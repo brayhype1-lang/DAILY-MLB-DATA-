@@ -29,7 +29,7 @@ st.markdown(
         color: #E2E8F0;
     }
 
-    /* Top Highlight Lock Card */
+    /* Featured Lock Card */
     .lock-card {
         background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
         border: 1px solid #38BDF8;
@@ -48,7 +48,7 @@ st.markdown(
         background: #38BDF8;
     }
 
-    /* Calibration Metric Box */
+    /* Model Calibration Metric Boxes */
     .calib-card {
         background: rgba(15, 23, 42, 0.6);
         border: 1px solid #334155;
@@ -106,7 +106,7 @@ st.markdown(
         font-weight: 700;
     }
 
-    /* Narrative Paragraph Box */
+    /* Game Narrative Box */
     .narrative-box {
         background: rgba(10, 15, 29, 0.85);
         border: 1px solid #1E293B;
@@ -127,22 +127,22 @@ st.markdown(
 )
 
 # ------------------------------------------------------------------
-# 2. SIDEBAR: CUSTOM INPUTS & MARKET TOGGLES
+# 2. SIDEBAR CONTROLS & STRATEGY SLIDERS
 # ------------------------------------------------------------------
 st.sidebar.title("⚙️ Model Controls")
 
-# Feature 6: First 5 Innings Toggle
+# First 5 Innings Toggle
 market_type = st.sidebar.radio(
     "Market Focus",
     ["Full Game ML", "First 5 Innings (F5) ML"],
-    help="F5 eliminates bullpen variance and isolates starting pitching vs offense.",
+    help="F5 removes bullpen volatility and isolates starting pitching vs offense.",
 )
 is_f5 = market_type == "First 5 Innings (F5) ML"
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎛️ Strategy Sliders")
 
-# Feature 5: Interactive Sliders
+# Dynamic Sliders
 pitching_weight = st.sidebar.slider("Starting Pitching Weight", 0.5, 2.0, 1.0, 0.1)
 offense_weight = st.sidebar.slider("Offense Weight", 0.5, 2.0, 1.0, 0.1)
 bullpen_weight = st.sidebar.slider(
@@ -152,7 +152,7 @@ weather_weight = st.sidebar.slider("Weather Impact Weight", 0.0, 2.0, 1.0, 0.1)
 min_edge_threshold = st.sidebar.slider("Min Edge Threshold (%)", 1.0, 8.0, 3.5, 0.5)
 
 # ------------------------------------------------------------------
-# 3. BALLPARKS & AUTOMATED WEATHER ENGINE (WIND DIRECTIONS)
+# 3. BALLPARK COORDINATES & LIVE WEATHER ENGINE
 # ------------------------------------------------------------------
 PARK_FACTORS = {
     "Colorado Rockies": {"run_mult": 1.28, "hr_mult": 1.15, "name": "Coors Field", "lat": 39.756, "lon": -104.994, "roof": False},
@@ -165,11 +165,10 @@ PARK_FACTORS = {
     "New York Mets": {"run_mult": 0.92, "hr_mult": 0.90, "name": "Citi Field", "lat": 40.757, "lon": -73.845, "roof": False},
 }
 
-# Feature 4: Live Weather & Wind Vector Engine
 @st.cache_data(ttl=7200)
 def fetch_live_weather(lat: float, lon: float, is_roof: bool) -> dict:
     if is_roof:
-        return {"temp_f": 72.0, "wind_mph": 0.0, "wind_dir": "Calm", "weather_desc": "Domed / Controlled", "impact_mult": 1.00}
+        return {"temp_f": 72.0, "wind_mph": 0.0, "wind_dir": "Calm", "weather_desc": "Domed / Roof Closed", "impact_mult": 1.00}
     
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph"
     try:
@@ -226,19 +225,17 @@ def build_editorial_breakdown(
     edge_thresh: float,
     is_f5_mode: bool,
 ) -> dict:
-    # Starter Scoring
     away_p_score = ((away_stats["siera"] * 0.35) + (away_stats["whip"] * 1.2) - (away_stats["k_bb_diff"] * 3.5))
     home_p_score = ((home_stats["siera"] * 0.35) + (home_stats["whip"] * 1.2) - (home_stats["k_bb_diff"] * 3.5))
 
-    # Offense Scoring
     away_off_score = (away_stats["off_woba"] * 1.5) + (away_stats["off_iso"] * 1.2)
     home_off_score = (home_stats["off_woba"] * 1.5) + (home_stats["off_iso"] * 1.2)
 
-    # Feature 2: Bullpen Fatigue Penalty (Disabled in F5)
+    # Bullpen Fatigue Penalty (Zeroed out in F5)
     away_bp_penalty = 0.0 if is_f5_mode else (away_stats["bp_pitch_count_3d"] * 0.0012 * b_w)
     home_bp_penalty = 0.0 if is_f5_mode else (home_stats["bp_pitch_count_3d"] * 0.0012 * b_w)
 
-    # Weather/Park Adjustments
+    # Weather & Park Factor Adjustments
     weather_impact = (park["weather"]["impact_mult"] - 1.00) * w_w
     park_impact = ((park["run_mult"] - 1.00) + weather_impact) * 0.08
     base_home_prob = 0.535 + park_impact
@@ -277,7 +274,7 @@ def build_editorial_breakdown(
         f"<span class='highlight-txt'>{selected_team}</span> (<span class='highlight-edge'>{win_p:.1f}% win prob</span>). "
         f"Starter <span class='highlight-txt'>{favored_starter}</span> commands a <span class='highlight-stat'>{f_siera:.2f} SIERA</span> "
         f"and <span class='highlight-stat'>{f_whip:.2f} WHIP</span> against <span class='highlight-txt'>{opp_starter}</span> "
-        f"({opp_era:.2f} ERA / {opp_siera:.2f} SIERA). Weather at <span class='highlight-txt'>{park['name']}</span>: "
+        f"({opp_era:.2f} ERA / {opp_siera:.2f} SIERA). Venue conditions at <span class='highlight-txt'>{park['name']}</span>: "
         f"<span class='highlight-stat'>{park['weather']['weather_desc']}</span>."
     )
 
@@ -292,7 +289,7 @@ def build_editorial_breakdown(
 
 
 # ------------------------------------------------------------------
-# 5. DATA FETCHING & MOCK MARKET ENRICHMENT
+# 5. DATA FETCHING & MARKET ENRICHMENT
 # ------------------------------------------------------------------
 @st.cache_data(ttl=3600)
 def fetch_advanced_pitcher(person_id: int, name: str):
@@ -339,7 +336,6 @@ def load_full_slate():
             away_stats = fetch_advanced_pitcher(away_p.get("id"), away_p.get("fullName", "Unannounced Starter"))
             home_stats = fetch_advanced_pitcher(home_p.get("id"), home_p.get("fullName", "Unannounced Starter"))
 
-            # Feature 2 & 3: Mocking Bullpen Fatigue, Odds, and Betting Splits
             np.random.seed(g.get("gamePk", 12345) % 100000)
             
             away_stats.update({
@@ -370,7 +366,6 @@ def load_full_slate():
         return []
 
 
-# Helper for Bullpen Fatigue Badges
 def get_fatigue_badge(pitches: int) -> str:
     if pitches >= 190:
         return f'<span class="badge-fatigue-high">HIGH FATIGUE ({pitches}p / 3d)</span>'
@@ -383,9 +378,9 @@ def get_fatigue_badge(pitches: int) -> str:
 # 6. DASHBOARD PRESENTATION
 # ------------------------------------------------------------------
 st.title("⚾ MLB Quantitative Edge Engine")
-st.caption("Multi-Factor Intelligence • Real-Time Weather • Market Splits • Bullpen Fatigue")
+st.caption("Multi-Factor Intelligence • Live Weather & Wind • Betting Splits • Bullpen Fatigue")
 
-# Feature 1: Model Calibration Tracker Top-Level Section
+# Model Calibration Tracker
 st.markdown("### 📈 Model Calibration & Hit Rate Tracker")
 c1, c2, c3, c4 = st.columns(4)
 with c1:
@@ -417,7 +412,7 @@ else:
     top_locks = [g for g in evaluated_slate if g["analysis"]["target"] is not None]
     top_locks = sorted(top_locks, key=lambda x: x["analysis"]["edge"], reverse=True)
 
-    # FEATURED LOCKS
+    # FEATURED VALUE PICKS
     st.markdown(f"### 🔒 Featured Value Selections ({'F5 ML' if is_f5 else 'Full Game ML'})")
 
     if top_locks:
@@ -491,7 +486,7 @@ else:
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            # Away Team Column
+            # Away Column
             with c1:
                 st.markdown(f"**{g['away_team']}**")
                 st.caption(f"👤 Starter: {g['away_stats']['pitcher']}")
@@ -500,14 +495,13 @@ else:
                 m2.metric("SIERA", f"{g['away_stats']['siera']:.2f}")
                 m3.metric("WHIP", f"{g['away_stats']['whip']:.2f}")
 
-                # Feature 2 & 3: Bullpen Fatigue & Public/Sharp Betting Splits
                 if not is_f5:
                     st.markdown(f"**Bullpen Status:** {get_fatigue_badge(g['away_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
                 st.caption(f"🎰 Market Splits: {g['away_stats']['public_bets_pct']}% Bets | {g['away_stats']['money_pct']}% Money")
 
                 st.progress(int(an["away_prob"] * 100), text=f"Win Prob: {an['away_prob']*100:.1f}%")
 
-            # Home Team Column
+            # Home Column
             with c2:
                 st.markdown(f"**{g['home_team']}**")
                 st.caption(f"👤 Starter: {g['home_stats']['pitcher']}")
@@ -522,7 +516,7 @@ else:
 
                 st.progress(int(an["home_prob"] * 100), text=f"Win Prob: {an['home_prob']*100:.1f}%")
 
-            # Editorial Narrative Column
+            # Narrative Column
             with c3:
                 st.markdown(f"**Matchup Breakdown ({'F5' if is_f5 else 'Full Game'})**")
                 st.markdown(f'<div class="narrative-box">{an["narrative"]}</div>', unsafe_allow_html=True)
