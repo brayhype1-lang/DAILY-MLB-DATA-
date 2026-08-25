@@ -1,1152 +1,231 @@
 {
-  "last_updated": "2026-08-25 22:00:50 UTC",
-  "mlb_schedule": {
-    "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
-    "totalItems": 15,
-    "totalEvents": 0,
-    "totalGames": 15,
-    "totalGamesInProgress": 0,
-    "dates": [
-      {
-        "date": "2026-08-25",
-        "totalItems": 15,
-        "totalEvents": 0,
-        "totalGames": 15,
-        "totalGamesInProgress": 0,
-        "games": [
-          {
-            "gamePk": 824233,
-            "gameGuid": "55000cd1-4bb4-47a9-a221-d29be14c42d6",
-            "link": "/api/v1.1/game/824233/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T22:40:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 139,
-                  "name": "Tampa Bay Rays",
-                  "link": "/api/v1/teams/139"
-                },
-                "leagueRecord": {
-                  "wins": 78,
-                  "losses": 53,
-                  "ties": 0,
-                  "pct": ".595"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 116,
-                  "name": "Detroit Tigers",
-                  "link": "/api/v1/teams/116"
-                },
-                "leagueRecord": {
-                  "wins": 61,
-                  "losses": 70,
-                  "ties": 0,
-                  "pct": ".466"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 2394,
-              "name": "Comerica Park",
-              "link": "/api/v1/venues/2394"
-            },
-            "content": {
-              "link": "/api/v1/game/824233/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-824233-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 823826,
-            "gameGuid": "ce5e2434-820e-436f-8897-671ed8c106c0",
-            "link": "/api/v1.1/game/823826/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T22:40:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 111,
-                  "name": "Boston Red Sox",
-                  "link": "/api/v1/teams/111"
-                },
-                "leagueRecord": {
-                  "wins": 72,
-                  "losses": 59,
-                  "ties": 0,
-                  "pct": ".550"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 146,
-                  "name": "Miami Marlins",
-                  "link": "/api/v1/teams/146"
-                },
-                "leagueRecord": {
-                  "wins": 67,
-                  "losses": 65,
-                  "ties": 0,
-                  "pct": ".508"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 4169,
-              "name": "loanDepot park",
-              "link": "/api/v1/venues/4169"
-            },
-            "content": {
-              "link": "/api/v1/game/823826/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-823826-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 822693,
-            "gameGuid": "3f830e2b-b01e-4e43-a47a-184cb3360c1a",
-            "link": "/api/v1.1/game/822693/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T22:45:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 115,
-                  "name": "Colorado Rockies",
-                  "link": "/api/v1/teams/115"
-                },
-                "leagueRecord": {
-                  "wins": 50,
-                  "losses": 81,
-                  "ties": 0,
-                  "pct": ".382"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 120,
-                  "name": "Washington Nationals",
-                  "link": "/api/v1/teams/120"
-                },
-                "leagueRecord": {
-                  "wins": 62,
-                  "losses": 71,
-                  "ties": 0,
-                  "pct": ".466"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 3309,
-              "name": "Nationals Park",
-              "link": "/api/v1/venues/3309"
-            },
-            "content": {
-              "link": "/api/v1/game/822693/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-822693-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 4,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 823505,
-            "gameGuid": "6b9af5f0-0809-4760-b25e-e2fd87c82d96",
-            "link": "/api/v1.1/game/823505/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T23:05:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 117,
-                  "name": "Houston Astros",
-                  "link": "/api/v1/teams/117"
-                },
-                "leagueRecord": {
-                  "wins": 65,
-                  "losses": 66,
-                  "ties": 0,
-                  "pct": ".496"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 147,
-                  "name": "New York Yankees",
-                  "link": "/api/v1/teams/147"
-                },
-                "leagueRecord": {
-                  "wins": 74,
-                  "losses": 56,
-                  "ties": 0,
-                  "pct": ".569"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 3313,
-              "name": "Yankee Stadium",
-              "link": "/api/v1/venues/3313"
-            },
-            "content": {
-              "link": "/api/v1/game/823505/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-823505-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 1,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 822773,
-            "gameGuid": "a5a5d7d3-8b9d-48a9-90fe-d0d3d067e8ed",
-            "link": "/api/v1.1/game/822773/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T23:07:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 118,
-                  "name": "Kansas City Royals",
-                  "link": "/api/v1/teams/118"
-                },
-                "leagueRecord": {
-                  "wins": 58,
-                  "losses": 74,
-                  "ties": 0,
-                  "pct": ".439"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 141,
-                  "name": "Toronto Blue Jays",
-                  "link": "/api/v1/teams/141"
-                },
-                "leagueRecord": {
-                  "wins": 64,
-                  "losses": 68,
-                  "ties": 0,
-                  "pct": ".485"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 44
-              }
-            },
-            "venue": {
-              "id": 14,
-              "name": "Rogers Centre",
-              "link": "/api/v1/venues/14"
-            },
-            "content": {
-              "link": "/api/v1/game/822773/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-822773-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 1,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 823585,
-            "gameGuid": "7ef19d96-24b9-4d5e-a495-013198d9cbcf",
-            "link": "/api/v1.1/game/823585/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T23:10:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 158,
-                  "name": "Milwaukee Brewers",
-                  "link": "/api/v1/teams/158"
-                },
-                "leagueRecord": {
-                  "wins": 81,
-                  "losses": 50,
-                  "ties": 0,
-                  "pct": ".618"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 121,
-                  "name": "New York Mets",
-                  "link": "/api/v1/teams/121"
-                },
-                "leagueRecord": {
-                  "wins": 59,
-                  "losses": 72,
-                  "ties": 0,
-                  "pct": ".450"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 3289,
-              "name": "Citi Field",
-              "link": "/api/v1/venues/3289"
-            },
-            "content": {
-              "link": "/api/v1/game/823585/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-823585-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 1,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 824881,
-            "gameGuid": "7dbd7088-db0a-41c7-9e3f-e3f8ca462fbc",
-            "link": "/api/v1.1/game/824881/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T23:15:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 119,
-                  "name": "Los Angeles Dodgers",
-                  "link": "/api/v1/teams/119"
-                },
-                "leagueRecord": {
-                  "wins": 80,
-                  "losses": 51,
-                  "ties": 0,
-                  "pct": ".611"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 144,
-                  "name": "Atlanta Braves",
-                  "link": "/api/v1/teams/144"
-                },
-                "leagueRecord": {
-                  "wins": 76,
-                  "losses": 55,
-                  "ties": 0,
-                  "pct": ".580"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 44
-              }
-            },
-            "venue": {
-              "id": 4705,
-              "name": "Truist Park",
-              "link": "/api/v1/venues/4705"
-            },
-            "content": {
-              "link": "/api/v1/game/824881/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-824881-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 145,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 1,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 824556,
-            "gameGuid": "3850c23b-f304-432e-a52c-6d1ef43d8a0d",
-            "link": "/api/v1.1/game/824556/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T23:40:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 140,
-                  "name": "Texas Rangers",
-                  "link": "/api/v1/teams/140"
-                },
-                "leagueRecord": {
-                  "wins": 66,
-                  "losses": 66,
-                  "ties": 0,
-                  "pct": ".500"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 145,
-                  "name": "Chicago White Sox",
-                  "link": "/api/v1/teams/145"
-                },
-                "leagueRecord": {
-                  "wins": 68,
-                  "losses": 63,
-                  "ties": 0,
-                  "pct": ".519"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 44
-              }
-            },
-            "venue": {
-              "id": 4,
-              "name": "Rate Field",
-              "link": "/api/v1/venues/4"
-            },
-            "content": {
-              "link": "/api/v1/game/824556/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-824556-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 823016,
-            "gameGuid": "88f106b3-8a2b-4a2f-9285-b3280c3a2164",
-            "link": "/api/v1.1/game/823016/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-25T23:45:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 110,
-                  "name": "Baltimore Orioles",
-                  "link": "/api/v1/teams/110"
-                },
-                "leagueRecord": {
-                  "wins": 63,
-                  "losses": 68,
-                  "ties": 0,
-                  "pct": ".481"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 138,
-                  "name": "St. Louis Cardinals",
-                  "link": "/api/v1/teams/138"
-                },
-                "leagueRecord": {
-                  "wins": 66,
-                  "losses": 66,
-                  "ties": 0,
-                  "pct": ".500"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 44
-              }
-            },
-            "venue": {
-              "id": 2889,
-              "name": "Busch Stadium",
-              "link": "/api/v1/venues/2889"
-            },
-            "content": {
-              "link": "/api/v1/game/823016/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-823016-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 1,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 823989,
-            "gameGuid": "b45843d3-f9a9-4ebf-b8ff-8c9f05c6633a",
-            "link": "/api/v1.1/game/823989/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-26T01:38:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 114,
-                  "name": "Cleveland Guardians",
-                  "link": "/api/v1/teams/114"
-                },
-                "leagueRecord": {
-                  "wins": 66,
-                  "losses": 66,
-                  "ties": 0,
-                  "pct": ".500"
-                },
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 108,
-                  "name": "Los Angeles Angels",
-                  "link": "/api/v1/teams/108"
-                },
-                "leagueRecord": {
-                  "wins": 52,
-                  "losses": 80,
-                  "ties": 0,
-                  "pct": ".394"
-                },
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 1,
-              "name": "Angel Stadium",
-              "link": "/api/v1/venues/1"
-            },
-            "content": {
-              "link": "/api/v1/game/823989/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-823989-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 825042,
-            "gameGuid": "a5445c08-c5d7-4784-b39a-7bbecb8817a9",
-            "link": "/api/v1.1/game/825042/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-26T01:40:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "S",
-              "detailedState": "Scheduled",
-              "statusCode": "S",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 112,
-                  "name": "Chicago Cubs",
-                  "link": "/api/v1/teams/112"
-                },
-                "leagueRecord": {
-                  "wins": 76,
-                  "losses": 56,
-                  "ties": 0,
-                  "pct": ".576"
-                },
-                "splitSquad": false,
-                "seriesNumber": 44
-              },
-              "home": {
-                "team": {
-                  "id": 109,
-                  "name": "Arizona Diamondbacks",
-                  "link": "/api/v1/teams/109"
-                },
-                "leagueRecord": {
-                  "wins": 69,
-                  "losses": 63,
-                  "ties": 0,
-                  "pct": ".523"
-                },
-                "splitSquad": false,
-                "seriesNumber": 44
-              }
-            },
-            "venue": {
-              "id": 15,
-              "name": "Chase Field",
-              "link": "/api/v1/venues/15"
-            },
-            "content": {
-              "link": "/api/v1/game/825042/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-825042-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 823259,
-            "gameGuid": "56f12e22-213a-401c-94d9-1d153a5f250a",
-            "link": "/api/v1.1/game/823259/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-26T01:40:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 134,
-                  "name": "Pittsburgh Pirates",
-                  "link": "/api/v1/teams/134"
-                },
-                "leagueRecord": {
-                  "wins": 64,
-                  "losses": 69,
-                  "ties": 0,
-                  "pct": ".481"
-                },
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 135,
-                  "name": "San Diego Padres",
-                  "link": "/api/v1/teams/135"
-                },
-                "leagueRecord": {
-                  "wins": 71,
-                  "losses": 61,
-                  "ties": 0,
-                  "pct": ".538"
-                },
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 2680,
-              "name": "Petco Park",
-              "link": "/api/v1/venues/2680"
-            },
-            "content": {
-              "link": "/api/v1/game/823259/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-823259-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 824962,
-            "gameGuid": "5c5671c4-62d6-405c-a805-b19528cf0d18",
-            "link": "/api/v1.1/game/824962/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-26T01:40:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 142,
-                  "name": "Minnesota Twins",
-                  "link": "/api/v1/teams/142"
-                },
-                "leagueRecord": {
-                  "wins": 64,
-                  "losses": 68,
-                  "ties": 0,
-                  "pct": ".485"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 133,
-                  "name": "Athletics",
-                  "link": "/api/v1/teams/133"
-                },
-                "leagueRecord": {
-                  "wins": 51,
-                  "losses": 81,
-                  "ties": 0,
-                  "pct": ".386"
-                },
-                "score": 0,
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 2529,
-              "name": "Sutter Health Park",
-              "link": "/api/v1/venues/2529"
-            },
-            "content": {
-              "link": "/api/v1/game/824962/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-824962-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 823098,
-            "gameGuid": "d07fd532-fec8-4283-b469-8fc1e45dbc36",
-            "link": "/api/v1.1/game/823098/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-26T01:40:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 143,
-                  "name": "Philadelphia Phillies",
-                  "link": "/api/v1/teams/143"
-                },
-                "leagueRecord": {
-                  "wins": 73,
-                  "losses": 59,
-                  "ties": 0,
-                  "pct": ".553"
-                },
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 136,
-                  "name": "Seattle Mariners",
-                  "link": "/api/v1/teams/136"
-                },
-                "leagueRecord": {
-                  "wins": 63,
-                  "losses": 69,
-                  "ties": 0,
-                  "pct": ".477"
-                },
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 680,
-              "name": "T-Mobile Park",
-              "link": "/api/v1/venues/680"
-            },
-            "content": {
-              "link": "/api/v1/game/823098/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-823098-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          },
-          {
-            "gamePk": 823181,
-            "gameGuid": "466c7426-511a-4b64-a03f-33692c09a9ba",
-            "link": "/api/v1.1/game/823181/feed/live",
-            "gameType": "R",
-            "season": "2026",
-            "gameDate": "2026-08-26T01:45:00Z",
-            "officialDate": "2026-08-25",
-            "status": {
-              "abstractGameState": "Preview",
-              "codedGameState": "P",
-              "detailedState": "Pre-Game",
-              "statusCode": "P",
-              "startTimeTBD": false,
-              "abstractGameCode": "P"
-            },
-            "teams": {
-              "away": {
-                "team": {
-                  "id": 113,
-                  "name": "Cincinnati Reds",
-                  "link": "/api/v1/teams/113"
-                },
-                "leagueRecord": {
-                  "wins": 62,
-                  "losses": 70,
-                  "ties": 0,
-                  "pct": ".470"
-                },
-                "splitSquad": false,
-                "seriesNumber": 43
-              },
-              "home": {
-                "team": {
-                  "id": 137,
-                  "name": "San Francisco Giants",
-                  "link": "/api/v1/teams/137"
-                },
-                "leagueRecord": {
-                  "wins": 53,
-                  "losses": 78,
-                  "ties": 0,
-                  "pct": ".405"
-                },
-                "splitSquad": false,
-                "seriesNumber": 43
-              }
-            },
-            "venue": {
-              "id": 2395,
-              "name": "Oracle Park",
-              "link": "/api/v1/venues/2395"
-            },
-            "content": {
-              "link": "/api/v1/game/823181/content"
-            },
-            "gameNumber": 1,
-            "publicFacing": true,
-            "doubleHeader": "N",
-            "gamedayType": "P",
-            "tiebreaker": "N",
-            "calendarEventID": "14-823181-2026-08-25",
-            "seasonDisplay": "2026",
-            "dayNight": "night",
-            "scheduledInnings": 9,
-            "reverseHomeAwayStatus": false,
-            "inningBreakLength": 120,
-            "gamesInSeries": 3,
-            "seriesGameNumber": 2,
-            "seriesDescription": "Regular Season",
-            "recordSource": "S",
-            "ifNecessary": "N",
-            "ifNecessaryDescription": "Normal Game"
-          }
-        ],
-        "events": []
-      }
-    ]
-  }
+  "last_updated": "2026-08-25 22:37:47 UTC",
+  "total_games": 15,
+  "slate": [
+    {
+      "game_id": 824233,
+      "status": "Warmup",
+      "venue": "Comerica Park",
+      "away_team": "Tampa Bay Rays",
+      "away_record": "78-53",
+      "away_pitcher": "Casey Legumina",
+      "away_pitcher_id": 668984,
+      "home_team": "Detroit Tigers",
+      "home_record": "61-70",
+      "home_pitcher": "Jackson Jobe",
+      "home_pitcher_id": 695549,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 823826,
+      "status": "Warmup",
+      "venue": "loanDepot park",
+      "away_team": "Boston Red Sox",
+      "away_record": "72-59",
+      "away_pitcher": "Payton Tolle",
+      "away_pitcher_id": 801139,
+      "home_team": "Miami Marlins",
+      "home_record": "67-65",
+      "home_pitcher": "Tyler Phillips",
+      "home_pitcher_id": 663969,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 822693,
+      "status": "Warmup",
+      "venue": "Nationals Park",
+      "away_team": "Colorado Rockies",
+      "away_record": "50-81",
+      "away_pitcher": "Mason Adams",
+      "away_pitcher_id": 690279,
+      "home_team": "Washington Nationals",
+      "home_record": "62-71",
+      "home_pitcher": "Andrew Alvarez",
+      "home_pitcher_id": 674841,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 823505,
+      "status": "Pre-Game",
+      "venue": "Yankee Stadium",
+      "away_team": "Houston Astros",
+      "away_record": "65-66",
+      "away_pitcher": "Ethan Pecko",
+      "away_pitcher_id": 814490,
+      "home_team": "New York Yankees",
+      "home_record": "74-56",
+      "home_pitcher": "Will Warren",
+      "home_pitcher_id": 701542,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 822773,
+      "status": "Pre-Game",
+      "venue": "Rogers Centre",
+      "away_team": "Kansas City Royals",
+      "away_record": "58-74",
+      "away_pitcher": "Seth Lugo",
+      "away_pitcher_id": 607625,
+      "home_team": "Toronto Blue Jays",
+      "home_record": "64-68",
+      "home_pitcher": "Max Scherzer",
+      "home_pitcher_id": 453286,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 823585,
+      "status": "Pre-Game",
+      "venue": "Citi Field",
+      "away_team": "Milwaukee Brewers",
+      "away_record": "81-50",
+      "away_pitcher": "Kyle Harrison",
+      "away_pitcher_id": 690986,
+      "home_team": "New York Mets",
+      "home_record": "59-72",
+      "home_pitcher": "Zac Thornton",
+      "home_pitcher_id": 804267,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 824881,
+      "status": "Pre-Game",
+      "venue": "Truist Park",
+      "away_team": "Los Angeles Dodgers",
+      "away_record": "80-51",
+      "away_pitcher": "Tyler Glasnow",
+      "away_pitcher_id": 607192,
+      "home_team": "Atlanta Braves",
+      "home_record": "76-55",
+      "home_pitcher": "Bryce Elder",
+      "home_pitcher_id": 693821,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 824556,
+      "status": "Pre-Game",
+      "venue": "Rate Field",
+      "away_team": "Texas Rangers",
+      "away_record": "66-66",
+      "away_pitcher": "Jacob deGrom",
+      "away_pitcher_id": 594798,
+      "home_team": "Chicago White Sox",
+      "home_record": "68-63",
+      "home_pitcher": "Anthony Kay",
+      "home_pitcher_id": 641743,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 823016,
+      "status": "Pre-Game",
+      "venue": "Busch Stadium",
+      "away_team": "Baltimore Orioles",
+      "away_record": "63-68",
+      "away_pitcher": "Chris Bassitt",
+      "away_pitcher_id": 605135,
+      "home_team": "St. Louis Cardinals",
+      "home_record": "66-66",
+      "home_pitcher": "Matthew Liberatore",
+      "home_pitcher_id": 669461,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 823989,
+      "status": "Pre-Game",
+      "venue": "Angel Stadium",
+      "away_team": "Cleveland Guardians",
+      "away_record": "66-66",
+      "away_pitcher": "Gavin Williams",
+      "away_pitcher_id": 668909,
+      "home_team": "Los Angeles Angels",
+      "home_record": "52-80",
+      "home_pitcher": "Walbert Ure\u00f1a",
+      "home_pitcher_id": 700712,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 825042,
+      "status": "Pre-Game",
+      "venue": "Chase Field",
+      "away_team": "Chicago Cubs",
+      "away_record": "76-56",
+      "away_pitcher": "Clay Holmes",
+      "away_pitcher_id": 605280,
+      "home_team": "Arizona Diamondbacks",
+      "home_record": "69-63",
+      "home_pitcher": "Brandon Pfaadt",
+      "home_pitcher_id": 694297,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 823259,
+      "status": "Pre-Game",
+      "venue": "Petco Park",
+      "away_team": "Pittsburgh Pirates",
+      "away_record": "64-69",
+      "away_pitcher": "Paul Skenes",
+      "away_pitcher_id": 694973,
+      "home_team": "San Diego Padres",
+      "home_record": "71-61",
+      "home_pitcher": "Michael King",
+      "home_pitcher_id": 650633,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 824962,
+      "status": "Pre-Game",
+      "venue": "Sutter Health Park",
+      "away_team": "Minnesota Twins",
+      "away_record": "64-68",
+      "away_pitcher": "Taj Bradley",
+      "away_pitcher_id": 671737,
+      "home_team": "Athletics",
+      "home_record": "51-81",
+      "home_pitcher": "Gage Jump",
+      "home_pitcher_id": 695611,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 823098,
+      "status": "Pre-Game",
+      "venue": "T-Mobile Park",
+      "away_team": "Philadelphia Phillies",
+      "away_record": "73-59",
+      "away_pitcher": "Aaron Nola",
+      "away_pitcher_id": 605400,
+      "home_team": "Seattle Mariners",
+      "home_record": "63-69",
+      "home_pitcher": "George Kirby",
+      "home_pitcher_id": 669923,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    },
+    {
+      "game_id": 823181,
+      "status": "Pre-Game",
+      "venue": "Oracle Park",
+      "away_team": "Cincinnati Reds",
+      "away_record": "62-70",
+      "away_pitcher": "Brady Singer",
+      "away_pitcher_id": 663903,
+      "home_team": "San Francisco Giants",
+      "home_record": "53-78",
+      "home_pitcher": "Adrian Houser",
+      "home_pitcher_id": 605288,
+      "edge_signal": "STATCAST MATCHUP ACTIVE",
+      "recommended_angle": "EVALUATE STRIKEOUT PROPS OR F5 MONEYLINE"
+    }
+  ]
 }
