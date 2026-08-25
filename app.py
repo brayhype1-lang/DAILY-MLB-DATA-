@@ -1,71 +1,78 @@
 import json
-import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="MLB AI Handicapping Engine", page_icon="⚡", layout="wide"
+    page_title="MLB Quantitative Edge Model", page_icon="⚡", layout="wide"
 )
 
-st.title("⚡ MLB Daily Quantitative Edge & Betting Analysis")
+st.title("⚡ MLB Algorithmic Edge & Prop Dashboard")
 
 try:
   with open("daily_mlb_data.json", "r") as f:
     payload = json.load(f)
 
-  st.caption(f"Last Model Run: **{payload.get('last_updated')}**")
+  st.caption(f"Last Model Sync: **{payload.get('last_updated')}**")
   slate = payload.get("slate", [])
 
   if slate:
-    st.markdown("## 🎯 Top Algorithmic Picks & Locks")
+    # ------------------ TOP SLATE HIGHLIGHTS ------------------
+    st.markdown("## 🎯 Top High-Confidence Locks Today")
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-      st.metric(
-          label="Total Slate Games",
-          value=payload.get("total_games"),
-          delta="Active",
-      )
-    with col2:
-      st.metric(
-          label="Model Confidence", value="HIGH", delta="Statcast Synced"
-      )
-    with col3:
-      st.metric(
-          label="Primary Focus",
-          value="F5 & Pitcher K-Props",
-          delta="Low Volatility",
+    high_conf_games = [g for g in slate if g["confidence"] == "HIGH"]
+
+    if high_conf_games:
+      c1, c2 = st.columns(2)
+      for idx, game in enumerate(high_conf_games[:4]):
+        col = c1 if idx % 2 == 0 else c2
+        with col:
+          st.success(
+              f"🔥 **{game['f5_edge']}**\n\nMatchup: {game['away_team']} @"
+              f" {game['home_team']}"
+          )
+    else:
+      st.info(
+          "No extreme pitch-mismatch locks found today. Standard slate model"
+          " active below."
       )
 
     st.markdown("---")
-    st.markdown("## 📊 Game-by-Game Edge Breakdown")
 
-    for idx, game in enumerate(slate):
+    # ------------------ GAME BY GAME METRICS ------------------
+    st.markdown("## 📊 Full Slate Model Projections")
+
+    for game in slate:
       with st.expander(
-          f"🔥 {game['away_team']} ({game['away_record']}) AT {game['home_team']}"
-          f" ({game['home_record']})",
-          expanded=(idx == 0),
+          f"⚾ {game['away_team']} ({game['away_win_prob']}%) @ {game['home_team']} ({game['home_win_prob']}%)"
       ):
 
-        c1, c2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
-        with c1:
-          st.markdown(f"### 🔵 Away: {game['away_team']}")
-          st.write(f"**Starting Pitcher:** {game['away_pitcher']}")
-          st.write(f"**Record:** {game['away_record']}")
+        with col1:
+          st.markdown(f"### 🔵 {game['away_team']}")
+          st.write(f"**Pitcher:** {game['away_pitcher']}")
+          st.write(f"**ERA:** {game['away_era']} | **WHIP:** {game['away_whip']}")
+          st.progress(
+              int(game["away_win_prob"]),
+              text=f"Win Probability: {game['away_win_prob']}%",
+          )
 
-        with c2:
-          st.markdown(f"### 🔴 Home: {game['home_team']}")
-          st.write(f"**Starting Pitcher:** {game['home_pitcher']}")
-          st.write(f"**Record:** {game['home_record']}")
+        with col2:
+          st.markdown(f"### 🔴 {game['home_team']}")
+          st.write(f"**Pitcher:** {game['home_pitcher']}")
+          st.write(f"**ERA:** {game['home_era']} | **WHIP:** {game['home_whip']}")
+          st.progress(
+              int(game["home_win_prob"]),
+              text=f"Win Probability: {game['home_win_prob']}%",
+          )
 
-        st.markdown("#### 💡 Algorithmic Angle")
-        st.info(
-            f"**Signal:** {game['edge_signal']} | **Suggested Bet:**"
-            f" {game['recommended_angle']}"
-        )
+        with col3:
+          st.markdown("### 🎯 Model Outputs")
+          st.write(f"**Primary Angle:** {game['f5_edge']}")
+          st.write(f"**Model Confidence:** {game['confidence']}")
+          st.write(f"**K-Prop Target:** {game['strikeout_prop']}")
 
   else:
-    st.warning("No games found on the slate for today.")
+    st.warning("No games found on today's slate.")
 
 except FileNotFoundError:
   st.error(
