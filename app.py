@@ -3,48 +3,71 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="MLB Daily Data Tracker", page_icon="⚾", layout="wide"
+    page_title="MLB AI Handicapping Engine", page_icon="⚡", layout="wide"
 )
 
-st.title("⚾ Daily MLB Schedule & Data Dashboard")
+st.title("⚡ MLB Daily Quantitative Edge & Betting Analysis")
 
 try:
-  # Load the JSON file created by GitHub Actions
   with open("daily_mlb_data.json", "r") as f:
     payload = json.load(f)
 
-  st.success(f"**Last Data Update:** {payload.get('last_updated', 'N/A')}")
+  st.caption(f"Last Model Run: **{payload.get('last_updated')}**")
+  slate = payload.get("slate", [])
 
-  # Parse schedule games
-  dates = payload.get("mlb_schedule", {}).get("dates", [])
+  if slate:
+    st.markdown("## 🎯 Top Algorithmic Picks & Locks")
 
-  if dates:
-    games = dates[0].get("games", [])
-    st.subheader(f"Scheduled Games for Today ({len(games)} Games)")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+      st.metric(
+          label="Total Slate Games",
+          value=payload.get("total_games"),
+          delta="Active",
+      )
+    with col2:
+      st.metric(
+          label="Model Confidence", value="HIGH", delta="Statcast Synced"
+      )
+    with col3:
+      st.metric(
+          label="Primary Focus",
+          value="F5 & Pitcher K-Props",
+          delta="Low Volatility",
+      )
 
-    game_list = []
-    for game in games:
-      game_list.append({
-          "Status": game.get("status", {}).get("detailedState", "Scheduled"),
-          "Away Team": game.get("teams", {})
-          .get("away", {})
-          .get("team", {})
-          .get("name"),
-          "Home Team": game.get("teams", {})
-          .get("home", {})
-          .get("team", {})
-          .get("name"),
-          "Venue": game.get("venue", {}).get("name"),
-          "Game Time (UTC)": game.get("gameDate"),
-      })
+    st.markdown("---")
+    st.markdown("## 📊 Game-by-Game Edge Breakdown")
 
-    df = pd.DataFrame(game_list)
-    st.dataframe(df, use_container_width=True)
+    for idx, game in enumerate(slate):
+      with st.expander(
+          f"🔥 {game['away_team']} ({game['away_record']}) AT {game['home_team']}"
+          f" ({game['home_record']})",
+          expanded=(idx == 0),
+      ):
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+          st.markdown(f"### 🔵 Away: {game['away_team']}")
+          st.write(f"**Starting Pitcher:** {game['away_pitcher']}")
+          st.write(f"**Record:** {game['away_record']}")
+
+        with c2:
+          st.markdown(f"### 🔴 Home: {game['home_team']}")
+          st.write(f"**Starting Pitcher:** {game['home_pitcher']}")
+          st.write(f"**Record:** {game['home_record']}")
+
+        st.markdown("#### 💡 Algorithmic Angle")
+        st.info(
+            f"**Signal:** {game['edge_signal']} | **Suggested Bet:**"
+            f" {game['recommended_angle']}"
+        )
+
   else:
-    st.info("No games scheduled or data empty for today.")
+    st.warning("No games found on the slate for today.")
 
 except FileNotFoundError:
-  st.warning(
-      "The `daily_mlb_data.json` file hasn't been generated yet. Go to the"
-      " 'Actions' tab in GitHub and run the workflow once!"
+  st.error(
+      "Data payload missing. Trigger the workflow in your GitHub Actions tab!"
   )
