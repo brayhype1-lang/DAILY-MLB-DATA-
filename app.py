@@ -6,7 +6,7 @@ import requests
 import streamlit as st
 
 # ------------------------------------------------------------------
-# 1. PAGE CONFIG & MODERN TYPOGRAPHY STYLING
+# 1. PAGE CONFIG & MODERN UI STYLING
 # ------------------------------------------------------------------
 st.set_page_config(
     page_title="MLB Deep Quantitative Intelligence Engine",
@@ -18,54 +18,83 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
     html, body, [class*="css"], div, span, h1, h2, h3, h4, p {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
     .stApp {
-        background-color: #070A10;
+        background: radial-gradient(circle at top center, #0F172A 0%, #070A10 100%);
         color: #E2E8F0;
     }
 
+    /* Top Highlight Lock Card */
     .lock-card {
         background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        border: 2px solid #38BDF8;
+        border: 1px solid #38BDF8;
         border-radius: 16px;
         padding: 24px;
         margin-bottom: 24px;
-        box-shadow: 0 12px 30px -10px rgba(56, 189, 248, 0.25);
+        box-shadow: 0 0 25px rgba(56, 189, 248, 0.15);
+        position: relative;
+        overflow: hidden;
     }
 
+    .lock-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 4px; height: 100%;
+        background: #38BDF8;
+    }
+
+    /* Badges */
     .badge-edge {
-        background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
         color: #FFFFFF;
         font-weight: 800;
         padding: 6px 16px;
         border-radius: 30px;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         letter-spacing: 0.05em;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
     }
 
     .badge-pass {
-        background-color: #334155;
-        color: #94A3B8;
+        background-color: #1E293B;
+        color: #64748B;
         font-weight: 600;
         padding: 6px 16px;
         border-radius: 30px;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
+        border: 1px solid #334155;
     }
 
+    /* Dynamic Editorial Paragraph Box */
     .narrative-box {
-        background-color: #0A0F1D;
-        border-left: 4px solid #38BDF8;
-        padding: 16px 20px;
-        border-radius: 0 8px 8px 0;
-        margin-top: 12px;
-        font-size: 0.95rem;
-        line-height: 1.7;
-        color: #CBD5E1;
+        background: rgba(10, 15, 29, 0.85);
+        border: 1px solid #1E293B;
+        border-left: 3px solid #38BDF8;
+        padding: 16px;
+        border-radius: 10px;
+        font-size: 0.92rem;
+        line-height: 1.65;
+        color: #94A3B8;
+    }
+
+    .highlight-txt {
+        color: #F8FAFC;
+        font-weight: 700;
+    }
+
+    .highlight-stat {
+        color: #38BDF8;
+        font-weight: 700;
+    }
+
+    .highlight-edge {
+        color: #34D399;
+        font-weight: 700;
     }
 </style>
 """,
@@ -107,7 +136,6 @@ def build_editorial_breakdown(
     home_stats: dict,
     park: dict,
 ) -> dict:
-  # Pitching indices
   away_pitch_score = (
       (away_stats["siera"] * 0.35)
       + (away_stats["whip"] * 1.2)
@@ -121,7 +149,6 @@ def build_editorial_breakdown(
       + (home_stats["hr_9"] * 0.4)
   )
 
-  # Offensive indices
   away_off_score = (away_stats["off_woba"] * 1.5) + (away_stats["off_iso"] * 1.2) + (away_stats["hard_hit_pct"] * 0.5)
   home_off_score = (home_stats["off_woba"] * 1.5) + (home_stats["off_iso"] * 1.2) + (home_stats["hard_hit_pct"] * 0.5)
 
@@ -138,9 +165,6 @@ def build_editorial_breakdown(
   home_edge = home_prob - fair_home
   away_edge = away_prob - fair_away
 
-  # Construct a deep, flowing narrative paragraph explaining the matchup
-  paragraphs = []
-  
   if home_edge > 0.035:
     target, edge, win_p = home_team, home_edge * 100, home_prob * 100
     favored_starter = home_stats['pitcher']
@@ -169,14 +193,18 @@ def build_editorial_breakdown(
     opp_era = away_stats['era']
     opp_siera = away_stats['siera']
 
-  # Craft rich editorial text
+  selected_team = target if target else home_team
+
+  # HTML-formatted narrative to eliminate raw markdown tags
   narrative = (
-      f"The quantitative model projects a clear structural advantage for the **{target if target else 'market pass'}** "
-      f"backed by a modeled win probability of **{win_p:.1f}%**. On the mound, starter **{favored_starter}** establishes control "
-      f"with a sharp SIERA of {f_siera:.2f} and a tight {f_whip:.2f} WHIP, effectively limiting base traffic. Conversely, opposing arm "
-      f"**{opp_starter}** presents vulnerability indicators, carrying a surface ERA of {opp_era:.2f} against an underlying SIERA of {opp_siera:.2f} "
-      f"alongside an elevated {opp_whip:.2f} WHIP. Factoring in **{park['name']}** venue dynamics (run factor {park['run_mult']:.2f}), "
-      f"the model expects {target if target else 'the market'} to exploit high-leverage scoring opportunities and command the game flow from the middle innings onward."
+      f"The quantitative model projects a structural advantage for <span class='highlight-txt'>{selected_team}</span> "
+      f"with a modeled win probability of <span class='highlight-edge'>{win_p:.1f}%</span>. On the mound, starter "
+      f"<span class='highlight-txt'>{favored_starter}</span> holds command with a sharp SIERA of "
+      f"<span class='highlight-stat'>{f_siera:.2f}</span> and a tight <span class='highlight-stat'>{f_whip:.2f} WHIP</span>. "
+      f"In contrast, opposing pitcher <span class='highlight-txt'>{opp_starter}</span> shows regression exposure with a "
+      f"<span class='highlight-stat'>{opp_era:.2f} ERA</span> (SIERA: <span class='highlight-stat'>{opp_siera:.2f}</span>) and an elevated "
+      f"<span class='highlight-stat'>{opp_whip:.2f} WHIP</span>. Factoring in <span class='highlight-txt'>{park['name']}</span> venue "
+      f"effects, the model signals edge value on this matchup."
   )
 
   return {
@@ -280,8 +308,8 @@ def load_full_slate():
 # ------------------------------------------------------------------
 # 5. DASHBOARD PRESENTATION
 # ------------------------------------------------------------------
-st.title("⚾ Deep Quantitative Edge & Matchup Intelligence")
-st.caption("Multi-Factor Intelligence • SIERA & K-BB% • Park Factors • Lineup wOBA/ISO")
+st.title("⚾ MLB Quantitative Edge Dashboard")
+st.caption("Multi-Factor Intelligence • Advanced Pitching Metrics • Venue Factors")
 
 slate = load_full_slate()
 
@@ -300,7 +328,7 @@ else:
   top_locks = sorted(top_locks, key=lambda x: x["analysis"]["edge"], reverse=True)
 
   # HIGH CONFIDENCE SECTION
-  st.markdown("## 🔒 High-Confidence Value Plays")
+  st.markdown("### 🔒 Featured Value Selections")
 
   if top_locks:
     for g in top_locks[:3]:
@@ -313,21 +341,21 @@ else:
         <div class="lock-card">
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <img src="{target_logo}" width="60" height="60" />
+                    <img src="{target_logo}" width="56" height="56" />
                     <div>
-                        <span style="color: #38BDF8; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;">RECOMMENDED SELECTION</span>
-                        <h2 style="margin: 0; color: #FFFFFF; font-size: 1.6rem; font-weight: 800;">{an['target']} Moneyline</h2>
-                        <span style="color: #94A3B8; font-size: 0.85rem;">Venue: {g['park']['name']}</span>
+                        <span style="color: #38BDF8; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;">FEATURED PICK</span>
+                        <h2 style="margin: 0; color: #FFFFFF; font-size: 1.5rem; font-weight: 800;">{an['target']} Moneyline</h2>
+                        <span style="color: #64748B; font-size: 0.82rem;">{g['park']['name']}</span>
                     </div>
                 </div>
                 <div style="text-align: right;">
                     <span class="badge-edge">+{an['edge']}% EDGE</span>
-                    <div style="font-weight: 800; font-size: 1.2rem; color: #38BDF8; margin-top: 8px;">
-                        Model Win Prob: {an['win_prob']}%
+                    <div style="font-weight: 800; font-size: 1.1rem; color: #38BDF8; margin-top: 8px;">
+                        Win Prob: {an['win_prob']}%
                     </div>
                 </div>
             </div>
-            <div class="narrative-box">
+            <div class="narrative-box" style="margin-top: 16px;">
                 {an['narrative']}
             </div>
         </div>
@@ -338,7 +366,7 @@ else:
     st.info("No games currently meet the strict +3.5% edge threshold on today's slate.")
 
   st.markdown("---")
-  st.markdown("## 📊 Full Slate Matchup Intelligence")
+  st.markdown("### 📊 Daily Matchup Analysis")
 
   for g in evaluated_slate:
     an = g["analysis"]
@@ -349,11 +377,11 @@ else:
         st.markdown(
             f"""
             <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
-                <img src="{g['away_logo']}" width="34" height="34" />
-                <span style="font-size: 1.3rem; font-weight: 700;">{g['away_team']}</span>
+                <img src="{g['away_logo']}" width="32" height="32" />
+                <span style="font-size: 1.2rem; font-weight: 700;">{g['away_team']}</span>
                 <span style="color: #64748B; font-weight: 800;">@</span>
-                <img src="{g['home_logo']}" width="34" height="34" />
-                <span style="font-size: 1.3rem; font-weight: 700;">{g['home_team']}</span>
+                <img src="{g['home_logo']}" width="32" height="32" />
+                <span style="font-size: 1.2rem; font-weight: 700;">{g['home_team']}</span>
             </div>
             """,
             unsafe_allow_html=True,
@@ -374,7 +402,7 @@ else:
 
       # Away Breakdown
       with c1:
-        st.markdown(f"**{g['away_team']} Starter & Offense**")
+        st.markdown(f"**{g['away_team']} Starter**")
         st.caption(f"👤 {g['away_stats']['pitcher']}")
         m1, m2, m3 = st.columns(3)
         m1.metric("ERA", f"{g['away_stats']['era']:.2f}")
@@ -382,7 +410,7 @@ else:
         m3.metric("WHIP", f"{g['away_stats']['whip']:.2f}")
         
         o1, o2 = st.columns(2)
-        o1.metric("Team wOBA", f"{g['away_stats']['off_woba']:.3f}")
+        o1.metric("wOBA", f"{g['away_stats']['off_woba']:.3f}")
         o2.metric("K-BB%", f"{g['away_stats']['k_bb_diff']*100:.1f}%")
 
         st.progress(
@@ -392,7 +420,7 @@ else:
 
       # Home Breakdown
       with c2:
-        st.markdown(f"**{g['home_team']} Starter & Offense**")
+        st.markdown(f"**{g['home_team']} Starter**")
         st.caption(f"👤 {g['home_stats']['pitcher']}")
         h1, h2, h3 = st.columns(3)
         h1.metric("ERA", f"{g['home_stats']['era']:.2f}")
@@ -400,7 +428,7 @@ else:
         h3.metric("WHIP", f"{g['home_stats']['whip']:.2f}")
 
         ho1, ho2 = st.columns(2)
-        ho1.metric("Team wOBA", f"{g['home_stats']['off_woba']:.3f}")
+        ho1.metric("wOBA", f"{g['home_stats']['off_woba']:.3f}")
         ho2.metric("K-BB%", f"{g['home_stats']['k_bb_diff']*100:.1f}%")
 
         st.progress(
@@ -410,7 +438,7 @@ else:
 
       # Editorial Paragraph Box
       with c3:
-        st.markdown("**Quantitative Editorial Breakdown**")
+        st.markdown("**Game Analysis & Advantage**")
         st.markdown(f'<div class="narrative-box">{an["narrative"]}</div>', unsafe_allow_html=True)
 
       st.divider()
