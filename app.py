@@ -18,7 +18,9 @@ try:
     # ------------------ TOP SLATE HIGHLIGHTS ------------------
     st.markdown("## 🎯 Top High-Confidence Locks Today")
 
-    high_conf_games = [g for g in slate if g["confidence"] == "HIGH"]
+    high_conf_games = [
+        g for g in slate if g.get("confidence") == "HIGH"
+    ]
 
     if high_conf_games:
       c1, c2 = st.columns(2)
@@ -26,8 +28,8 @@ try:
         col = c1 if idx % 2 == 0 else c2
         with col:
           st.success(
-              f"🔥 **{game['f5_edge']}**\n\nMatchup: {game['away_team']} @"
-              f" {game['home_team']}"
+              f"🔥 **{game.get('recommended_bet', 'Pass')}**\n\nMatchup:"
+              f" {game.get('away_team')} @ {game.get('home_team')}"
           )
     else:
       st.info(
@@ -41,35 +43,46 @@ try:
     st.markdown("## 📊 Full Slate Model Projections")
 
     for game in slate:
+      away_prob = game.get("away_prob", 50.0)
+      home_prob = game.get("home_prob", 50.0)
+
       with st.expander(
-          f"⚾ {game['away_team']} ({game['away_win_prob']}%) @ {game['home_team']} ({game['home_win_prob']}%)"
+          f"⚾ {game.get('away_team')} ({away_prob}%) @"
+          f" {game.get('home_team')} ({home_prob}%)"
       ):
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
-          st.markdown(f"### 🔵 {game['away_team']}")
-          st.write(f"**Pitcher:** {game['away_pitcher']}")
-          st.write(f"**ERA:** {game['away_era']} | **WHIP:** {game['away_whip']}")
+          st.markdown(f"### 🔵 {game.get('away_team')}")
+          st.write(f"**Pitcher:** {game.get('away_pitcher')}")
+          st.write(
+              f"**ERA:** {game.get('away_era')} | **WHIP:**"
+              f" {game.get('away_whip')}"
+          )
           st.progress(
-              int(game["away_win_prob"]),
-              text=f"Win Probability: {game['away_win_prob']}%",
+              int(away_prob), text=f"Win Probability: {away_prob}%"
           )
 
         with col2:
-          st.markdown(f"### 🔴 {game['home_team']}")
-          st.write(f"**Pitcher:** {game['home_pitcher']}")
-          st.write(f"**ERA:** {game['home_era']} | **WHIP:** {game['home_whip']}")
+          st.markdown(f"### 🔴 {game.get('home_team')}")
+          st.write(f"**Pitcher:** {game.get('home_pitcher')}")
+          st.write(
+              f"**ERA:** {game.get('home_era')} | **WHIP:**"
+              f" {game.get('home_whip')}"
+          )
           st.progress(
-              int(game["home_win_prob"]),
-              text=f"Win Probability: {game['home_win_prob']}%",
+              int(home_prob), text=f"Win Probability: {home_prob}%"
           )
 
         with col3:
           st.markdown("### 🎯 Model Outputs")
-          st.write(f"**Primary Angle:** {game['f5_edge']}")
-          st.write(f"**Model Confidence:** {game['confidence']}")
-          st.write(f"**K-Prop Target:** {game['strikeout_prop']}")
+          st.write(
+              f"**Primary Angle:** {game.get('recommended_bet', 'Pass')}"
+          )
+          st.write(
+              f"**Model Confidence:** {game.get('confidence', 'MEDIUM')}"
+          )
 
   else:
     st.warning("No games found on today's slate.")
