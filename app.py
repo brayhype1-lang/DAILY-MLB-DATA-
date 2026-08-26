@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="MLB Deep Quantitative Intelligence Engine",
     page_icon="⚾",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown(
@@ -151,100 +151,92 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-PITCHING_WEIGHT = 1.0
-OFFENSE_WEIGHT = 1.0
-BULLPEN_WEIGHT = 1.0
-WEATHER_WEIGHT = 1.0
 MIN_EDGE_THRESHOLD = 3.5
 
 # ------------------------------------------------------------------
-# 2. BALLPARK & WEATHER ENGINE
+# 2. PARK FACTORS & WEATHER ENGINE
 # ------------------------------------------------------------------
 PARK_FACTORS = {
-    "Colorado Rockies": {"run_mult": 1.28, "hr_mult": 1.15, "name": "Coors Field", "lat": 39.756, "lon": -104.994, "roof": False},
-    "Boston Red Sox": {"run_mult": 1.12, "hr_mult": 1.05, "name": "Fenway Park", "lat": 42.346, "lon": -71.097, "roof": False},
-    "Cincinnati Reds": {"run_mult": 1.08, "hr_mult": 1.22, "name": "Great American Ball Park", "lat": 39.097, "lon": -84.507, "roof": False},
-    "Chicago Cubs": {"run_mult": 1.05, "hr_mult": 1.10, "name": "Wrigley Field", "lat": 41.948, "lon": -87.655, "roof": False},
-    "San Francisco Giants": {"run_mult": 0.88, "hr_mult": 0.82, "name": "Oracle Park", "lat": 37.778, "lon": -122.389, "roof": False},
-    "Seattle Mariners": {"run_mult": 0.89, "hr_mult": 0.88, "name": "T-Mobile Park", "lat": 47.591, "lon": -122.332, "roof": True},
-    "San Diego Padres": {"run_mult": 0.91, "hr_mult": 0.89, "name": "Petco Park", "lat": 32.707, "lon": -117.157, "roof": False},
-    "New York Mets": {"run_mult": 0.92, "hr_mult": 0.90, "name": "Citi Field", "lat": 40.757, "lon": -73.845, "roof": False},
-    "Detroit Tigers": {"run_mult": 0.95, "hr_mult": 0.86, "name": "Comerica Park", "lat": 42.339, "lon": -83.048, "roof": False},
+    "Colorado Rockies": {"run_mult": 1.28, "name": "Coors Field", "lat": 39.756, "lon": -104.994, "roof": False},
+    "Boston Red Sox": {"run_mult": 1.12, "name": "Fenway Park", "lat": 42.346, "lon": -71.097, "roof": False},
+    "Cincinnati Reds": {"run_mult": 1.08, "name": "Great American Ball Park", "lat": 39.097, "lon": -84.507, "roof": False},
+    "Chicago Cubs": {"run_mult": 1.05, "name": "Wrigley Field", "lat": 41.948, "lon": -87.655, "roof": False},
+    "San Francisco Giants": {"run_mult": 0.88, "name": "Oracle Park", "lat": 37.778, "lon": -122.389, "roof": False},
+    "Seattle Mariners": {"run_mult": 0.89, "name": "T-Mobile Park", "lat": 47.591, "lon": -122.332, "roof": True},
+    "San Diego Padres": {"run_mult": 0.91, "name": "Petco Park", "lat": 32.707, "lon": -117.157, "roof": False},
+    "New York Mets": {"run_mult": 0.92, "name": "Citi Field", "lat": 40.757, "lon": -73.845, "roof": False},
+    "Detroit Tigers": {"run_mult": 0.95, "name": "Comerica Park", "lat": 42.339, "lon": -83.048, "roof": False},
 }
 
-@st.cache_data(ttl=7200)
+@st.cache_data(ttl=3600)
 def fetch_live_weather(lat: float, lon: float, is_roof: bool) -> dict:
     if is_roof:
-        return {
-            "temp_f": 72.0, "wind_mph": 0.0, "wind_dir": "Calm", 
-            "weather_desc": "Domed / Roof Closed", "impact_mult": 1.00,
-            "narrative_impact": "Neutral dome conditions neutralize exterior elements."
-        }
+        return {"weather_desc": "Domed / Roof Closed", "impact_mult": 1.00}
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph"
     try:
-        res = requests.get(url, timeout=5).json()
+        res = requests.get(url, timeout=4).json()
         curr = res.get("current_weather", {})
         temp = float(curr.get("temperature", 70.0))
         wind = float(curr.get("windspeed", 5.0))
-        return {
-            "temp_f": temp, "wind_mph": wind, "wind_dir": "Out",
-            "weather_desc": f"{temp:.0f}°F, Wind {wind:.0f}mph",
-            "impact_mult": 1.00, "narrative_impact": "Standard baseline weather conditions."
-        }
+        return {"weather_desc": f"{temp:.0f}°F, Wind {wind:.0f}mph", "impact_mult": 1.00}
     except Exception:
-        return {
-            "temp_f": 70.0, "wind_mph": 5.0, "wind_dir": "Out", 
-            "weather_desc": "70°F, 5mph Out", "impact_mult": 1.00,
-            "narrative_impact": "Standard baseline weather conditions."
-        }
+        return {"weather_desc": "70°F, 5mph Out", "impact_mult": 1.00}
 
 def get_park_factor(home_team: str):
-    default_park = {"run_mult": 1.00, "hr_mult": 1.00, "name": "Standard Ballpark", "lat": 40.0, "lon": -95.0, "roof": False}
+    default_park = {"run_mult": 1.00, "name": "Standard Ballpark", "lat": 40.0, "lon": -95.0, "roof": False}
     park = PARK_FACTORS.get(home_team, default_park)
     park["weather"] = fetch_live_weather(park["lat"], park["lon"], park["roof"])
     return park
 
 # ------------------------------------------------------------------
-# 3. LIVE SCORE & OVERRIDE ENGINE
+# 3. ROBUST NATIVE LIVE SCORE ENGINE (V7 ENDPOINT)
 # ------------------------------------------------------------------
 @st.cache_data(ttl=15)
 def fetch_live_game_state(game_pk: int) -> dict:
-    url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/feed/live"
+    """Fetches real-time game status and linescore directly from MLB v1.1 live endpoint."""
+    url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
     try:
         res = requests.get(url, timeout=5).json()
-        status_data = res.get("gameData", {}).get("status", {})
-        abstract_state = status_data.get("abstractGameState", "Preview")
-        detailed_state = status_data.get("detailedState", "Scheduled")
-        
-        linescore = res.get("liveData", {}).get("linescore", {})
-        away_runs = linescore.get("teams", {}).get("away", {}).get("runs", 0)
-        home_runs = linescore.get("teams", {}).get("home", {}).get("runs", 0)
+        game_data = res.get("gameData", {})
+        status = game_data.get("status", {})
+        abstract_state = status.get("abstractGameState", "Preview")
+        detailed_state = status.get("detailedState", "Scheduled")
 
-        if abstract_state == "Live" or "In Progress" in detailed_state:
+        linescore = res.get("liveData", {}).get("linescore", {})
+        teams_linescore = linescore.get("teams", {})
+        away_runs = teams_linescore.get("away", {}).get("runs", 0)
+        home_runs = teams_linescore.get("home", {}).get("runs", 0)
+
+        # Catch active game states
+        if abstract_state == "Live" or "In Progress" in detailed_state or detailed_state == "Warmup":
             inning = linescore.get("currentInningOrdinal", "1st")
             half = linescore.get("inningState", "Top")
             return {
                 "status": "LIVE",
                 "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning} ({away_runs}-{home_runs})</span>',
-                "away_runs": away_runs, "home_runs": home_runs
+                "away_runs": away_runs,
+                "home_runs": home_runs
             }
-        elif abstract_state == "Final":
+        elif abstract_state == "Final" or "Final" in detailed_state:
             return {
                 "status": "FINAL",
                 "badge_html": f'<span class="badge-final">🏁 FINAL ({away_runs}-{home_runs})</span>',
-                "away_runs": away_runs, "home_runs": home_runs
+                "away_runs": away_runs,
+                "home_runs": home_runs
             }
         else:
             return {
                 "status": "PREVIEW",
                 "badge_html": f'<span class="badge-upcoming">⏰ {detailed_state}</span>',
-                "away_runs": 0, "home_runs": 0
+                "away_runs": 0,
+                "home_runs": 0
             }
     except Exception:
         return {
             "status": "PREVIEW",
             "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
-            "away_runs": 0, "home_runs": 0
+            "away_runs": 0,
+            "home_runs": 0
         }
 
 def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple[float, float]:
@@ -252,12 +244,12 @@ def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple
         return 1.0 - base_home_prob, base_home_prob
 
     run_diff = live_state["home_runs"] - live_state["away_runs"]
-    prob_shift = run_diff * 0.085
+    prob_shift = run_diff * 0.085  # Dynamic weight shift per run difference
     new_home_prob = min(0.99, max(0.01, base_home_prob + prob_shift))
     return 1.0 - new_home_prob, new_home_prob
 
 # ------------------------------------------------------------------
-# 4. MODELING & DATA FETCHING
+# 4. QUANTITATIVE MODEL & SLATE LOADER
 # ------------------------------------------------------------------
 def devig_implied(odds1: int, odds2: int) -> tuple[float, float]:
     p1 = (100 / (odds1 + 100)) if odds1 > 0 else (abs(odds1) / (abs(odds1) + 100))
@@ -290,10 +282,6 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
         "home_prob": home_prob, "away_prob": away_prob, "narrative": narrative,
     }
 
-@st.cache_data(ttl=3600)
-def fetch_advanced_pitcher(person_id: int, name: str):
-    return {"pitcher": name, "era": 4.10, "whip": 1.25, "siera": 3.90, "k_bb_diff": 0.16}
-
 def load_full_slate():
     url = "https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher,team"
     try:
@@ -305,16 +293,11 @@ def load_full_slate():
         for g in dates[0].get("games", []):
             away = g.get("teams", {}).get("away", {})
             home = g.get("teams", {}).get("home", {})
-            away_p = away.get("probablePitcher", {})
-            home_p = home.get("probablePitcher", {})
             away_id = away.get("team", {}).get("id")
             home_id = home.get("team", {}).get("id")
 
-            away_stats = fetch_advanced_pitcher(away_p.get("id"), away_p.get("fullName", "Starter A"))
-            home_stats = fetch_advanced_pitcher(home_p.get("id"), home_p.get("fullName", "Starter B"))
-
-            away_stats.update({"odds": -110, "public_bets_pct": 50, "money_pct": 50, "bp_pitch_count_3d": 150})
-            home_stats.update({"odds": -110, "public_bets_pct": 50, "money_pct": 50, "bp_pitch_count_3d": 150})
+            away_stats = {"pitcher": "Starter A", "era": 4.10, "whip": 1.25, "odds": -110}
+            home_stats = {"pitcher": "Starter B", "era": 4.10, "whip": 1.25, "odds": -110}
 
             slate.append({
                 "game_id": g.get("gamePk"),
@@ -329,22 +312,20 @@ def load_full_slate():
     except Exception:
         return []
 
-def get_fatigue_badge(pitches: int) -> str:
-    return '<span style="color:#6EE7B7;font-size:0.75rem;">RESTED</span>'
-
 # ------------------------------------------------------------------
-# 5. DASHBOARD UI & MANUAL OVERRIDES
+# 5. DASHBOARD PRESENTATION
 # ------------------------------------------------------------------
-st.title("⚾ MLB Quantitative Edge Engine")
-st.caption("Multi-Factor Intelligence • Live In-Game Score Tracker")
+col_title, col_btn = st.columns([4, 1])
+with col_title:
+    st.title("⚾ MLB Quantitative Edge Engine")
+    st.caption("Multi-Factor Intelligence • Automated Live In-Game Score Tracker")
+with col_btn:
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔄 Refresh Live Scores", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
 
-# Sidebar Manual Override Panel so you can force live states instantly
-with st.sidebar:
-    st.header("⚙️ Manual Live Controls")
-    st.info("Use this if the official MLB API status feed is stuck on 'Scheduled' while games are playing.")
-    force_live_mode = st.checkbox("Force Manual Live Score Mode", value=False)
-    manual_away_runs = st.number_input("Away Runs", min_value=0, max_value=30, value=2)
-    manual_home_runs = st.number_input("Home Runs", min_value=0, max_value=30, value=4)
+st.markdown("---")
 
 slate = load_full_slate()
 
@@ -356,23 +337,15 @@ else:
         park = get_park_factor(g["home_team"])
         live_state = fetch_live_game_state(g["game_id"])
         
-        # If manual override is enabled in the sidebar, force it live!
-        if force_live_mode:
-            live_state = {
-                "status": "LIVE",
-                "badge_html": f'<span class="badge-live">🔴 MANUAL LIVE ({manual_away_runs}-{manual_home_runs})</span>',
-                "away_runs": manual_away_runs,
-                "home_runs": manual_home_runs
-            }
-
         analysis = build_editorial_breakdown(g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park)
         
+        # Automatically update win probabilities if the game is live
         if live_state["status"] == "LIVE":
             away_p, home_p = adjust_prob_for_live_state(analysis["home_prob"], live_state)
             analysis["home_prob"] = home_p
             analysis["away_prob"] = away_p
             analysis["win_prob"] = round(home_p * 100, 1)
-            analysis["narrative"] = f"🔴 <span class='highlight-txt'>LIVE UPDATE</span>: Score is {g['away_team']} {live_state['away_runs']} - {g['home_team']} {live_state['home_runs']}. Probabilities adjusted."
+            analysis["narrative"] = f"🔴 <span class='highlight-txt'>LIVE SCORE UPDATE</span>: {g['away_team']} {live_state['away_runs']} - {g['home_team']} {live_state['home_runs']}. Model win probabilities updated automatically."
 
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
 
@@ -385,9 +358,20 @@ else:
             st.markdown('<div class="matchup-card">', unsafe_allow_html=True)
             col_hdr, col_status = st.columns([3, 1])
             with col_hdr:
-                st.markdown(f"**{g['away_team']}** @ **{g['home_team']}**", unsafe_allow_html=True)
+                st.markdown(
+                    f"""
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="{g['away_logo']}" width="24" height="24" />
+                        <span style="font-size: 1.05rem; font-weight: 700;">{g['away_team']}</span>
+                        <span style="color: #64748B;">@</span>
+                        <img src="{g['home_logo']}" width="24" height="24" />
+                        <span style="font-size: 1.05rem; font-weight: 700;">{g['home_team']}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
             with col_status:
                 st.markdown(f'<div style="text-align: right;">{g["live"]["badge_html"]}</div>', unsafe_allow_html=True)
             
-            st.markdown(f'<div class="narrative-box">{an["narrative"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="narrative-box" style="margin-top: 12px;">{an["narrative"]}</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
