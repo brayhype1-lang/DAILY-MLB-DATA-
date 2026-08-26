@@ -7,7 +7,7 @@ import requests
 import streamlit as st
 
 # ------------------------------------------------------------------
-# 1. PAGE CONFIG & ANIMATED UNDERWATER STYLING
+# 1. PAGE CONFIG & ANIMATED BUBBLE UNDERWATER STYLING
 # ------------------------------------------------------------------
 st.set_page_config(
     page_title="MLB Deep Quantitative Intelligence Engine",
@@ -25,46 +25,96 @@ st.markdown(
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
-    /* Animated Deep-Sea / Underwater Background */
+    /* Deep Underwater Background */
     .stApp {
-        background: linear-gradient(135deg, #020617 0%, #061a2e 50%, #032d42 100%);
-        background-size: 400% 400%;
-        animation: underwaterDrift 18s ease infinite;
+        background: linear-gradient(135deg, #020617 0%, #041426 50%, #022338 100%);
         color: #E2E8F0;
+        overflow-x: hidden;
     }
 
-    @keyframes underwaterDrift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+    /* Floating Bubbles Animation Layer */
+    .bubbles-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .bubble {
+        position: absolute;
+        bottom: -50px;
+        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(56, 189, 248, 0.15));
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 50%;
+        box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.5), 0 0 10px rgba(56, 189, 248, 0.2);
+        animation: riseUp linear infinite;
+    }
+
+    @keyframes riseUp {
+        0% {
+            transform: translateY(0) translateX(0) scale(1);
+            opacity: 0;
+        }
+        20% {
+            opacity: 0.7;
+        }
+        80% {
+            opacity: 0.7;
+        }
+        100% {
+            transform: translateY(-110vh) translateX(30px) scale(1.1);
+            opacity: 0;
+        }
+    }
+
+    /* Randomize bubble placement & speeds */
+    .bubble:nth-child(1) { left: 5%; width: 18px; height: 18px; animation-duration: 9s; animation-delay: 0s; }
+    .bubble:nth-child(2) { left: 15%; width: 28px; height: 28px; animation-duration: 13s; animation-delay: 2s; }
+    .bubble:nth-child(3) { left: 25%; width: 12px; height: 12px; animation-duration: 7s; animation-delay: 1s; }
+    .bubble:nth-child(4) { left: 35%; width: 35px; height: 35px; animation-duration: 16s; animation-delay: 4s; }
+    .bubble:nth-child(5) { left: 45%; width: 22px; height: 22px; animation-duration: 11s; animation-delay: 3s; }
+    .bubble:nth-child(6) { left: 55%; width: 15px; height: 15px; animation-duration: 8s; animation-delay: 0.5s; }
+    .bubble:nth-child(7) { left: 65%; width: 30px; height: 30px; animation-duration: 14s; animation-delay: 5s; }
+    .bubble:nth-child(8) { left: 75%; width: 20px; height: 20px; animation-duration: 10s; animation-delay: 2.5s; }
+    .bubble:nth-child(9) { left: 85%; width: 25px; height: 25px; animation-duration: 12s; animation-delay: 1.5s; }
+    .bubble:nth-child(10) { left: 93%; width: 14px; height: 14px; animation-duration: 7.5s; animation-delay: 3.5s; }
+
+    /* Ensure app elements sit above bubbles */
+    .stMainBlockContainer {
+        position: relative;
+        z-index: 1;
     }
 
     /* Hero Header Banner Decoration */
     .hero-banner {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(3, 45, 66, 0.65) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.3);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(3, 45, 66, 0.75) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.35);
         border-radius: 16px;
         padding: 24px;
         margin-bottom: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(12px);
     }
 
     /* Enhanced Matchup Card with Glowing Edge */
     .matchup-card {
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid rgba(56, 189, 248, 0.2);
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(56, 189, 248, 0.25);
         border-radius: 16px;
         padding: 22px;
         margin-bottom: 22px;
         transition: all 0.25s ease-in-out;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
     }
     .matchup-card:hover {
-        border-color: rgba(56, 189, 248, 0.7);
-        box-shadow: 0 6px 28px rgba(56, 189, 248, 0.2);
-        background: rgba(15, 23, 42, 0.88);
+        border-color: rgba(56, 189, 248, 0.8);
+        box-shadow: 0 6px 28px rgba(56, 189, 248, 0.25);
+        background: rgba(15, 23, 42, 0.9);
         transform: translateY(-2px);
     }
 
@@ -136,7 +186,7 @@ st.markdown(
 
     /* Polished Narrative Box */
     .narrative-box {
-        background: rgba(3, 15, 29, 0.85);
+        background: rgba(3, 15, 29, 0.9);
         border: 1px solid rgba(56, 189, 248, 0.25);
         border-left: 3px solid #38BDF8;
         padding: 16px;
@@ -149,6 +199,20 @@ st.markdown(
 
     .highlight-txt { color: #F8FAFC; font-weight: 700; }
 </style>
+
+<!-- Floating Bubbles HTML Injection -->
+<div class="bubbles-container">
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+</div>
 """,
     unsafe_allow_html=True,
 )
