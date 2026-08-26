@@ -326,6 +326,30 @@ def fetch_live_game_state(game_pk: int) -> dict:
             "home_runs": 0
         }
 
+def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple[float, float]:
+    """
+    Adjusts pre-game win probabilities dynamically based on live score and inning progress.
+    """
+    if live_state["status"] != "LIVE":
+        return 1.0 - base_home_prob, base_home_prob
+
+    away_runs = live_state["away_runs"]
+    home_runs = live_state["home_runs"]
+    run_diff = home_runs - away_runs  # Positive means home team is winning
+
+    try:
+        inning_num = float(re.findall(r'\d+', live_state.get("badge_html", "1"))[0])
+    except Exception:
+        inning_num = 5.0
+
+    inning_weight = min(1.8, max(0.8, inning_num / 5.0))
+    prob_shift = run_diff * 0.085 * inning_weight
+
+    new_home_prob = min(0.99, max(0.01, base_home_prob + prob_shift))
+    new_away_prob = 1.0 - new_home_prob
+
+    return new_away_prob, new_home_prob
+
 
 # ------------------------------------------------------------------
 # 4. QUANTITATIVE MODELING ENGINE
@@ -526,10 +550,40 @@ else:
     evaluated_slate = []
     for g in slate:
         park = get_park_factor(g["home_team"])
+        live_state = fetch_live_game_state(g["game_id"])
+        
+        # Get baseline pre-game analysis
         analysis = build_editorial_breakdown(
             g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park
         )
-        live_state = fetch_live_game_state(g["game_id"])
+        
+        # Dynamically adjust probabilities and picks if the game is LIVE
+        if live_state["status"] == "LIVE":
+            away_p, home_p = adjust_prob_for_live_state(analysis["home_prob"], live_state)
+            
+            fair_away, fair_home = devig_implied(g["home_stats"]["odds"], g["away_stats"]["odds"])
+            home_edge = home_p - fair_home
+            away_edge = away_p - fair_away
+            req_edge = MIN_EDGE_THRESHOLD / 100.0
+
+            if home_edge >= req_edge:
+                target, edge, win_p = g["home_team"], home_edge * 100, home_p * 100
+            elif away_edge >= req_edge:
+                target, edge, win_p = g["away_team"], away_edge * 100, away_p * 100
+            else:
+                target, edge, win_p = None, 0.0, home_p * 100
+
+            analysis["home_prob"] = home_p
+            analysis["away_prob"] = away_p
+            analysis["target"] = target
+            analysis["edge"] = round(edge, 1)
+            analysis["win_prob"] = round(win_p, 1)
+            analysis["narrative"] = (
+                f"🔴 <span class='highlight-txt'>LIVE IN-GAME UPDATE</span>: Score is "
+                f"{g['away_team']} {live_state['away_runs']} - {g['home_team']} {live_state['home_runs']}. "
+                f"Model has dynamically shifted win probabilities to reflect current run differential."
+            )
+
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
 
     top_locks = [g for g in evaluated_slate if g["analysis"]["target"] is not None]
