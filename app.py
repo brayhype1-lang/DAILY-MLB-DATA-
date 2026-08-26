@@ -478,51 +478,52 @@ else:
             lv = g["live"]
             is_live = (lv["status"] == "LIVE")
 
-            b1 = "background: #38BDF8; box-shadow: 0 0 5px #38BDF8;" if lv.get("has_1b") else "background: rgba(255,255,255,0.12);"
-            b2 = "background: #38BDF8; box-shadow: 0 0 5px #38BDF8;" if lv.get("has_2b") else "background: rgba(255,255,255,0.12);"
-            b3 = "background: #38BDF8; box-shadow: 0 0 5px #38BDF8;" if lv.get("has_3b") else "background: rgba(255,255,255,0.12);"
-
-            live_footer_html = ""
-            if is_live:
-                live_footer_html = f"""
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.65rem; font-family: 'JetBrains Mono', monospace; background: rgba(15, 23, 42, 0.75); padding: 5px 8px; border-radius: 6px; color: #94A3B8; margin-top: 4px; border: 1px solid rgba(56, 189, 248, 0.15);">
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <span style="font-size: 0.6rem; color: #64748B;">BASE</span>
-                        <span style="display: inline-flex; gap: 3px; align-items: center;">
-                            <span style="width: 6px; height: 6px; transform: rotate(45deg); {b2}" title="2nd Base"></span>
-                            <span style="width: 6px; height: 6px; transform: rotate(45deg); {b3}" title="3rd Base"></span>
-                            <span style="width: 6px; height: 6px; transform: rotate(45deg); {b1}" title="1st Base"></span>
-                        </span>
-                    </div>
-                    <div>OUTS: <b style="color: #F8FAFC; font-size: 0.7rem;">{lv['outs']}</b></div>
-                </div>
-                """
-
-            card_html = f"""
-            <div style="background: linear-gradient(145deg, rgba(11, 22, 42, 0.95), rgba(5, 13, 26, 0.98)); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 10px; margin-bottom: 10px; font-family: 'Inter', sans-serif;">
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.65rem; font-family: 'JetBrains Mono', monospace; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 5px; margin-bottom: 6px;">
-                    <span style="color: #94A3B8; font-weight: 600;">{lv['inning_str']}</span>
-                    <span style="color: #38BDF8;">{lv['status']}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: #F8FAFC; margin-bottom: 4px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <img src="{g['away_logo']}" width="16" height="16" style="object-fit: contain;" />
-                        <span>{g['away_short']}</span>
-                    </div>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">{lv['away_runs']}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: #F8FAFC; margin-bottom: 2px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <img src="{g['home_logo']}" width="16" height="16" style="object-fit: contain;" />
-                        <span>{g['home_short']}</span>
-                    </div>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">{lv['home_runs']}</span>
-                </div>
-                {live_footer_html}
-            </div>
-            """
             with cols[idx]:
-                st.markdown(card_html, unsafe_allow_html=True)
+                with st.container(border=True):
+                    # Header: Inning & Status
+                    col_h1, col_h2 = st.columns([2, 1])
+                    with col_h1:
+                        st.caption(lv['inning_str'])
+                    with col_h2:
+                        st.markdown(f"<div style='text-align: right;'><span style='font-size:0.65rem; color:#38BDF8;'>{lv['status']}</span></div>", unsafe_allow_html=True)
+
+                    # Teams & Scores
+                    st.markdown(
+                        f"""
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: #F8FAFC; margin-bottom: 4px;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <img src="{g['away_logo']}" width="16" height="16" style="object-fit: contain;" />
+                                <span>{g['away_short']}</span>
+                            </div>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">{lv['away_runs']}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: #F8FAFC; margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <img src="{g['home_logo']}" width="16" height="16" style="object-fit: contain;" />
+                                <span>{g['home_short']}</span>
+                            </div>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">{lv['home_runs']}</span>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                    # Clean Outs & Diamond Bases Footer for Live Games
+                    if is_live:
+                        b1 = "◆" if lv.get("has_1b") else "◇"
+                        b2 = "◆" if lv.get("has_2b") else "◇"
+                        b3 = "◆" if lv.get("has_3b") else "◇"
+                        outs_count = lv.get("outs", 0)
+
+                        st.markdown(
+                            f"""
+                            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; color: #94A3B8;">
+                                <div>Bases: {b2} {b3} {b1}</div>
+                                <div>Outs: <b style="color: #F8FAFC;">{outs_count}</b></div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
 
     st.markdown("<br>### 📊 Complete Slate Breakdown & Model Winner Picks", unsafe_allow_html=True)
 
