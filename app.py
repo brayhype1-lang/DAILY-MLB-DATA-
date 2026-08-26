@@ -351,9 +351,8 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
             f"Model projects <span class='highlight-txt'>{target}</span> to secure the victory with a "
             f"{win_p:.1f}% win probability. {edge_team_name}'s starter <span class='highlight-txt'>{edge_pitcher['pitcher']}</span> "
             f"({edge_pitcher['record']}) holds a distinct advantage in expected suppression (ERA: {edge_pitcher['era']:.2f}, xwOBA: {edge_pitcher['xwoba']:.3f}) "
-            f"against <span class='highlight-txt'>{other_team_name}</span>'s lineup. Backed by recent form "
-            f"({edge_team_name} L10: {edge_pitcher['l10_record']} vs {other_team_name} L10: {other_pitcher['l10_record']}), "
-            f"quantitative metrics point toward a <span class='highlight-txt'>{target}</span> win at <span class='highlight-txt'>{park['name']}</span>."
+            f"against <span class='highlight-txt'>{other_team_name}</span>'s lineup. "
+            f"Quantitative metrics point toward a <span class='highlight-txt'>{target}</span> win at <span class='highlight-txt'>{park['name']}</span>."
         )
 
     return {
@@ -372,7 +371,9 @@ def load_full_slate():
         slate = []
         for g in dates[0].get("games", []):
             game_pk = g.get("gamePk", 12345)
-            np.random.seed(game_pk)
+            
+            # STABLE RANDOM SEED LOCK BASED STRICTLY ON GAME PK
+            rng = np.random.default_rng(game_pk)
 
             away = g.get("teams", {}).get("away", {})
             home = g.get("teams", {}).get("home", {})
@@ -382,22 +383,21 @@ def load_full_slate():
             home_id = home.get("team", {}).get("id")
 
             def create_pitcher_profile():
-                wins = int(np.random.randint(4, 14))
-                losses = int(np.random.randint(3, 10))
+                wins = int(rng.integers(4, 14))
+                losses = int(rng.integers(3, 10))
                 recent_starts = []
                 for _ in range(3):
-                    ip = float(np.random.choice([5.0, 5.2, 6.0, 6.1, 6.2, 7.0]))
-                    er = int(np.random.choice([0, 1, 2, 3, 4], p=[0.2, 0.3, 0.3, 0.15, 0.05]))
-                    hits = int(np.random.randint(3, 9))
+                    ip = float(rng.choice([5.0, 5.2, 6.0, 6.1, 6.2, 7.0]))
+                    er = int(rng.choice([0, 1, 2, 3, 4], p=[0.2, 0.3, 0.3, 0.15, 0.05]))
+                    hits = int(rng.integers(3, 9))
                     recent_starts.append({"ip": ip, "er": er, "hits": hits})
                 
                 return {
                     "pitcher": "Starter Name", "record": f"{wins}-{losses}",
-                    "era": round(float(np.random.uniform(3.00, 4.60)), 2),
-                    "xwoba": round(float(np.random.uniform(0.290, 0.340)), 3),
-                    "hard_hit_pct": round(float(np.random.uniform(33.0, 43.0)), 1),
-                    "l10_record": f"{np.random.randint(4,8)}-{10-np.random.randint(4,8)}",
-                    "vs_lhp_wrc": int(np.random.randint(90, 115)),
+                    "era": round(float(rng.uniform(3.00, 4.60)), 2),
+                    "xwoba": round(float(rng.uniform(0.290, 0.340)), 3),
+                    "hard_hit_pct": round(float(rng.uniform(33.0, 43.0)), 1),
+                    "vs_lhp_wrc": int(rng.integers(90, 115)),
                     "recent_starts": recent_starts
                 }
 
@@ -501,7 +501,6 @@ else:
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            # Direct rendering helper block inside the loop to guarantee parsing
             def render_pitcher_column(stats, pct_val):
                 st.markdown(
                     f"""
@@ -511,7 +510,6 @@ else:
                                 <span style="font-weight: 700; font-size: 0.92rem; color: #F8FAFC;">{stats['pitcher']}</span>
                                 <span style="color: #38BDF8; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; margin-left: 6px;">({stats['record']})</span>
                             </div>
-                            <span style="color: #64748B; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">L10: {stats['l10_record']}</span>
                         </div>
                         <div class="stat-pill-container">
                             <div class="stat-pill">ERA: <b>{stats['era']:.2f}</b></div>
