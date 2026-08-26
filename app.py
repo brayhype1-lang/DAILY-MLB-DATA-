@@ -1266,6 +1266,29 @@ def simulate_score_distribution(
     }
 
 
+def pregame_model_state(game: dict[str, Any]) -> dict[str, Any]:
+    """Return a score-neutral copy of a game for a locked pregame forecast.
+
+    The original game object still carries the real live/final state for the UI.
+    Only the copy passed to the prediction simulation is neutralized, preventing
+    the current score, inning, outs or occupied bases from changing the pick.
+    """
+    model_game = dict(game)
+    model_game["live"] = {
+        **(game.get("live") or {}),
+        "status": "PREVIEW",
+        "away_runs": 0,
+        "home_runs": 0,
+        "inning": 0,
+        "inning_state": "",
+        "outs": 0,
+        "has_1b": False,
+        "has_2b": False,
+        "has_3b": False,
+    }
+    return model_game
+
+
 def _data_quality(
     away_team: dict[str, Any],
     home_team: dict[str, Any],
@@ -1425,6 +1448,7 @@ def build_game_prediction(
     lineup: dict[str, Any],
     moneyline_odds: dict[str, Any] | None,
     simulations: int = 30_000,
+    lock_pregame: bool = True,
 ) -> dict[str, Any]:
     league = build_league_context(team_stats)
     away_id, home_id = game["away"]["id"], game["home"]["id"]
@@ -1479,15 +1503,17 @@ def build_game_prediction(
     home_mean = clamp(home_mean, 2.0, 8.2)
 
     total_line = moneyline_odds.get("consensus_total") if moneyline_odds else None
+    actual_status = game["live"]["status"]
+    model_game = pregame_model_state(game) if lock_pregame else game
     distribution = simulate_score_distribution(
-        game, away_mean, home_mean, simulations, total_line=total_line
+        model_game, away_mean, home_mean, simulations, total_line=total_line
     )
     record_home = _record_probability(game)
     sim_home = distribution["home_win"]
-    status = game["live"]["status"]
-    if status == "FINAL":
+    model_status = model_game["live"]["status"]
+    if model_status == "FINAL":
         home_probability = 1.0 if game["live"]["home_runs"] > game["live"]["away_runs"] else 0.0
-    elif status == "LIVE":
+    elif model_status == "LIVE":
         home_probability = 0.96 * sim_home + 0.04 * record_home
         home_probability = clamp(home_probability, 0.005, 0.995)
     else:
@@ -1523,7 +1549,7 @@ def build_game_prediction(
     )
 
     value: dict[str, Any] | None = None
-    if moneyline_odds and status == "PREVIEW":
+    if moneyline_odds and actual_status == "PREVIEW":
         candidates = []
         for side, model_probability in (("away", away_probability), ("home", home_probability)):
             market_probability = moneyline_odds[f"{side}_no_vig"]
@@ -1557,6 +1583,8 @@ def build_game_prediction(
 
     return {
         "game": game,
+        "pregame_locked": bool(lock_pregame),
+        "live_score_used": bool(not lock_pregame and actual_status in {"LIVE", "FINAL"}),
         "away_probability": away_probability,
         "home_probability": home_probability,
         "target_side": target_side,
@@ -2022,8 +2050,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-st.title("⚾ MLB Quantitative Matchup & Winner Engine")
-st.caption("Live MLB data · transparent probabilities · detailed matchup research")
 
 
 @st.cache_resource
@@ -2256,7 +2282,22 @@ def build_model_explanation(
     target_probability = prediction["target_probability"]
     status = game["live"]["status"]
 
-    if status == "FINAL":
+    if prediction.get("pregame_locked") and status in {"LIVE", "FINAL"}:
+        game_state_copy = (
+            "The live score is displayed separately" if status == "LIVE"
+            else "The final score is displayed separately"
+        )
+        summary = (
+            f"This is the locked pregame forecast: {target['name']} at "
+            f"{target_probability*100:.1f}%. {game_state_copy}, but the score, inning, outs "
+            "and occupied bases are not fed back into this prediction. The pick is retained "
+            "unchanged so its eventual win or loss can be graded honestly."
+        )
+        short_summary = (
+            f"Locked pregame pick: {target['short_name']} {target_probability*100:.1f}% · "
+            "live game state excluded."
+        )
+    elif status == "FINAL":
         summary = (
             f"This game is final. {target['name']} is shown as the result winner; the probability "
             "is no longer a pregame forecast."
@@ -2607,7 +2648,7 @@ def scoreboard_rail(predictions: list[dict[str, Any]], empty_message: str) -> st
 
 
 def render_native_score_card(prediction: dict[str, Any]) -> None:
-    """Render one compact scoreboard tile using only stable Streamlit widgets."""
+    """Render a compact sports-app score tile using stable Streamlit widgets."""
     game = prediction["game"]
     away, home = game["away"], game["home"]
     live = game["live"]
@@ -2616,24 +2657,21 @@ def render_native_score_card(prediction: dict[str, Any]) -> None:
     start_text = game_dt.astimezone(ET).strftime("%-I:%M %p ET") if game_dt else "Time TBD"
 
     if status == "LIVE":
-        status_text = f"🔴 {live.get('status_label') or 'LIVE'}"
+        outs = int(live.get("outs") or 0)
+        status_text = (
+            f"🔴 LIVE · {live.get('status_label') or 'In progress'} · "
+            f"{outs} {'out' if outs == 1 else 'outs'}"
+        )
         away_value = str(int(live.get("away_runs") or 0))
         home_value = str(int(live.get("home_runs") or 0))
-        outs = int(live.get("outs") or 0)
-        context_text = f"{outs} {'out' if outs == 1 else 'outs'} · {game['venue'].get('name') or 'Venue TBD'}"
     elif status == "FINAL":
         status_text = "✅ FINAL"
         away_value = str(int(live.get("away_runs") or 0))
         home_value = str(int(live.get("home_runs") or 0))
-        context_text = game["venue"].get("name") or "Completed"
     else:
-        status_text = f"🕒 {start_text}"
-        away_value = f"{prediction['away_probability']*100:.0f}%"
-        home_value = f"{prediction['home_probability']*100:.0f}%"
-        context_text = (
-            f"{away.get('pitcher_name') or 'Starter TBD'} vs "
-            f"{home.get('pitcher_name') or 'Starter TBD'}"
-        )
+        status_text = f"🕒 UPCOMING · {start_text}"
+        away_value = "—"
+        home_value = "—"
 
     with st.container(border=True):
         st.caption(status_text)
@@ -2645,18 +2683,16 @@ def render_native_score_card(prediction: dict[str, Any]) -> None:
                 st.image(team["logo"], width=25)
             with team_column:
                 st.markdown(f"**{team['short_name']}**")
-                st.caption(f"{int(team.get('wins') or 0)}-{int(team.get('losses') or 0)}")
             with value_column:
                 st.markdown(f"**{value}**")
 
-        st.caption(context_text)
         st.caption(
-            f"Lean: {prediction['target_name']} {prediction['target_probability']*100:.1f}% · "
-            f"Data {prediction['quality_score']}/100"
+            f"🔒 Pregame pick: {prediction['target_name']} "
+            f"{prediction['target_probability']*100:.1f}%"
         )
         analysis_is_open = st.session_state.get("open_game_pk") == game["game_pk"]
         st.button(
-            "Close details" if analysis_is_open else "Game details",
+            "Close" if analysis_is_open else "Details",
             key=f"game_center_toggle_{game['game_pk']}",
             on_click=toggle_game_analysis,
             args=(game["game_pk"],),
@@ -2676,30 +2712,32 @@ def render_score_card_grid(predictions: list[dict[str, Any]], empty_message: str
                 render_native_score_card(prediction)
 
 
-def render_game_center(predictions: list[dict[str, Any]]) -> None:
+def render_game_center(predictions: list[dict[str, Any]], selected_date: date) -> None:
     live_games = [p for p in predictions if p["game"]["live"]["status"] == "LIVE"]
     upcoming_games = [p for p in predictions if p["game"]["live"]["status"] == "PREVIEW"]
     final_games = [p for p in predictions if p["game"]["live"]["status"] == "FINAL"]
 
-    st.subheader("Today's Game Center")
+    st.subheader("Score Center")
     st.caption(
-        f"{len(predictions)} games · {len(live_games)} live · "
+        f"{selected_date.strftime('%A, %B %-d')} · {len(predictions)} games · {len(live_games)} live · "
         f"{len(upcoming_games)} upcoming · {len(final_games)} final"
     )
 
-    live_tab, upcoming_tab, final_tab = st.tabs(
-        [
-            f"🔴 Live ({len(live_games)})",
+    groups = [
+        (f"🔴 Live ({len(live_games)})", live_games, "No games are live right now."),
+        (
             f"🕒 Upcoming ({len(upcoming_games)})",
-            f"✅ Final ({len(final_games)})",
-        ]
-    )
-    with live_tab:
-        render_score_card_grid(live_games, "No games are live right now.")
-    with upcoming_tab:
-        render_score_card_grid(upcoming_games, "No upcoming games remain on this slate.")
-    with final_tab:
-        render_score_card_grid(final_games, "No games are final yet.")
+            upcoming_games,
+            "No upcoming games remain on this slate.",
+        ),
+        (f"✅ Final ({len(final_games)})", final_games, "No games are final yet."),
+    ]
+    if not live_games:
+        groups = [groups[1], groups[2], groups[0]]
+    tabs = st.tabs([label for label, _, _ in groups])
+    for tab, (_, games, empty_message) in zip(tabs, groups):
+        with tab:
+            render_score_card_grid(games, empty_message)
 
 
 def slate_insight_card(
@@ -2808,7 +2846,11 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
                 text=f"{away['short_name']} {away_pct:.1f}%  |  {home['short_name']} {home_pct:.1f}%",
             )
         with pick_column:
-            st.metric("Model lean", prediction["target_name"], f"{prediction['target_probability']*100:.1f}%")
+            st.metric(
+                "Locked pregame pick",
+                prediction["target_name"],
+                f"{prediction['target_probability']*100:.1f}%",
+            )
             st.caption(f"Fair moneyline {fmt_odds(fair_odds)}")
         with score_column:
             st.metric(score_label, score_value)
@@ -2828,6 +2870,10 @@ def render_advanced(
         f"Full analysis · {game['away']['short_name']} at {game['home']['short_name']}",
         expanded=True,
     ):
+        st.info(
+            "🔒 Pregame prediction locked — live and final scores are shown for context "
+            "but never used to change this pick."
+        )
         st.markdown("### Matchup at a glance")
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Model lean", f"{prediction['target_probability']*100:.1f}%")
@@ -3002,91 +3048,51 @@ if st.session_state.get("calendar_day") != today_et.isoformat():
 next_update = next_scheduled_update(now_et)
 odds_api_key = secret_value("ODDS_API_KEY")
 
-with st.container(border=True):
-    nav_brand, nav_date, nav_sync = st.columns([1.55, 1.35, 1.0], vertical_alignment="center")
-    with nav_brand:
-        st.markdown("#### ⚾ MLB Quant Terminal")
-        st.caption("Daily matchup intelligence")
-    with nav_date:
-        previous_day, date_picker, next_day = st.columns([0.42, 2.4, 0.42], vertical_alignment="center")
-        current_slate_date = st.session_state.get("slate_date", today_et)
-        with previous_day:
-            st.button(
-                "‹",
-                key="previous_slate_day",
-                use_container_width=True,
-                disabled=current_slate_date <= today_et,
-                on_click=shift_slate_date,
-                args=(-1,),
-                help="Previous slate",
-            )
-        with date_picker:
-            selected_date = st.date_input(
-                "Slate date",
-                min_value=today_et,
-                max_value=today_et + timedelta(days=7),
-                key="slate_date",
-                label_visibility="collapsed",
-                help="Choose today's slate or an upcoming MLB date.",
-            )
-        with next_day:
-            st.button(
-                "›",
-                key="next_slate_day",
-                use_container_width=True,
-                disabled=current_slate_date >= today_et + timedelta(days=7),
-                on_click=shift_slate_date,
-                args=(1,),
-                help="Next slate",
-            )
-    with nav_sync:
-        sync_copy, sync_button = st.columns([1.45, 0.72], vertical_alignment="center")
-        with sync_copy:
-            st.caption(f"🟢 LIVE DATA SYNC\n\n{now_et.strftime('%-I:%M:%S %p ET')}")
-        with sync_button:
-            if st.button("↻", key="top_refresh", use_container_width=True, help="Refresh all data"):
-                st.cache_data.clear()
-                st.rerun()
-
-with st.sidebar:
-    st.markdown("### ⚙️ Model Controls")
-    simulations = st.select_slider(
-        "Monte Carlo simulations",
-        options=[10_000, 20_000, 30_000, 50_000, 75_000],
-        value=30_000,
-    )
-    st.caption("Use either refresh button for the newest live score and lineup data.")
-    if st.button("🔄 Force complete data refresh", use_container_width=True):
+brand_column, sync_column, refresh_column, settings_column = st.columns(
+    [4.7, 1.25, 0.48, 0.9], vertical_alignment="center"
+)
+with brand_column:
+    st.markdown("## ⚾ MLB Quant Terminal")
+    st.caption("Live scores · locked pregame predictions · full matchup research")
+with sync_column:
+    st.caption(f"🟢 LIVE DATA\n\n{now_et.strftime('%-I:%M:%S %p ET')}")
+with refresh_column:
+    if st.button("↻", key="top_refresh", use_container_width=True, help="Refresh all data"):
         st.cache_data.clear()
         st.rerun()
-    st.markdown("---")
-    st.markdown("### Data Connections")
-    st.success("MLB + Baseball Savant enabled")
-    st.success("Game-time weather enabled")
-    if odds_api_key:
-        st.success("Sportsbook comparison enabled")
-    else:
-        st.info("Sportsbook odds disabled until an API key is added")
-    st.markdown("---")
-    st.markdown("### Scheduled Update")
-    st.success(
-        f"Daily forced refresh: {scheduled_today.strftime('%-I:%M %p ET')}"
-    )
-    st.caption(f"Next scheduled update: {next_update.strftime('%a, %b %-d at %-I:%M %p ET')}")
-    st.caption(
-        "To change the time, edit DAILY_REFRESH_HOUR_ET and "
-        "DAILY_REFRESH_MINUTE_ET near the top of app.py."
-    )
+with settings_column:
+    with st.popover("⚙️ Settings", use_container_width=True):
+        selected_date = st.date_input(
+            "Slate date",
+            min_value=today_et,
+            max_value=today_et + timedelta(days=7),
+            key="slate_date",
+            help="Choose today's slate or an upcoming MLB date.",
+        )
+        simulations = st.select_slider(
+            "Monte Carlo simulations",
+            options=[10_000, 20_000, 30_000, 50_000, 75_000],
+            value=30_000,
+        )
+        st.caption("🔒 Picks use pregame inputs. Live scores never change them.")
+        if st.button("Force complete refresh", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+        st.divider()
+        st.markdown("**Connections**")
+        st.caption("✅ MLB + Baseball Savant\n\n✅ Game-time weather")
+        if odds_api_key:
+            st.caption("✅ Sportsbook comparison")
+        else:
+            st.caption("ℹ️ Sportsbook comparison needs an API key")
+        st.markdown("**Scheduled update**")
+        st.caption(
+            f"Daily refresh {scheduled_today.strftime('%-I:%M %p ET')} · next "
+            f"{next_update.strftime('%a, %b %-d at %-I:%M %p ET')}"
+        )
 
+st.divider()
 as_of = selected_date.isoformat()
-with st.container(border=True):
-    st.caption("DAILY MLB COMMAND CENTER")
-    st.header(f"{selected_date.strftime('%A, %B %-d')} Slate")
-    st.write("Live scores · upcoming games · transparent probabilities · full matchup research")
-    st.caption(
-        f"{simulations:,} simulations per game · daily forced update "
-        f"{scheduled_today.strftime('%-I:%M %p ET')}"
-    )
 try:
     with st.spinner("Syncing the MLB slate and official game states…"):
         games = cached_schedule(as_of)
@@ -3181,6 +3187,7 @@ for game in games:
             lineup,
             odds,
             simulations=simulations,
+            lock_pregame=True,
         )
     )
 
@@ -3195,7 +3202,7 @@ predictions.sort(
 live_count = sum(p["game"]["live"]["status"] == "LIVE" for p in predictions)
 preview_count = sum(p["game"]["live"]["status"] == "PREVIEW" for p in predictions)
 final_count = sum(p["game"]["live"]["status"] == "FINAL" for p in predictions)
-render_game_center(predictions)
+render_game_center(predictions, selected_date)
 
 selected_prediction = next(
     (
@@ -3310,6 +3317,8 @@ with st.expander("Methodology, data sources and important limitations", expanded
     st.markdown(
         """
 The app uses an interpretable ensemble rather than presenting an unvalidated model as “AI.” Pregame run estimates combine season-to-date and recent team offense, opposing starter ERA/FIP/xERA, bullpen relief splits, fielding, a rolling three-year park factor, game-time weather and home-field context. A negative-binomial Monte Carlo simulation produces a score distribution; its winner probability is blended with a separate record-based estimate and shrunk toward 50% to acknowledge uncertainty.
+
+Every displayed pick is a locked pregame forecast. Live scores, inning, outs and base state are shown in the Score Center but are deliberately excluded from the prediction so a pick cannot flip after first pitch.
 
 Current limits:
 
