@@ -146,12 +146,14 @@ st.markdown(
         font-size: 0.78rem;
     }
 
-    .pitcher-box {
-        background: rgba(8, 15, 30, 0.85);
-        border: 1px solid rgba(56, 189, 248, 0.2);
-        border-radius: 12px;
+    /* Bubble Glassmorphism Pitcher Card */
+    .pitcher-bubble-card {
+        background: linear-gradient(145deg, rgba(11, 22, 42, 0.9), rgba(5, 13, 26, 0.95));
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 14px;
         padding: 14px;
         margin-bottom: 12px;
+        box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.05), 0 4px 15px rgba(0, 0, 0, 0.4);
     }
 
     .stat-pill-container {
@@ -161,34 +163,39 @@ st.markdown(
         margin: 8px 0;
     }
     .stat-pill {
-        background: rgba(15, 23, 42, 0.8);
-        border: 1px solid rgba(56, 189, 248, 0.2);
-        padding: 4px 8px;
-        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        padding: 5px 9px;
+        border-radius: 8px;
         font-size: 0.73rem;
         color: #94A3B8;
         font-family: 'JetBrains Mono', monospace !important;
     }
     .stat-pill b { color: #F8FAFC; }
 
-    .recent-table {
-        width: 100%;
+    /* Clean Bubble Rows for Recent Starts */
+    .recent-starts-header {
         font-size: 0.72rem;
-        font-family: 'JetBrains Mono', monospace;
-        border-collapse: collapse;
-        margin-top: 8px;
-    }
-    .recent-table th {
+        font-weight: 700;
         color: #64748B;
-        border-bottom: 1px solid rgba(56, 189, 248, 0.2);
-        text-align: left;
-        padding-bottom: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 10px 0 4px 2px;
     }
-    .recent-table td {
+    .start-bubble-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: 5px 10px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        font-size: 0.75rem;
+        font-family: 'JetBrains Mono', monospace;
         color: #CBD5E1;
-        padding: 3px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     }
+    .start-bubble-row span b { color: #38BDF8; }
 
     .narrative-box {
         background: rgba(3, 15, 29, 0.9);
@@ -367,7 +374,6 @@ def load_full_slate():
         slate = []
         for g in dates[0].get("games", []):
             game_pk = g.get("gamePk", 12345)
-            # STRICT DETERMINISTIC SEED LOCK: Binds stats directly to the Game ID so they never drift on refresh
             np.random.seed(game_pk)
 
             away = g.get("teams", {}).get("away", {})
@@ -497,29 +503,33 @@ else:
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            def render_pitcher_column(team_name, stats, pct_val):
+            def render_pitcher_bubble_column(team_name, stats, pct_val):
                 recent_rows = ""
                 for s in stats["recent_starts"]:
-                    recent_rows += f"<tr><td>{s['ip']} IP</td><td>{s['er']} ER</td><td>{s['hits']} H</td></tr>"
+                    recent_rows += f"""
+                    <div class="start-bubble-row">
+                        <span><b>{s['ip']}</b> IP</span>
+                        <span><b>{s['er']}</b> ER</span>
+                        <span><b>{s['hits']}</b> H</span>
+                    </div>
+                    """
                 
                 return f"""
-                <div class="pitcher-box">
+                <div class="pitcher-bubble-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <div>
-                            <span style="font-weight: 700; font-size: 0.9rem; color: #F8FAFC;">{stats['pitcher']}</span>
+                            <span style="font-weight: 700; font-size: 0.92rem; color: #F8FAFC;">{stats['pitcher']}</span>
                             <span style="color: #38BDF8; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; margin-left: 6px;">({stats['record']})</span>
                         </div>
-                        <span style="color: #64748B; font-size: 0.72rem;">L10: {stats['l10_record']}</span>
+                        <span style="color: #64748B; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">L10: {stats['l10_record']}</span>
                     </div>
                     <div class="stat-pill-container">
                         <div class="stat-pill">ERA: <b>{stats['era']:.2f}</b></div>
                         <div class="stat-pill">xwOBA: <b>{stats['xwoba']:.3f}</b></div>
                         <div class="stat-pill">HardHit%: <b>{stats['hard_hit_pct']}%</b></div>
                     </div>
-                    <table class="recent-table">
-                        <thead><tr><th>Last 3 Starts</th><th>ER</th><th>Hits</th></tr></thead>
-                        <tbody>{recent_rows}</tbody>
-                    </table>
+                    <div class="recent-starts-header">Last 3 Starts Log</div>
+                    {recent_rows}
                 </div>
                 <div style="margin-top: 6px;">
                     <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 3px; font-family: 'JetBrains Mono', monospace;">
@@ -533,10 +543,10 @@ else:
                 """
 
             with c1:
-                st.markdown(render_pitcher_column(g['away_team'], g['away_stats'], away_pct), unsafe_allow_html=True)
+                st.markdown(render_pitcher_bubble_column(g['away_team'], g['away_stats'], away_pct), unsafe_allow_html=True)
 
             with c2:
-                st.markdown(render_pitcher_column(g['home_team'], g['home_stats'], home_pct), unsafe_allow_html=True)
+                st.markdown(render_pitcher_bubble_column(g['home_team'], g['home_stats'], home_pct), unsafe_allow_html=True)
 
             with c3:
                 st.markdown("**Quantitative Rationale & Matchup Breakdown**")
