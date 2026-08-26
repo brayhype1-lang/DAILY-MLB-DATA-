@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
+import streamlit_shadcn_ui as ui
 from datetime import datetime
 
 # ------------------------------------------------------------------
@@ -33,24 +34,6 @@ st.markdown(
 
     div.element-container div.stMarkdown {
         color: #F8FAFC;
-    }
-
-    /* Style bottom action button to look like a clean card footer action */
-    [data-testid="stVerticalBlock"] [data-testid="stButton"] button {
-        width: 100%;
-        background: rgba(56, 189, 248, 0.12) !important;
-        border: 1px solid rgba(56, 189, 248, 0.3) !important;
-        color: #38BDF8 !important;
-        font-weight: 700 !important;
-        font-size: 0.8rem !important;
-        border-radius: 6px !important;
-        padding: 6px 12px !important;
-        transition: all 0.2s ease-in-out !important;
-    }
-    [data-testid="stVerticalBlock"] [data-testid="stButton"] button:hover {
-        background: rgba(56, 189, 248, 0.25) !important;
-        border-color: #38BDF8 !important;
-        color: #F8FAFC !important;
     }
 
     /* Badges */
@@ -439,57 +422,21 @@ else:
             is_live = (lv["status"] == "LIVE")
             
             with cols[idx]:
-                with st.container(border=True):
-                    # Status Badge at the top
-                    st.markdown(lv['badge_html'], unsafe_allow_html=True)
-                    
-                    # Away Team Row
-                    sc_col1, sc_col2, sc_col3 = st.columns([1, 4, 1])
-                    with sc_col1:
-                        if g["away_logo"]:
-                            st.image(g["away_logo"], width=24)
-                    with sc_col2:
-                        st.markdown(f"**{g['away_short']}**")
-                    with sc_col3:
-                        st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
-
-                    # Home Team Row
-                    sc_col4, sc_col5, sc_col6 = st.columns([1, 4, 1])
-                    with sc_col4:
-                        if g["home_logo"]:
-                            st.image(g["home_logo"], width=24)
-                    with sc_col5:
-                        st.markdown(f"**{g['home_short']}**")
-                    with sc_col6:
-                        st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['home_runs']}</span>", unsafe_allow_html=True)
-
-                    # Base runners & outs for live games
-                    if is_live:
-                        b2 = "base-active" if lv.get("has_2b") else ""
-                        b3 = "base-active" if lv.get("has_3b") else ""
-                        b1 = "base-active" if lv.get("has_1b") else ""
-                        
-                        bases_html = f"""
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 4px; padding: 2px 0;">
-                            <div style="position: relative; width: 26px; height: 26px;">
-                                <!-- 2nd Base (Top) -->
-                                <div style="position: absolute; top: 0px; left: 9px;" class="base-diamond {b2}"></div>
-                                <!-- 3rd Base (Left) -->
-                                <div style="position: absolute; top: 9px; left: 0px;" class="base-diamond {b3}"></div>
-                                <!-- 1st Base (Right) -->
-                                <div style="position: absolute; top: 9px; left: 18px;" class="base-diamond {b1}"></div>
-                            </div>
-                            <span style="color: #94A3B8; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.75rem;">OUTS: {lv.get('outs', 0)}</span>
-                        </div>
-                        """
-                        st.markdown(bases_html, unsafe_allow_html=True)
-                    else:
-                        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-
-                    # Clean full-width action button at the bottom of the card
-                    if st.button("📊 View Deep Dive", key=f"card_btn_{g['game_id']}", use_container_width=True):
-                        st.session_state["selected_game_id"] = g["game_id"]
-                        st.rerun()
+                # Construct clean card content strings for shadcn component
+                card_title = f"{g['away_short']} @ {g['home_short']}"
+                card_content = f"Score: {lv['away_runs']} - {lv['home_runs']} | {lv['inning_str']}"
+                
+                # Using shadcn clickable card widget which registers clicks on the whole box background
+                clicked = ui.card(
+                    title=card_title,
+                    content=card_content,
+                    description=lv['status'],
+                    key=f"card_{g['game_id']}"
+                )
+                
+                if clicked:
+                    st.session_state["selected_game_id"] = g["game_id"]
+                    st.rerun()
 
     st.markdown("---")
     st.markdown("### 📊 Full Slate Model Predictions & Matchups")
