@@ -12,7 +12,7 @@ st.set_page_config(
     page_title="MLB Deep Quantitative Intelligence Engine",
     page_icon="⚾",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown(
@@ -121,38 +121,21 @@ st.markdown(
     .highlight-txt { color: #F8FAFC; font-weight: 700; }
     .highlight-stat { color: #38BDF8; font-weight: 700; }
     .highlight-edge { color: #34D399; font-weight: 700; }
+    .highlight-weather { color: #F59E0B; font-weight: 700; }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
-# ------------------------------------------------------------------
-# 2. SIDEBAR CONTROLS & STRATEGY SLIDERS
-# ------------------------------------------------------------------
-st.sidebar.title("⚙️ Model Controls")
-
-# First 5 Innings Toggle
-market_type = st.sidebar.radio(
-    "Market Focus",
-    ["Full Game ML", "First 5 Innings (F5) ML"],
-    help="F5 removes bullpen volatility and isolates starting pitching vs offense.",
-)
-is_f5 = market_type == "First 5 Innings (F5) ML"
-
-st.sidebar.markdown("---")
-st.sidebar.subheader("🎛️ Strategy Sliders")
-
-# Dynamic Sliders
-pitching_weight = st.sidebar.slider("Starting Pitching Weight", 0.5, 2.0, 1.0, 0.1)
-offense_weight = st.sidebar.slider("Offense Weight", 0.5, 2.0, 1.0, 0.1)
-bullpen_weight = st.sidebar.slider(
-    "Bullpen Fatigue Weight", 0.0, 2.0, 0.0 if is_f5 else 1.0, 0.1, disabled=is_f5
-)
-weather_weight = st.sidebar.slider("Weather Impact Weight", 0.0, 2.0, 1.0, 0.1)
-min_edge_threshold = st.sidebar.slider("Min Edge Threshold (%)", 1.0, 8.0, 3.5, 0.5)
+# Fixed Quantitative Weight Defaults (Sidebar Removed)
+PITCHING_WEIGHT = 1.0
+OFFENSE_WEIGHT = 1.0
+BULLPEN_WEIGHT = 1.0
+WEATHER_WEIGHT = 1.0
+MIN_EDGE_THRESHOLD = 3.5
 
 # ------------------------------------------------------------------
-# 3. BALLPARK COORDINATES & LIVE WEATHER ENGINE
+# 2. BALLPARK COORDINATES & AUTOMATED WEATHER ENGINE
 # ------------------------------------------------------------------
 PARK_FACTORS = {
     "Colorado Rockies": {"run_mult": 1.28, "hr_mult": 1.15, "name": "Coors Field", "lat": 39.756, "lon": -104.994, "roof": False},
@@ -163,12 +146,17 @@ PARK_FACTORS = {
     "Seattle Mariners": {"run_mult": 0.89, "hr_mult": 0.88, "name": "T-Mobile Park", "lat": 47.591, "lon": -122.332, "roof": True},
     "San Diego Padres": {"run_mult": 0.91, "hr_mult": 0.89, "name": "Petco Park", "lat": 32.707, "lon": -117.157, "roof": False},
     "New York Mets": {"run_mult": 0.92, "hr_mult": 0.90, "name": "Citi Field", "lat": 40.757, "lon": -73.845, "roof": False},
+    "Detroit Tigers": {"run_mult": 0.95, "hr_mult": 0.86, "name": "Comerica Park", "lat": 42.339, "lon": -83.048, "roof": False},
 }
 
 @st.cache_data(ttl=7200)
 def fetch_live_weather(lat: float, lon: float, is_roof: bool) -> dict:
     if is_roof:
-        return {"temp_f": 72.0, "wind_mph": 0.0, "wind_dir": "Calm", "weather_desc": "Domed / Roof Closed", "impact_mult": 1.00}
+        return {
+            "temp_f": 72.0, "wind_mph": 0.0, "wind_dir": "Calm", 
+            "weather_desc": "Domed / Roof Closed", "impact_mult": 1.00,
+            "narrative_impact": "Neutral dome conditions neutralize exterior wind and temperature variances."
+        }
     
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph"
     try:
@@ -182,18 +170,45 @@ def fetch_live_weather(lat: float, lon: float, is_roof: bool) -> dict:
         dir_str = dirs[int((direction_deg + 22.5) // 45) % 8]
 
         temp_factor = 1.0 + ((temp - 70.0) * 0.0015)
-        wind_factor = 1.0 + (wind * (0.004 if "Out" in dir_str else -0.003 if "In" in dir_str else 0.0))
+        is_out = "Out" in dir_str
+        is_in = "In" in dir_str
+        
+        wind_factor = 1.0 + (wind * (0.004 if is_out else -0.003 if is_in else 0.0))
         total_impact = round(temp_factor * wind_factor, 3)
+
+        # Dynamic Weather Narrative Generation
+        notes = []
+        if temp >= 82:
+            notes.append("Warm, high-density air boosting ball carry and fly-ball velocity")
+        elif temp <= 58:
+            notes.append("Cold, dense air suppressing exit velocity and reducing run scoring potential")
+
+        if is_out and wind >= 8:
+            notes.append(f"{wind:.0f}mph wind blowing OUT favoring power hitters and over totals")
+        elif is_in and wind >= 8:
+            notes.append(f"{wind:.0f}mph wind blowing IN aiding starting pitchers and deadening deep flys")
+        elif wind >= 10:
+            notes.append(f"{wind:.0f}mph crosswind creating unpredictable ball movement in the outfield")
+
+        if not notes:
+            narrative_impact = "Standard climate conditions with minimal impact on run scoring distribution."
+        else:
+            narrative_impact = "; ".join(notes) + "."
         
         return {
             "temp_f": temp,
             "wind_mph": wind,
             "wind_dir": dir_str,
             "weather_desc": f"{temp:.0f}°F, Wind {wind:.0f}mph {dir_str}",
-            "impact_mult": total_impact
+            "impact_mult": total_impact,
+            "narrative_impact": narrative_impact
         }
     except Exception:
-        return {"temp_f": 70.0, "wind_mph": 5.0, "wind_dir": "Out", "weather_desc": "70°F, 5mph Out", "impact_mult": 1.00}
+        return {
+            "temp_f": 70.0, "wind_mph": 5.0, "wind_dir": "Out", 
+            "weather_desc": "70°F, 5mph Out", "impact_mult": 1.00,
+            "narrative_impact": "Standard baseline weather conditions."
+        }
 
 def get_park_factor(home_team: str):
     default_park = {"run_mult": 1.00, "hr_mult": 1.00, "name": "Standard Ballpark", "lat": 40.0, "lon": -95.0, "roof": False}
@@ -203,7 +218,7 @@ def get_park_factor(home_team: str):
 
 
 # ------------------------------------------------------------------
-# 4. QUANTITATIVE MODELING ENGINE
+# 3. QUANTITATIVE MODELING ENGINE
 # ------------------------------------------------------------------
 def devig_implied(odds1: int, odds2: int) -> tuple[float, float]:
     p1 = (100 / (odds1 + 100)) if odds1 > 0 else (abs(odds1) / (abs(odds1) + 100))
@@ -218,12 +233,6 @@ def build_editorial_breakdown(
     away_stats: dict,
     home_stats: dict,
     park: dict,
-    p_w: float,
-    o_w: float,
-    b_w: float,
-    w_w: float,
-    edge_thresh: float,
-    is_f5_mode: bool,
 ) -> dict:
     away_p_score = ((away_stats["siera"] * 0.35) + (away_stats["whip"] * 1.2) - (away_stats["k_bb_diff"] * 3.5))
     home_p_score = ((home_stats["siera"] * 0.35) + (home_stats["whip"] * 1.2) - (home_stats["k_bb_diff"] * 3.5))
@@ -231,17 +240,15 @@ def build_editorial_breakdown(
     away_off_score = (away_stats["off_woba"] * 1.5) + (away_stats["off_iso"] * 1.2)
     home_off_score = (home_stats["off_woba"] * 1.5) + (home_stats["off_iso"] * 1.2)
 
-    # Bullpen Fatigue Penalty (Zeroed out in F5)
-    away_bp_penalty = 0.0 if is_f5_mode else (away_stats["bp_pitch_count_3d"] * 0.0012 * b_w)
-    home_bp_penalty = 0.0 if is_f5_mode else (home_stats["bp_pitch_count_3d"] * 0.0012 * b_w)
+    away_bp_penalty = away_stats["bp_pitch_count_3d"] * 0.0012 * BULLPEN_WEIGHT
+    home_bp_penalty = home_stats["bp_pitch_count_3d"] * 0.0012 * BULLPEN_WEIGHT
 
-    # Weather & Park Factor Adjustments
-    weather_impact = (park["weather"]["impact_mult"] - 1.00) * w_w
+    weather_impact = (park["weather"]["impact_mult"] - 1.00) * WEATHER_WEIGHT
     park_impact = ((park["run_mult"] - 1.00) + weather_impact) * 0.08
     base_home_prob = 0.535 + park_impact
     
-    pitching_delta = (away_p_score - home_p_score) * (0.16 if is_f5_mode else 0.11) * p_w
-    offense_delta = (home_off_score - away_off_score) * 0.08 * o_w
+    pitching_delta = (away_p_score - home_p_score) * 0.11 * PITCHING_WEIGHT
+    offense_delta = (home_off_score - away_off_score) * 0.08 * OFFENSE_WEIGHT
     bullpen_delta = away_bp_penalty - home_bp_penalty
 
     home_prob = min(0.85, max(0.15, base_home_prob + pitching_delta + offense_delta + bullpen_delta))
@@ -251,7 +258,7 @@ def build_editorial_breakdown(
     home_edge = home_prob - fair_home
     away_edge = away_prob - fair_away
 
-    req_edge = edge_thresh / 100.0
+    req_edge = MIN_EDGE_THRESHOLD / 100.0
 
     if home_edge >= req_edge:
         target, edge, win_p = home_team, home_edge * 100, home_prob * 100
@@ -267,15 +274,15 @@ def build_editorial_breakdown(
         opp_starter, opp_whip, opp_era, opp_siera = away_stats['pitcher'], away_stats['whip'], away_stats['era'], away_stats['siera']
 
     selected_team = target if target else home_team
-    mkt_label = "F5 ML" if is_f5_mode else "Full Game ML"
 
     narrative = (
-        f"Evaluating <span class='highlight-txt'>{mkt_label}</span>: Model projects advantage for "
+        f"Evaluating <span class='highlight-txt'>Full Game ML</span>: Model projects edge for "
         f"<span class='highlight-txt'>{selected_team}</span> (<span class='highlight-edge'>{win_p:.1f}% win prob</span>). "
         f"Starter <span class='highlight-txt'>{favored_starter}</span> commands a <span class='highlight-stat'>{f_siera:.2f} SIERA</span> "
-        f"and <span class='highlight-stat'>{f_whip:.2f} WHIP</span> against <span class='highlight-txt'>{opp_starter}</span> "
-        f"({opp_era:.2f} ERA / {opp_siera:.2f} SIERA). Venue conditions at <span class='highlight-txt'>{park['name']}</span>: "
-        f"<span class='highlight-stat'>{park['weather']['weather_desc']}</span>."
+        f"and <span class='highlight-stat'>{f_whip:.2f} WHIP</span> opposing <span class='highlight-txt'>{opp_starter}</span> "
+        f"({opp_era:.2f} ERA / {opp_siera:.2f} SIERA). "
+        f"<strong>Weather Factor:</strong> <span class='highlight-weather'>{park['weather']['weather_desc']}</span>. "
+        f"<em>{park['weather']['narrative_impact']}</em>"
     )
 
     return {
@@ -289,7 +296,7 @@ def build_editorial_breakdown(
 
 
 # ------------------------------------------------------------------
-# 5. DATA FETCHING & MARKET ENRICHMENT
+# 4. DATA FETCHING & MARKET ENRICHMENT
 # ------------------------------------------------------------------
 @st.cache_data(ttl=3600)
 def fetch_advanced_pitcher(person_id: int, name: str):
@@ -375,10 +382,10 @@ def get_fatigue_badge(pitches: int) -> str:
 
 
 # ------------------------------------------------------------------
-# 6. DASHBOARD PRESENTATION
+# 5. DASHBOARD PRESENTATION
 # ------------------------------------------------------------------
 st.title("⚾ MLB Quantitative Edge Engine")
-st.caption("Multi-Factor Intelligence • Live Weather & Wind • Betting Splits • Bullpen Fatigue")
+st.caption("Multi-Factor Intelligence • Automated Live Weather Analysis • Bullpen Fatigue & Market Splits")
 
 # Model Calibration Tracker
 st.markdown("### 📈 Model Calibration & Hit Rate Tracker")
@@ -403,9 +410,7 @@ else:
     for g in slate:
         park = get_park_factor(g["home_team"])
         analysis = build_editorial_breakdown(
-            g["away_team"], g["home_team"], g["away_stats"], g["home_stats"],
-            park, pitching_weight, offense_weight, bullpen_weight, weather_weight,
-            min_edge_threshold, is_f5
+            g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park
         )
         evaluated_slate.append({**g, "park": park, "analysis": analysis})
 
@@ -413,7 +418,7 @@ else:
     top_locks = sorted(top_locks, key=lambda x: x["analysis"]["edge"], reverse=True)
 
     # FEATURED VALUE PICKS
-    st.markdown(f"### 🔒 Featured Value Selections ({'F5 ML' if is_f5 else 'Full Game ML'})")
+    st.markdown("### 🔒 Featured Value Selections")
 
     if top_locks:
         for g in top_locks[:3]:
@@ -428,7 +433,7 @@ else:
                     <div style="display: flex; align-items: center; gap: 16px;">
                         <img src="{target_logo}" width="56" height="56" />
                         <div>
-                            <span style="color: #38BDF8; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;">FEATURED {'F5' if is_f5 else 'FULL GAME'} PICK</span>
+                            <span style="color: #38BDF8; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;">FEATURED FULL GAME PICK</span>
                             <h2 style="margin: 0; color: #FFFFFF; font-size: 1.5rem; font-weight: 800;">{an['target']} Moneyline</h2>
                             <span style="color: #64748B; font-size: 0.82rem;">{g['park']['name']} • 🌤️ {g['park']['weather']['weather_desc']}</span>
                         </div>
@@ -448,7 +453,7 @@ else:
                 unsafe_allow_html=True,
             )
     else:
-        st.info(f"No games currently meet the strict +{min_edge_threshold}% threshold based on current slider settings.")
+        st.info("No games currently meet the model's target threshold.")
 
     st.markdown("---")
     st.markdown("### 📊 Daily Matchup Analysis")
@@ -495,8 +500,7 @@ else:
                 m2.metric("SIERA", f"{g['away_stats']['siera']:.2f}")
                 m3.metric("WHIP", f"{g['away_stats']['whip']:.2f}")
 
-                if not is_f5:
-                    st.markdown(f"**Bullpen Status:** {get_fatigue_badge(g['away_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
+                st.markdown(f"**Bullpen Status:** {get_fatigue_badge(g['away_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
                 st.caption(f"🎰 Market Splits: {g['away_stats']['public_bets_pct']}% Bets | {g['away_stats']['money_pct']}% Money")
 
                 st.progress(int(an["away_prob"] * 100), text=f"Win Prob: {an['away_prob']*100:.1f}%")
@@ -510,15 +514,14 @@ else:
                 h2.metric("SIERA", f"{g['home_stats']['siera']:.2f}")
                 h3.metric("WHIP", f"{g['home_stats']['whip']:.2f}")
 
-                if not is_f5:
-                    st.markdown(f"**Bullpen Status:** {get_fatigue_badge(g['home_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
+                st.markdown(f"**Bullpen Status:** {get_fatigue_badge(g['home_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
                 st.caption(f"🎰 Market Splits: {g['home_stats']['public_bets_pct']}% Bets | {g['home_stats']['money_pct']}% Money")
 
                 st.progress(int(an["home_prob"] * 100), text=f"Win Prob: {an['home_prob']*100:.1f}%")
 
-            # Narrative Column
+            # Narrative Column with Weather Impact Explicitly Mentioned
             with c3:
-                st.markdown(f"**Matchup Breakdown ({'F5' if is_f5 else 'Full Game'})**")
+                st.markdown("**Matchup Breakdown & Weather Context**")
                 st.markdown(f'<div class="narrative-box">{an["narrative"]}</div>', unsafe_allow_html=True)
 
             st.divider()
