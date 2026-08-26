@@ -77,30 +77,30 @@ st.markdown(
         backdrop-filter: blur(12px);
     }
 
-    /* Scoreboard Grid Card Button Wrapper */
+    /* Scoreboard Grid Card Button Wrapper override */
     .stButton button {
         width: 100%;
-        background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(11, 18, 32, 0.95) 100%) !important;
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
         border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 18px !important;
+        border-radius: 16px !important;
         color: #F8FAFC !important;
-        padding: 16px !important;
-        text-align: left !important;
+        padding: 12px 14px !important;
         transition: all 0.2s ease-in-out !important;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
     }
     .stButton button:hover {
         border-color: #38BDF8 !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 12px 30px rgba(56, 189, 248, 0.25) !important;
+        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.3) !important;
+        background: linear-gradient(145deg, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
     }
 
     /* Visual Diamond HUD */
     .diamond-wrapper {
         position: relative;
-        width: 60px;
-        height: 60px;
-        margin: 0 auto;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
     }
     .diamond-wrapper-lg {
         position: relative;
@@ -110,12 +110,12 @@ st.markdown(
     }
     .base {
         position: absolute;
-        width: 14px;
-        height: 14px;
+        width: 8px;
+        height: 8px;
         background: rgba(51, 65, 85, 0.8);
         border: 1px solid rgba(100, 116, 139, 0.8);
         transform: rotate(45deg);
-        border-radius: 2px;
+        border-radius: 1px;
     }
     .base-lg {
         position: absolute;
@@ -129,11 +129,11 @@ st.markdown(
     .base.active, .base-lg.active {
         background: #38BDF8;
         border-color: #7dd3fc;
-        box-shadow: 0 0 12px #38BDF8;
+        box-shadow: 0 0 10px #38BDF8;
     }
-    .base-2b { top: 2px; left: 23px; }
-    .base-3b { top: 23px; left: 2px; }
-    .base-1b { top: 23px; right: 2px; }
+    .base-2b { top: 1px; left: 14px; }
+    .base-3b { top: 14px; left: 1px; }
+    .base-1b { top: 14px; right: 1px; }
 
     .base-lg-2b { top: 4px; left: 35px; }
     .base-lg-3b { top: 35px; left: 4px; }
@@ -145,31 +145,31 @@ st.markdown(
         border: 1px solid rgba(239, 68, 68, 0.5);
         color: #FCA5A5;
         font-weight: 800;
-        padding: 4px 12px;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.75rem;
+        font-size: 0.68rem;
         font-family: 'JetBrains Mono', monospace;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
     }
     .badge-final {
         background: rgba(51, 65, 85, 0.4);
         border: 1px solid rgba(100, 116, 139, 0.4);
         color: #94A3B8;
         font-weight: 700;
-        padding: 4px 12px;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.75rem;
+        font-size: 0.68rem;
     }
     .badge-upcoming {
         background: rgba(30, 41, 59, 0.4);
         border: 1px solid rgba(51, 65, 85, 0.4);
         color: #64748B;
         font-weight: 600;
-        padding: 4px 12px;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.75rem;
+        font-size: 0.68rem;
     }
 
     .big-score {
@@ -606,13 +606,47 @@ else:
         
         for idx, g in enumerate(row_games):
             lv = g["live"]
+            is_live_card = (lv["status"] == "LIVE")
+            
+            b1 = "active" if lv.get("has_1b") else ""
+            b2 = "active" if lv.get("has_2b") else ""
+            b3 = "active" if lv.get("has_3b") else ""
+
+            diamond_html = ""
+            if is_live_card:
+                diamond_html = f"""
+                <div class="diamond-wrapper">
+                    <div class="base base-2b {b2}"></div>
+                    <div class="base base-3b {b3}"></div>
+                    <div class="base base-1b {b1}"></div>
+                </div>
+                """
+
+            card_inner_html = f"""
+            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    {lv['badge_html']}
+                    {diamond_html}
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="{g['away_logo']}" width="22" height="22" />
+                        <span style="font-weight: 700; font-size: 0.88rem;">{g['away_short']}</span>
+                    </div>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['away_runs']}</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img src="{g['home_logo']}" width="22" height="22" />
+                        <span style="font-weight: 700; font-size: 0.88rem;">{g['home_short']}</span>
+                    </div>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['home_runs']}</span>
+                </div>
+            </div>
+            """
 
             with cols[idx]:
-                card_label = f"""
-{lv['inning_str']} - {lv['status']}
-{g['away_short']} ({lv['away_runs']}) @ {g['home_short']} ({lv['home_runs']})
-"""
-                if st.button(card_label, key=f"card_{g['game_id']}"):
+                if st.button(card_inner_html, key=f"card_{g['game_id']}", use_container_width=True):
                     st.session_state["selected_game_id"] = g["game_id"]
                     st.rerun()
 
