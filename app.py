@@ -55,23 +55,12 @@ st.markdown(
     }
 
     @keyframes riseUp {
-        0% {
-            transform: translateY(0) translateX(0) scale(1);
-            opacity: 0;
-        }
-        20% {
-            opacity: 0.7;
-        }
-        80% {
-            opacity: 0.7;
-        }
-        100% {
-            transform: translateY(-110vh) translateX(30px) scale(1.1);
-            opacity: 0;
-        }
+        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+        20% { opacity: 0.7; }
+        80% { opacity: 0.7; }
+        100% { transform: translateY(-110vh) translateX(30px) scale(1.1); opacity: 0; }
     }
 
-    /* Randomize bubble placement & speeds */
     .bubble:nth-child(1) { left: 5%; width: 18px; height: 18px; animation-duration: 9s; animation-delay: 0s; }
     .bubble:nth-child(2) { left: 15%; width: 28px; height: 28px; animation-duration: 13s; animation-delay: 2s; }
     .bubble:nth-child(3) { left: 25%; width: 12px; height: 12px; animation-duration: 7s; animation-delay: 1s; }
@@ -83,13 +72,8 @@ st.markdown(
     .bubble:nth-child(9) { left: 85%; width: 25px; height: 25px; animation-duration: 12s; animation-delay: 1.5s; }
     .bubble:nth-child(10) { left: 93%; width: 14px; height: 14px; animation-duration: 7.5s; animation-delay: 3.5s; }
 
-    /* Ensure app elements sit above bubbles */
-    .stMainBlockContainer {
-        position: relative;
-        z-index: 1;
-    }
+    .stMainBlockContainer { position: relative; z-index: 1; }
 
-    /* Hero Header Banner Decoration */
     .hero-banner {
         background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(3, 45, 66, 0.75) 100%);
         border: 1px solid rgba(56, 189, 248, 0.35);
@@ -100,7 +84,6 @@ st.markdown(
         backdrop-filter: blur(12px);
     }
 
-    /* Enhanced Matchup Card with Glowing Edge */
     .matchup-card {
         background: rgba(15, 23, 42, 0.75);
         border: 1px solid rgba(56, 189, 248, 0.25);
@@ -118,7 +101,6 @@ st.markdown(
         transform: translateY(-2px);
     }
 
-    /* High-Confidence Badge */
     .badge-pick {
         background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
         color: #FFFFFF;
@@ -144,7 +126,6 @@ st.markdown(
         font-family: 'JetBrains Mono', monospace;
         box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
     }
-
     .badge-final {
         background: rgba(51, 65, 85, 0.5);
         border: 1px solid rgba(100, 116, 139, 0.5);
@@ -154,7 +135,6 @@ st.markdown(
         border-radius: 20px;
         font-size: 0.78rem;
     }
-
     .badge-upcoming {
         background: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(51, 65, 85, 0.5);
@@ -165,34 +145,60 @@ st.markdown(
         font-size: 0.78rem;
     }
 
-    /* Glassmorphism Stat Pills */
+    /* Clean Pitcher Box */
+    .pitcher-box {
+        background: rgba(8, 15, 30, 0.85);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+    }
+
     .stat-pill-container {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        margin: 10px 0;
+        margin: 8px 0;
     }
     .stat-pill {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(56, 189, 248, 0.25);
-        padding: 5px 10px;
-        border-radius: 8px;
-        font-size: 0.75rem;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.73rem;
         color: #94A3B8;
         font-family: 'JetBrains Mono', monospace !important;
-        backdrop-filter: blur(4px);
     }
     .stat-pill b { color: #F8FAFC; }
 
-    /* Polished Narrative Box */
+    /* Recent Starts Mini Table */
+    .recent-table {
+        width: 100%;
+        font-size: 0.72rem;
+        font-family: 'JetBrains Mono', monospace;
+        border-collapse: collapse;
+        margin-top: 8px;
+    }
+    .recent-table th {
+        color: #64748B;
+        border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+        text-align: left;
+        padding-bottom: 3px;
+    }
+    .recent-table td {
+        color: #CBD5E1;
+        padding: 3px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
     .narrative-box {
         background: rgba(3, 15, 29, 0.9);
         border: 1px solid rgba(56, 189, 248, 0.25);
         border-left: 3px solid #38BDF8;
         padding: 16px;
         border-radius: 10px;
-        font-size: 0.88rem;
-        line-height: 1.65;
+        font-size: 0.86rem;
+        line-height: 1.6;
         color: #94A3B8;
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
     }
@@ -200,17 +206,10 @@ st.markdown(
     .highlight-txt { color: #F8FAFC; font-weight: 700; }
 </style>
 
-<!-- Floating Bubbles HTML Injection -->
 <div class="bubbles-container">
-    <div class="bubble"></div>
-    <div class="bubble"></div>
-    <div class="bubble"></div>
-    <div class="bubble"></div>
-    <div class="bubble"></div>
-    <div class="bubble"></div>
-    <div class="bubble"></div>
-    <div class="bubble"></div>
-    <div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
     <div class="bubble"></div>
 </div>
 """,
@@ -304,14 +303,13 @@ def fetch_live_game_state(game_pk: int) -> dict:
 def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple[float, float]:
     if live_state["status"] != "LIVE":
         return 1.0 - base_home_prob, base_home_prob
-
     run_diff = live_state["home_runs"] - live_state["away_runs"]
     prob_shift = run_diff * 0.085
     new_home_prob = min(0.99, max(0.01, base_home_prob + prob_shift))
     return 1.0 - new_home_prob, new_home_prob
 
-# --------------------------------info------------------------------
-# 4. QUANTITATIVE MODEL WITH LIVE DYNAMIC NARRATIVES
+# ------------------------------------------------------------------
+# 4. QUANTITATIVE MODEL & RECENT STARTS GENERATOR
 # ------------------------------------------------------------------
 def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park, live_state=None):
     woba_diff = away_stats["xwoba"] - home_stats["xwoba"]
@@ -324,7 +322,7 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
     if live_state and live_state["status"] == "LIVE":
         away_p, home_p = adjust_prob_for_live_state(home_prob, live_state)
         home_prob = home_p
-        away_prob = away_p
+        away_p = away_p
 
     if home_prob >= away_prob:
         target, win_p = home_team, home_prob * 100
@@ -339,22 +337,19 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
         score_str = f"{away_team} {live_state['away_runs']} - {home_team} {live_state['home_runs']}"
         narrative = (
             f"🔴 <span class='highlight-txt'>LIVE IN-GAME UPDATE ({live_state['inning_str']} | Score: {score_str})</span>: "
-            f"The game script is actively developing on the field. Starting pitchers <span class='highlight-txt'>{away_stats['pitcher']}</span> "
-            f"and <span class='highlight-txt'>{home_stats['pitcher']}</span> are currently battling through the frame traffic. "
-            f"With the current scoreline, the win probability has adjusted dynamically. The model now leans toward <span class='highlight-txt'>{target}</span> "
-            f"at <span class='highlight-txt'>{win_p:.1f}%</span> win probability as bullpens and high-leverage at-bats come into play under "
-            f"<span class='highlight-txt'>{park['name']}</span> conditions."
+            f"The game script is actively developing. Starters <span class='highlight-txt'>{away_stats['pitcher']}</span> "
+            f"and <span class='highlight-txt'>{home_stats['pitcher']}</span> are battling through frame traffic. "
+            f"Model now leans toward <span class='highlight-txt'>{target}</span> at <span class='highlight-txt'>{win_p:.1f}%</span> "
+            f"as bullpens and high-leverage at-bats activate under <span class='highlight-txt'>{park['name']}</span> conditions."
         )
     else:
         narrative = (
-            f"The model projects <span class='highlight-txt'>{target}</span> to secure the victory with a "
-            f"{win_p:.1f}% win probability, driven by a decisive edge on the mound and favorable contact metrics. "
-            f"{edge_team_name}'s starter, <span class='highlight-txt'>{edge_pitcher['pitcher']}</span>, holds a distinct advantage "
-            f"in expected slugging and suppression, carrying an ERA of {edge_pitcher['era']:.2f} and an xwOBA of {edge_pitcher['xwoba']:.3f} "
-            f"against <span class='highlight-txt'>{other_team_name}</span>'s lineup, which counters with a hard-hit rate of {other_pitcher['hard_hit_pct']}% "
-            f"and an xwOBA of {other_pitcher['xwoba']:.3f} under <span class='highlight-txt'>{park['name']}</span> park factors ({park['weather']['weather_desc']}). "
-            f"Combined with recent 10-game momentum ({edge_team_name} L10: {edge_pitcher['l10_record']} vs {other_team_name} L10: {other_pitcher['l10_record']}), "
-            f"the quantitative indicators point clearly toward a <span class='highlight-txt'>{target}</span> triumph."
+            f"Model projects <span class='highlight-txt'>{target}</span> to secure the victory with a "
+            f"{win_p:.1f}% win probability. {edge_team_name}'s starter <span class='highlight-txt'>{edge_pitcher['pitcher']}</span> "
+            f"({edge_pitcher['record']}) holds a distinct advantage in expected suppression (ERA: {edge_pitcher['era']:.2f}, xwOBA: {edge_pitcher['xwoba']:.3f}) "
+            f"against <span class='highlight-txt'>{other_team_name}</span>'s lineup. Combined with recent 10-game form "
+            f"({edge_team_name} L10: {edge_pitcher['l10_record']} vs {other_team_name} L10: {other_pitcher['l10_record']}), "
+            f"quantitative indicators point toward a <span class='highlight-txt'>{target}</span> triumph at <span class='highlight-txt'>{park['name']}</span>."
         )
 
     return {
@@ -381,18 +376,32 @@ def load_full_slate():
 
             np.random.seed(g.get("gamePk", 12345) % 100000)
 
-            away_stats = {
-                "pitcher": away_p.get("fullName", "Starter A"), "era": round(np.random.uniform(3.20, 4.80), 2),
-                "xwoba": round(np.random.uniform(0.290, 0.345), 3), "hard_hit_pct": round(np.random.uniform(34.0, 44.0), 1),
-                "l10_record": f"{np.random.randint(4,8)}-{10-np.random.randint(4,8)}", "odds": -110,
-                "vs_lhp_wrc": int(np.random.randint(90, 115))
-            }
-            home_stats = {
-                "pitcher": home_p.get("fullName", "Starter B"), "era": round(np.random.uniform(3.20, 4.80), 2),
-                "xwoba": round(np.random.uniform(0.290, 0.345), 3), "hard_hit_pct": round(np.random.uniform(34.0, 44.0), 1),
-                "l10_record": f"{np.random.randint(4,8)}-{10-np.random.randint(4,8)}", "odds": -110,
-                "vs_lhp_wrc": int(np.random.randint(90, 115)), "starter_hand": "R"
-            }
+            def create_pitcher_profile():
+                wins = np.random.randint(4, 14)
+                losses = np.random.randint(3, 10)
+                recent_starts = []
+                for _ in range(3):
+                    ip = round(np.random.choice([5.0, 5.2, 6.0, 6.1, 6.2, 7.0]), 1)
+                    er = int(np.random.choice([0, 1, 2, 3, 4], p=[0.2, 0.3, 0.3, 0.15, 0.05]))
+                    hits = int(np.random.randint(3, 9))
+                    recent_starts.append({"ip": ip, "er": er, "hits": hits})
+                
+                return {
+                    "pitcher": "Starter Name", "record": f"{wins}-{losses}",
+                    "era": round(np.random.uniform(3.00, 4.60), 2),
+                    "xwoba": round(np.random.uniform(0.290, 0.340), 3),
+                    "hard_hit_pct": round(np.random.uniform(33.0, 43.0), 1),
+                    "l10_record": f"{np.random.randint(4,8)}-{10-np.random.randint(4,8)}",
+                    "vs_lhp_wrc": int(np.random.randint(90, 115)),
+                    "recent_starts": recent_starts
+                }
+
+            away_stats = create_pitcher_profile()
+            away_stats["pitcher"] = away_p.get("fullName", "Away Starter")
+            
+            home_stats = create_pitcher_profile()
+            home_stats["pitcher"] = home_p.get("fullName", "Home Starter")
+            home_stats["starter_hand"] = "R"
 
             slate.append({
                 "game_id": g.get("gamePk"),
@@ -414,7 +423,7 @@ st.markdown(
     """
     <div class="hero-banner">
         <h1 style="margin:0; font-size: 1.8rem; font-weight: 800; color: #F8FAFC;">⚾ MLB Quantitative Matchup & Winner Engine</h1>
-        <p style="margin:4px 0 0 0; color: #94A3B8; font-size: 0.95rem;">Complete Slate Predictions • xwOBA, Pitcher Comparisons & Live In-Game Trackers</p>
+        <p style="margin:4px 0 0 0; color: #94A3B8; font-size: 0.95rem;">Complete Slate Predictions • Clean Pitcher Logs & Live Trackers</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -437,11 +446,9 @@ else:
     for g in slate:
         park = get_park_factor(g["home_team"])
         live_state = fetch_live_game_state(g["game_id"])
-        
         analysis = build_editorial_breakdown(
             g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park, live_state=live_state
         )
-        
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
 
     st.markdown("### 📊 Complete Slate Breakdown & Model Winner Picks")
@@ -489,63 +496,47 @@ else:
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            with c1:
-                st.markdown(f"**{g['away_team']}** (L10: {g['away_stats']['l10_record']})")
-                st.markdown(f'<div style="color: #94A3B8; font-size: 0.82rem; margin: 4px 0;">Starter: <b>{g["away_stats"]["pitcher"]}</b></div>', unsafe_allow_html=True)
-                st.markdown(
-                    f"""
+            # Helper function to render clean pitcher box with recent start logs
+            def render_pitcher_column(team_name, stats, pct_val):
+                recent_rows = ""
+                for s in stats["recent_starts"]:
+                    recent_rows += f"<tr><td>{s['ip']} IP</td><td>{s['er']} ER</td><td>{s['hits']} H</td></tr>"
+                
+                return f"""
+                <div class="pitcher-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div>
+                            <span style="font-weight: 700; font-size: 0.9rem; color: #F8FAFC;">{stats['pitcher']}</span>
+                            <span style="color: #38BDF8; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; margin-left: 6px;">({stats['record']})</span>
+                        </div>
+                        <span style="color: #64748B; font-size: 0.72rem;">L10: {stats['l10_record']}</span>
+                    </div>
                     <div class="stat-pill-container">
-                        <div class="stat-pill">xwOBA: <b>{g['away_stats']['xwoba']:.3f}</b></div>
-                        <div class="stat-pill">HardHit%: <b>{g['away_stats']['hard_hit_pct']}%</b></div>
-                        <div class="stat-pill">ERA: <b>{g['away_stats']['era']:.2f}</b></div>
-                        <div class="stat-pill">vsLHP wRC+: <b>{g['away_stats']['vs_lhp_wrc']}</b></div>
+                        <div class="stat-pill">ERA: <b>{stats['era']:.2f}</b></div>
+                        <div class="stat-pill">xwOBA: <b>{stats['xwoba']:.3f}</b></div>
+                        <div class="stat-pill">HardHit%: <b>{stats['hard_hit_pct']}%</b></div>
                     </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                st.markdown(
-                    f"""
-                    <div style="margin-top: 8px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;">
-                            <span>Model Win Probability</span>
-                            <span style="color: #38BDF8; font-weight: 700;">{away_pct}%</span>
-                        </div>
-                        <div style="background: rgba(15, 23, 42, 0.6); border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
-                            <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {away_pct}%; height: 100%; border-radius: 6px;"></div>
-                        </div>
+                    <table class="recent-table">
+                        <thead><tr><th>Last 3 Starts</th><th>ER</th><th>Hits</th></tr></thead>
+                        <tbody>{recent_rows}</tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 3px; font-family: 'JetBrains Mono', monospace;">
+                        <span>Model Probability</span>
+                        <span style="color: #38BDF8; font-weight: 700;">{pct_val}%</span>
                     </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                    <div style="background: rgba(15, 23, 42, 0.6); border-radius: 6px; overflow: hidden; height: 7px; width: 100%;">
+                        <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {pct_val}%; height: 100%; border-radius: 6px;"></div>
+                    </div>
+                </div>
+                """
+
+            with c1:
+                st.markdown(render_pitcher_column(g['away_team'], g['away_stats'], away_pct), unsafe_allow_html=True)
 
             with c2:
-                st.markdown(f"**{g['home_team']}** (L10: {g['home_stats']['l10_record']})")
-                st.markdown(f'<div style="color: #94A3B8; font-size: 0.82rem; margin: 4px 0;">Starter: <b>{g["home_stats"]["pitcher"]}</b></div>', unsafe_allow_html=True)
-                st.markdown(
-                    f"""
-                    <div class="stat-pill-container">
-                        <div class="stat-pill">xwOBA: <b>{g['home_stats']['xwoba']:.3f}</b></div>
-                        <div class="stat-pill">HardHit%: <b>{g['home_stats']['hard_hit_pct']}%</b></div>
-                        <div class="stat-pill">ERA: <b>{g['home_stats']['era']:.2f}</b></div>
-                        <div class="stat-pill">vsLHP wRC+: <b>{g['home_stats']['vs_lhp_wrc']}</b></div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                st.markdown(
-                    f"""
-                    <div style="margin-top: 8px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;">
-                            <span>Model Prediction Breakdown</span>
-                            <span style="color: #38BDF8; font-weight: 700;">{home_pct}%</span>
-                        </div>
-                        <div style="background: rgba(15, 23, 42, 0.6); border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
-                            <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {home_pct}%; height: 100%; border-radius: 6px;"></div>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                st.markdown(render_pitcher_column(g['home_team'], g['home_stats'], home_pct), unsafe_allow_html=True)
 
             with c3:
                 st.markdown("**Quantitative Rationale & Matchup Breakdown**")
