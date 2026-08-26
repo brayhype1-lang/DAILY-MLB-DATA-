@@ -86,25 +86,12 @@ st.markdown(
         backdrop-filter: blur(14px);
     }
 
-    /* Live Scores Ticker Carousel Container */
-    .ticker-scroll-wrap {
+    /* Score Grid Container (No Scrolling Required) */
+    .score-grid-wrap {
         display: flex;
-        gap: 12px;
-        overflow-x: auto;
-        padding: 6px 2px 10px 2px;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(56, 189, 248, 0.4) rgba(15, 23, 42, 0.5);
-    }
-    .ticker-scroll-wrap::-webkit-scrollbar {
-        height: 6px;
-    }
-    .ticker-scroll-wrap::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.5);
-        border-radius: 4px;
-    }
-    .ticker-scroll-wrap::-webkit-scrollbar-thumb {
-        background: rgba(56, 189, 248, 0.4);
-        border-radius: 4px;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
     }
 
     /* Score Pill Component */
@@ -113,8 +100,9 @@ st.markdown(
         border: 1px solid rgba(56, 189, 248, 0.25);
         border-radius: 12px;
         padding: 10px 14px;
-        min-width: 175px;
-        flex-shrink: 0;
+        width: calc(20% - 9px);
+        min-width: 160px;
+        flex-grow: 1;
         box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.05);
         display: flex;
         flex-direction: column;
@@ -289,7 +277,7 @@ def get_park_factor(home_team: str):
     return park
 
 # ------------------------------------------------------------------
-# 3. AUTOMATED LIVE SCORE ENGINE
+# 3. AUTOMATED LIVE SCORE ENGINE & SMART SORTING WEIGHTS
 # ------------------------------------------------------------------
 @st.cache_data(ttl=15)
 def fetch_live_game_state(game_pk: int) -> dict:
@@ -307,17 +295,26 @@ def fetch_live_game_state(game_pk: int) -> dict:
         home_runs = teams_linescore.get("home", {}).get("runs", 0)
 
         if abstract_state == "Live" or "In Progress" in detailed_state or detailed_state == "Warmup":
-            inning = linescore.get("currentInningOrdinal", "1st")
+            inning = linescore.get("currentInning", 1)
             half = linescore.get("inningState", "Top")
+            inning_ordinal = linescore.get("currentInningOrdinal", f"{inning}th")
+            
+            # Weight metric for sorting: later innings come closer up among live games
+            # Top of inning = inning * 2 - 1, Bottom of inning = inning * 2
+            half_weight = 1 if half.lower().startswith("top") else 2
+            sort_val = (inning * 10) + half_weight
+
             return {
                 "status": "LIVE",
-                "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning}</span>',
+                "sort_priority": sort_val, # Lower numbers = earlier live/started, higher = deeper into game (closer up)
+                "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning_ordinal}</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
-                "inning_str": f"{half} {inning}"
+                "inning_str": f"{half} {inning_ordinal}"
             }
         elif abstract_state == "Final" or "Final" in detailed_state:
             return {
                 "status": "FINAL",
+                "sort_priority": 9999, # Pushed to the very back
                 "badge_html": '<span class="badge-final">🏁 FINAL</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
                 "inning_str": "Final"
@@ -325,6 +322,7 @@ def fetch_live_game_state(game_pk: int) -> dict:
         else:
             return {
                 "status": "PREVIEW",
+                "sort_priority": -100, # Upcoming games sit behind active live games
                 "badge_html": f'<span class="badge-upcoming">⏰ {detailed_state}</span>',
                 "away_runs": 0, "home_runs": 0,
                 "inning_str": "Upcoming"
@@ -332,6 +330,7 @@ def fetch_live_game_state(game_pk: int) -> dict:
     except Exception:
         return {
             "status": "PREVIEW",
+            "sort_priority": -100,
             "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
             "away_runs": 0, "home_runs": 0,
             "inning_str": "Upcoming"
@@ -450,7 +449,7 @@ def load_full_slate():
         return []
 
 # ------------------------------------------------------------------
-# 5. DASHBOARD PRESENTATION & LIVE SCORE TICKER
+# 5. DASHBOARD PRESENTATION & SMART SORTED SCORE GRID
 # ------------------------------------------------------------------
 slate = load_full_slate()
 
@@ -466,7 +465,25 @@ else:
         )
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
 
-    # Build Live Score Ticker HTML
+    # Sort games so that:
+    # 1. Live games appear first. For live games, sort descending by sort_priority (later innings/closer to end = closer up top).
+    # 2. Upcoming games next.
+    # 3. Final games at the very bottom.
+    # We achieve this by sorting by status rank and sort_priority.
+    def game_sort_key(item):
+        st_val = item["live"]["status"]
+        priority = item["live"]["sort_priority"]
+        if st_val == "LIVE":
+            # Return negative priority so higher innings sort FIRST (closer up)
+            return (0, -priority)
+        elif st_val == "PREVIEW":
+            return (1, 0)
+        else: # FINAL
+            return (2, 0)
+
+    evaluated_slate.sort(key=game_sort_key)
+
+    # Build Score Grid HTML (All games visible in a clean flex wrap grid)
     ticker_pills_html = ""
     for g in evaluated_slate:
         lv = g["live"]
@@ -494,7 +511,7 @@ else:
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <div>
                     <h1 style="margin:0; font-size: 1.7rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
-                    <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.88rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE AUTO-SYNC TICKER • LOCKED SEEDS & PROBABILITY ENGINE</p>
+                    <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.88rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE SCORE GRID • LATER INNINGS SORTED PROMINENTLY • FINALS AT BACK</p>
                 </div>
                 <div style="text-align: right;">
                     <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 6px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
@@ -502,7 +519,7 @@ else:
                     </span>
                 </div>
             </div>
-            <div class="ticker-scroll-wrap">
+            <div class="score-grid-wrap">
                 {ticker_pills_html}
             </div>
         </div>
