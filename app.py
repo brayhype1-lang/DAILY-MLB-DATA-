@@ -11,14 +11,14 @@ from datetime import datetime
 # 1. PAGE CONFIGURATION & ARCHITECTURAL SETUP
 # ------------------------------------------------------------------
 st.set_page_config(
-    page_title="MLB Quantitative Neural Terminal Pro",
+    page_title="MLB Quantitative Neural Terminal Pro Ultra",
     page_icon="⚾",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
 # ------------------------------------------------------------------
-# 2. ADVANCED CSS STYLING & 3D PARTICLE CANVAS ENGINE
+# 2. ADVANCED CSS STYLING & DUAL 3D PARTICLE CANVAS ENGINE
 # ------------------------------------------------------------------
 st.markdown(
     """
@@ -41,7 +41,7 @@ st.markdown(
         color: #F8FAFC;
     }
 
-    /* Full-Screen 3D Interactive Floating Bubble Canvas */
+    /* Full-Screen 3D Interactive Floating Bubble & Particle Canvas */
     #background-canvas {
         position: fixed;
         top: 0;
@@ -141,7 +141,7 @@ st.markdown(
     }
 </style>
 
-<!-- FULL 3D INTERACTIVE FLOATING BUBBLE / ORB CANVAS SCRIPT -->
+<!-- DUAL LAYER 3D INTERACTIVE FLOATING BUBBLE / ORB CANVAS SCRIPT -->
 <canvas id="background-canvas"></canvas>
 <script>
     const canvas = document.getElementById('background-canvas');
@@ -154,7 +154,6 @@ st.markdown(
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Mouse tracking for subtle 3D bubble deflection
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
     window.addEventListener('mousemove', (e) => {
@@ -163,47 +162,44 @@ st.markdown(
     });
 
     const bubbles = [];
-    const bubbleCount = 65; // High density immersive 3D bubbles
+    const bubbleCount = 85; // Heavy-duty immersive 3D bubble density
 
     for (let i = 0; i < bubbleCount; i++) {
         bubbles.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            radius: Math.random() * 45 + 12,
-            speedY: -(Math.random() * 1.2 + 0.4),
-            speedX: (Math.random() - 0.5) * 0.6,
-            alpha: Math.random() * 0.3 + 0.08,
-            pulseSpeed: Math.random() * 0.025 + 0.008,
+            radius: Math.random() * 55 + 10,
+            speedY: -(Math.random() * 1.4 + 0.3),
+            speedX: (Math.random() - 0.5) * 0.7,
+            alpha: Math.random() * 0.35 + 0.06,
+            pulseSpeed: Math.random() * 0.03 + 0.005,
             pulseOffset: Math.random() * Math.PI * 2,
-            depthFactor: Math.random() * 0.8 + 0.5
+            depthFactor: Math.random() * 0.9 + 0.4
         });
     }
 
     function animateBubbles() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Deep Cinematic Gradient Background
         let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
         bgGrad.addColorStop(0, '#02040a');
-        bgGrad.addColorStop(0.4, '#060d1f');
+        bgGrad.addColorStop(0.35, '#050b18');
         bgGrad.addColorStop(1, '#030712');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         bubbles.forEach((b) => {
             b.y += b.speedY * b.depthFactor;
-            b.x += b.speedX + Math.sin(b.y * 0.008) * 0.3;
+            b.x += b.speedX + Math.sin(b.y * 0.007) * 0.35;
 
-            // Mouse interaction repulsion factor
             let dx = mouseX - b.x;
             let dy = mouseY - b.y;
             let dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 150) {
-                b.x -= (dx / dist) * 1.2;
-                b.y -= (dy / dist) * 1.2;
+            if (dist < 180) {
+                b.x -= (dx / dist) * 1.5;
+                b.y -= (dy / dist) * 1.5;
             }
 
-            // Screen boundary wrap-around
             if (b.y + b.radius < 0) {
                 b.y = canvas.height + b.radius;
                 b.x = Math.random() * canvas.width;
@@ -211,37 +207,34 @@ st.markdown(
             if (b.x < -b.radius) b.x = canvas.width + b.radius;
             if (b.x > canvas.width + b.radius) b.x = -b.radius;
 
-            let currentRadius = b.radius + Math.sin(Date.now() * b.pulseSpeed + b.pulseOffset) * 3;
+            let currentRadius = b.radius + Math.sin(Date.now() * b.pulseSpeed + b.pulseOffset) * 3.5;
 
             ctx.save();
             ctx.beginPath();
             ctx.arc(b.x, b.y, currentRadius, 0, Math.PI * 2);
             
-            // Radial Multi-Stop Gradient for True 3D Glossy Sphere Effect
             let grad = ctx.createRadialGradient(
                 b.x - currentRadius * 0.35, b.y - currentRadius * 0.35, currentRadius * 0.05,
                 b.x, b.y, currentRadius
             );
-            grad.addColorStop(0, `rgba(125, 211, 252, ${b.alpha * 2.2})`);
-            grad.addColorStop(0.4, `rgba(56, 189, 248, ${b.alpha * 1.2})`);
-            grad.addColorStop(0.8, `rgba(147, 51, 234, ${b.alpha * 0.7})`);
-            grad.addColorStop(1, `rgba(15, 23, 42, 0)');
+            grad.addColorStop(0, `rgba(125, 211, 252, ${b.alpha * 2.4})`);
+            grad.addColorStop(0.45, `rgba(56, 189, 248, ${b.alpha * 1.3})`);
+            grad.addColorStop(0.8, `rgba(147, 51, 234, ${b.alpha * 0.8})`);
+            grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
             
             ctx.fillStyle = grad;
-            ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
-            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'rgba(56, 189, 248, 0.6)';
+            ctx.shadowBlur = 25;
             ctx.fill();
             
-            // Primary Specular Reflection Highlight
             ctx.beginPath();
             ctx.arc(b.x - currentRadius * 0.38, b.y - currentRadius * 0.38, currentRadius * 0.2, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255, ${b.alpha * 1.6})`;
+            ctx.fillStyle = `rgba(255, 255, 255, ${b.alpha * 1.8})`;
             ctx.fill();
 
-            // Secondary Refraction Arc
             ctx.beginPath();
             ctx.arc(b.x + currentRadius * 0.3, b.y + currentRadius * 0.3, currentRadius * 0.1, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 255, 255, ${b.alpha * 0.5})`;
+            ctx.fillStyle = `rgba(255, 255, 255, ${b.alpha * 0.6})`;
             ctx.fill();
 
             ctx.restore();
@@ -266,6 +259,9 @@ with st.sidebar:
     st.markdown("### 📈 Model Hyperparameters")
     confidence_threshold = st.slider("Min Edge Confidence", 50, 80, 55)
     kelly_multiplier = st.slider("Bankroll Kelly Criterion", 0.1, 1.0, 0.25)
+    st.markdown("---")
+    st.markdown("### 🚀 Quick Navigation")
+    nav_view = st.radio("Terminal View", ["Live Scoreboard Hub", "Multi-Leg Parlay Builder", "Quant Analytics Matrix"])
     st.caption("Active data stream connected. Neural weights optimized for 2026 MLB season.")
 
 # ------------------------------------------------------------------
@@ -283,6 +279,14 @@ PARK_FACTORS = {
     "Detroit Tigers": {"run_mult": 0.95, "name": "Comerica Park", "lat": 42.339, "lon": -83.048, "roof": False},
     "New York Yankees": {"run_mult": 1.06, "name": "Yankee Stadium", "lat": 40.829, "lon": -73.926, "roof": False},
     "Los Angeles Dodgers": {"run_mult": 1.02, "name": "Dodger Stadium", "lat": 34.073, "lon": -118.240, "roof": False},
+    "Philadelphia Phillies": {"run_mult": 1.09, "name": "Citizens Bank Park", "lat": 39.906, "lon": -75.166, "roof": False},
+    "Minnesota Twins": {"run_mult": 0.98, "name": "Target Field", "lat": 44.981, "lon": -93.277, "roof": False},
+    "Oakland Athletics": {"run_mult": 0.96, "name": "Oakland Coliseum", "lat": 37.751, "lon": -122.200, "roof": False},
+    "Tampa Bay Rays": {"run_mult": 0.94, "name": "Tropicana Field", "lat": 27.768, "lon": -82.653, "roof": True},
+    "Miami Marlins": {"run_mult": 0.90, "name": "loanDepot park", "lat": 25.778, "lon": -80.219, "roof": True},
+    "Houston Astros": {"run_mult": 1.01, "name": "Minute Maid Park", "lat": 29.757, "lon": -95.355, "roof": True},
+    "Toronto Blue Jays": {"run_mult": 1.03, "name": "Rogers Centre", "lat": 43.641, "lon": -79.389, "roof": True},
+    "Milwaukee Brewers": {"run_mult": 1.04, "name": "American Family Field", "lat": 43.028, "lon": -87.971, "roof": True},
 }
 
 @st.cache_data(ttl=3600)
@@ -545,130 +549,171 @@ else:
     if "selected_game_id" not in st.session_state:
         st.session_state["selected_game_id"] = None
 
-    # --- DEEP DIVE INSPECTOR VIEW ---
-    if st.session_state["selected_game_id"] is not None:
-        selected_g = next((x for x in evaluated_slate if x["game_id"] == st.session_state["selected_game_id"]), None)
+    # --- VIEW ROUTING ---
+    if nav_view == "Multi-Leg Parlay Builder":
+        st.markdown("## 🎟️ MULTI-LEG PARLAY & EV MATRIX BUILDER")
+        st.caption("COMBINE HIGH-CONFIDENCE PREDICTIVE LOCKS INTO OPTIMIZED PARLAY SLIPS")
         
-        if selected_g:
-            lv = selected_g["live"]
-            
-            if st.button("⬅️ BACK TO SCOREBOARD", key="back_to_grid_btn"):
-                st.session_state["selected_game_id"] = None
-                st.rerun()
+        selected_legs = []
+        for g in evaluated_slate:
+            an = g["analysis"]
+            if an["win_prob"] >= confidence_threshold:
+                if st.checkbox(f"{g['away_team']} @ {g['home_team']} ➔ LOCK: {an['target']} ({an['win_prob']}%)", value=True, key=f"parlay_{g['game_id']}"):
+                    selected_legs.append(an['win_prob'] / 100.0)
 
-            st.markdown(f"## ⚾ {selected_g['away_team']} @ {selected_g['home_team']}")
-            st.markdown(lv['badge_html'], unsafe_allow_html=True)
-
-            col_box1, col_box2 = st.columns(2)
-            with col_box1:
-                with st.container(border=True):
-                    st.markdown("### 🏟️ DEEP BOX SCORE TELEMETRY")
-                    sc1, sc2, sc3 = st.columns(3)
-                    runs_val = lv['away_runs']
-                    sc1.metric("RUNS", f"{runs_val} - {lv['home_runs']}")
-                    sc2.metric("HITS", f"{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}")
-                    sc3.metric("ERRORS", f"{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}")
-            with col_box2:
-                with st.container(border=True):
-                    st.markdown("### 🌤️ BALLPARK METEOROLOGY")
-                    st.write(f"**Venue:** {selected_g['park']['name']}")
-                    st.write(f"**Conditions:** {selected_g['park']['weather']['weather_desc']}")
-                    st.write(f"**Run Multiplier:** {selected_g['park']['run_mult']}x")
-
-            st.markdown("### ⚡ REAL-TIME PLAY-BY-PLAY FEED")
-            with st.container(border=True):
-                plays = lv.get("recent_plays", [])
-                if plays:
-                    for p in plays:
-                        st.markdown(f"**[{p['inning']}]** {p['description']}")
-                else:
-                    st.caption("Play-by-play stream initializes automatically upon live pitch delivery.")
-
-            st.stop()
-
-    # --- MAIN SCOREBOARD GRID ---
-    with st.container(border=True):
-        st.markdown("### ⚾ MLB QUANTITATIVE TERMINAL • LIVE HUB")
-        st.caption("ACTIVE SLATE TELEMETRY • SELECT ANY CARD FOR DEEP DIVE ANALYSIS")
-
-    cols_per_row = 4
-    for i in range(0, len(evaluated_slate), cols_per_row):
-        row_games = evaluated_slate[i:i + cols_per_row]
-        cols = st.columns(cols_per_row)
-        
-        for idx, g in enumerate(row_games):
-            lv = g["live"]
-            is_live = (lv["status"] == "LIVE")
-            g_id = g["game_id"]
-            
-            with cols[idx]:
-                with st.container(border=True):
-                    st.markdown(lv['badge_html'], unsafe_allow_html=True)
-                    
-                    # Away Team Row
-                    sc_col1, sc_col2, sc_col3 = st.columns([1, 4, 1])
-                    with sc_col1:
-                        if g["away_logo"]:
-                            st.image(g["away_logo"], width=24)
-                    with sc_col2:
-                        st.markdown(f"**{g['away_short']}**")
-                    with sc_col3:
-                        st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
-
-                    # Home Team Row
-                    sc_col4, sc_col5, sc_col6 = st.columns([1, 4, 1])
-                    with sc_col4:
-                        if g["home_logo"]:
-                            st.image(g["home_logo"], width=24)
-                    with sc_col5:
-                        st.markdown(f"**{g['home_short']}**")
-                    with sc_col6:
-                        st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['home_runs']}</span>", unsafe_allow_html=True)
-
-                    if is_live:
-                        b2 = "base-active" if lv.get("has_2b") else ""
-                        b3 = "base-active" if lv.get("has_3b") else ""
-                        b1 = "base-active" if lv.get("has_1b") else ""
-                        
-                        bases_html = f"""
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 4px; padding: 2px 0;">
-                            <div style="position: relative; width: 28px; height: 28px;">
-                                <div style="position: absolute; top: 0px; left: 10px;" class="base-diamond {b2}"></div>
-                                <div style="position: absolute; top: 10px; left: 0px;" class="base-diamond {b3}"></div>
-                                <div style="position: absolute; top: 10px; left: 20px;" class="base-diamond {b1}"></div>
-                            </div>
-                            <span style="color: #94A3B8; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.75rem;">OUTS: {lv.get('outs', 0)}</span>
-                        </div>
-                        """
-                        st.markdown(bases_html, unsafe_allow_html=True)
-                    else:
-                        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-
-                    if st.button("🔍 INSPECT MATCH", key=f"btn_{g_id}", use_container_width=True):
-                        st.session_state["selected_game_id"] = g_id
-                        st.rerun()
-
-    st.markdown("---")
-    st.markdown("### 📊 COMPREHENSIVE MODEL PREDICTIONS & EDGE MATRIX")
-
-    for g in evaluated_slate:
-        an = g["analysis"]
-        away_pct = int(an["away_prob"] * 100)
-        home_pct = int(an["home_prob"] * 100)
-
-        with st.container(border=True):
-            st.markdown(f"#### ⚾ {g['away_team']} @ {g['home_team']} ({g['park']['name']})")
-            st.markdown(f"🔥 **MODEL LOCK:** {an['target']} ({an['win_prob']}% Win Probability)")
-
+        if selected_legs:
+            combined_prob = math.prod(selected_legs)
+            implied_odds_american = int((1.0 / combined_prob - 1.0) * 100) if combined_prob > 0 else 0
+            st.markdown("---")
             c1, c2, c3 = st.columns(3)
-            with c1:
-                st.markdown(f"**{g['away_stats']['pitcher']}** ({g['away_stats']['record']})")
-                st.write(f"ERA: {g['away_stats']['era']:.2f} | xwOBA: {g['away_stats']['xwoba']:.3f}")
-                st.progress(away_pct / 100, text=f"Win Prob: {away_pct}%")
-            with c2:
-                st.markdown(f"**{g['home_stats']['pitcher']}** ({g['home_stats']['record']})")
-                st.write(f"ERA: {g['home_stats']['era']:.2f} | xwOBA: {g['home_stats']['xwoba']:.3f}")
-                st.progress(home_pct / 100, text=f"Win Prob: {home_pct}%")
-            with c3:
-                st.markdown("**QUANTITATIVE BREAKDOWN**")
-                st.write(an['narrative'])
+            c1.metric("Selected Legs", len(selected_legs))
+            c2.metric("Combined Probability", f"{combined_prob * 100:.2f}%")
+            c3.metric("Estimated Fair American Odds", f"+{implied_odds_american}" if implied_odds_american > 0 else str(implied_odds_american))
+        else:
+            st.info("Select at least one game leg above to calculate parlay expectation.")
+
+    elif nav_view == "Quant Analytics Matrix":
+        st.markdown("## 📊 ADVANCED QUANTITATIVE ANALYTICS MATRIX")
+        st.caption("DEEP TEAM METRICS, xwOBA SPREADS, AND STARTING PITCHER LEVERAGE")
+        
+        matrix_data = []
+        for g in evaluated_slate:
+            matrix_data.append({
+                "Matchup": f"{g['away_short']} @ {g['home_short']}",
+                "Venue": g["park"]["name"],
+                "Park Factor": g["park"]["run_mult"],
+                "Away Pitcher": g["away_stats"]["pitcher"],
+                "Away xwOBA": g["away_stats"]["xwoba"],
+                "Home Pitcher": g["home_stats"]["pitcher"],
+                "Home xwOBA": g["home_stats"]["xwoba"],
+                "Model Pick": g["analysis"]["target"],
+                "Win Prob": f"{g['analysis']['win_prob']}%"
+            })
+        st.dataframe(pd.DataFrame(matrix_data), use_container_width=True)
+
+    else:
+        # --- DEEP DIVE INSPECTOR VIEW ---
+        if st.session_state["selected_game_id"] is not None:
+            selected_g = next((x for x in evaluated_slate if x["game_id"] == st.session_state["selected_game_id"]), None)
+            
+            if selected_g:
+                lv = selected_g["live"]
+                
+                if st.button("⬅️ BACK TO SCOREBOARD", key="back_to_grid_btn"):
+                    st.session_state["selected_game_id"] = None
+                    st.rerun()
+
+                st.markdown(f"## ⚾ {selected_g['away_team']} @ {selected_g['home_team']}")
+                st.markdown(lv['badge_html'], unsafe_allow_html=True)
+
+                col_box1, col_box2 = st.columns(2)
+                with col_box1:
+                    with st.container(border=True):
+                        st.markdown("### 🏟️ DEEP BOX SCORE TELEMETRY")
+                        sc1, sc2, sc3 = st.columns(3)
+                        runs_val = lv['away_runs']
+                        sc1.metric("RUNS", f"{runs_val} - {lv['home_runs']}")
+                        sc2.metric("HITS", f"{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}")
+                        sc3.metric("ERRORS", f"{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}")
+                with col_box2:
+                    with st.container(border=True):
+                        st.markdown("### 🌤️ BALLPARK METEOROLOGY")
+                        st.write(f"**Venue:** {selected_g['park']['name']}")
+                        st.write(f"**Conditions:** {selected_g['park']['weather']['weather_desc']}")
+                        st.write(f"**Run Multiplier:** {selected_g['park']['run_mult']}x")
+
+                st.markdown("### ⚡ REAL-TIME PLAY-BY-PLAY FEED")
+                with st.container(border=True):
+                    plays = lv.get("recent_plays", [])
+                    if plays:
+                        for p in plays:
+                            st.markdown(f"**[{p['inning']}]** {p['description']}")
+                    else:
+                        st.caption("Play-by-play stream initializes automatically upon live pitch delivery.")
+
+                st.stop()
+
+        # --- MAIN SCOREBOARD GRID ---
+        with st.container(border=True):
+            st.markdown("### ⚾ MLB QUANTITATIVE TERMINAL • LIVE HUB")
+            st.caption("ACTIVE SLATE TELEMETRY • SELECT ANY CARD FOR DEEP DIVE ANALYSIS")
+
+        cols_per_row = 4
+        for i in range(0, len(evaluated_slate), cols_per_row):
+            row_games = evaluated_slate[i:i + cols_per_row]
+            cols = st.columns(cols_per_row)
+            
+            for idx, g in enumerate(row_games):
+                lv = g["live"]
+                is_live = (lv["status"] == "LIVE")
+                g_id = g["game_id"]
+                
+                with cols[idx]:
+                    with st.container(border=True):
+                        st.markdown(lv['badge_html'], unsafe_allow_html=True)
+                        
+                        sc_col1, sc_col2, sc_col3 = st.columns([1, 4, 1])
+                        with sc_col1:
+                            if g["away_logo"]:
+                                st.image(g["away_logo"], width=24)
+                        with sc_col2:
+                            st.markdown(f"**{g['away_short']}**")
+                        with sc_col3:
+                            st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
+
+                        sc_col4, sc_col5, sc_col6 = st.columns([1, 4, 1])
+                        with sc_col4:
+                            if g["home_logo"]:
+                                st.image(g["home_logo"], width=24)
+                        with sc_col5:
+                            st.markdown(f"**{g['home_short']}**")
+                        with sc_col6:
+                            st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['home_runs']}</span>", unsafe_allow_html=True)
+
+                        if is_live:
+                            b2 = "base-active" if lv.get("has_2b") else ""
+                            b3 = "base-active" if lv.get("has_3b") else ""
+                            b1 = "base-active" if lv.get("has_1b") else ""
+                            
+                            bases_html = f"""
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 4px; padding: 2px 0;">
+                                <div style="position: relative; width: 28px; height: 28px;">
+                                    <div style="position: absolute; top: 0px; left: 10px;" class="base-diamond {b2}"></div>
+                                    <div style="position: absolute; top: 10px; left: 0px;" class="base-diamond {b3}"></div>
+                                    <div style="position: absolute; top: 10px; left: 20px;" class="base-diamond {b1}"></div>
+                                </div>
+                                <span style="color: #94A3B8; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.75rem;">OUTS: {lv.get('outs', 0)}</span>
+                            </div>
+                            """
+                            st.markdown(bases_html, unsafe_allow_html=True)
+                        else:
+                            st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
+                        if st.button("🔍 INSPECT MATCH", key=f"btn_{g_id}", use_container_width=True):
+                            st.session_state["selected_game_id"] = g_id
+                            st.rerun()
+
+        st.markdown("---")
+        st.markdown("### 📊 COMPREHENSIVE MODEL PREDICTIONS & EDGE MATRIX")
+
+        for g in evaluated_slate:
+            an = g["analysis"]
+            away_pct = int(an["away_prob"] * 100)
+            home_pct = int(an["home_prob"] * 100)
+
+            with st.container(border=True):
+                st.markdown(f"#### ⚾ {g['away_team']} @ {g['home_team']} ({g['park']['name']})")
+                st.markdown(f"🔥 **MODEL LOCK:** {an['target']} ({an['win_prob']}% Win Probability)")
+
+                c1, c2, c3 = st.columns(3)
+                with c1:
+                    st.markdown(f"**{g['away_stats']['pitcher']}** ({g['away_stats']['record']})")
+                    st.write(f"ERA: {g['away_stats']['era']:.2f} | xwOBA: {g['away_stats']['xwoba']:.3f}")
+                    st.progress(away_pct / 100, text=f"Win Prob: {away_pct}%")
+                with c2:
+                    st.markdown(f"**{g['home_stats']['pitcher']}** ({g['home_stats']['record']})")
+                    st.write(f"ERA: {g['home_stats']['era']:.2f} | xwOBA: {g['home_stats']['xwoba']:.3f}")
+                    st.progress(home_pct / 100, text=f"Win Prob: {home_pct}%")
+                with c3:
+                    st.markdown("**QUANTITATIVE BREAKDOWN**")
+                    st.write(an['narrative'])
