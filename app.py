@@ -75,6 +75,11 @@ st.markdown(
 
     .stMainBlockContainer { position: relative; z-index: 1; }
 
+    /* Fix Streamlit column element opacity inheritance */
+    [data-testid="column"] {
+        opacity: 1 !important;
+    }
+
     /* Hero Banner HUD */
     .hero-banner {
         background: linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(3, 45, 66, 0.85) 100%);
