@@ -1671,50 +1671,47 @@ html, body, .stApp,
 }
 
 .stApp::before,
-.stApp::after {
-    content: "";
+.stApp::after { display: none !important; }
+
+.quant-bubbles {
     position: fixed;
-    display: block;
-    border-radius: 50%;
+    inset: 0;
+    overflow: hidden;
     pointer-events: none;
-    z-index: 0;
+    z-index: 1;
 }
 
-.stApp::before {
-    width: 175px;
-    height: 175px;
-    top: 9.5rem;
-    right: 4.5vw;
-    opacity: .34;
-    border: 1px solid rgba(186,230,253,.25);
-    background: radial-gradient(circle at 31% 25%, rgba(255,255,255,.45) 0 3%, rgba(125,211,252,.18) 12%, rgba(30,106,164,.12) 42%, rgba(4,19,34,.04) 67%, transparent 72%);
-    box-shadow: inset -24px -27px 42px rgba(0,5,15,.50), inset 12px 12px 24px rgba(255,255,255,.06), 0 24px 60px rgba(0,0,0,.26), 0 0 42px rgba(56,189,248,.12);
+.quant-bubble {
+    position: absolute;
+    bottom: -135px;
+    display: block;
+    border-radius: 999px;
+    border: 1px solid rgba(186,230,253,.30);
+    background:
+        radial-gradient(circle at 29% 24%, rgba(255,255,255,.48) 0 3%, rgba(186,230,253,.20) 8%, rgba(56,189,248,.10) 28%, rgba(15,71,112,.06) 56%, transparent 69%);
+    box-shadow:
+        inset -14px -16px 25px rgba(0,7,18,.46),
+        inset 8px 8px 16px rgba(255,255,255,.07),
+        0 9px 25px rgba(0,0,0,.16),
+        0 0 18px rgba(56,189,248,.09);
+    animation-name: quantBubbleRise, quantBubbleWobble;
+    animation-timing-function: linear, ease-in-out;
+    animation-iteration-count: infinite;
+    will-change: transform, margin-left;
 }
 
-.stApp::after {
-    width: 96px;
-    height: 96px;
-    left: 3.5vw;
-    bottom: 6.5rem;
-    opacity: .27;
-    border: 1px solid rgba(167,243,208,.22);
-    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.42), rgba(45,212,191,.14) 22%, rgba(10,56,78,.08) 58%, transparent 72%);
-    box-shadow: inset -16px -18px 28px rgba(0,5,15,.48), 0 17px 40px rgba(0,0,0,.24), 0 0 30px rgba(45,212,191,.09);
+@keyframes quantBubbleRise {
+    from { transform: translate3d(0, 0, 0) scale(.92); }
+    to { transform: translate3d(0, calc(-100vh - 270px), 0) scale(1.06); }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .stApp::before { animation: quantOrbFloat 16s ease-in-out infinite; }
-    .stApp::after { animation: quantOrbFloatSmall 19s ease-in-out infinite; }
+@keyframes quantBubbleWobble {
+    0%, 100% { margin-left: 0; }
+    50% { margin-left: 32px; }
 }
 
-@keyframes quantOrbFloat {
-    0%, 100% { transform: translate3d(0, 0, 0); }
-    50% { transform: translate3d(-14px, 18px, 0); }
-}
-
-@keyframes quantOrbFloatSmall {
-    0%, 100% { transform: translate3d(0, 0, 0); }
-    50% { transform: translate3d(12px, -16px, 0); }
+@media (prefers-reduced-motion: reduce) {
+    .quant-bubble { animation-play-state: paused; }
 }
 
 [data-testid="stAppViewContainer"] {
@@ -1729,6 +1726,8 @@ html, body, .stApp,
 }
 
 [data-testid="stMainBlockContainer"] {
+    position: relative;
+    z-index: 2;
     max-width: 1480px;
     padding-top: 1.35rem;
     padding-bottom: 4rem;
@@ -2310,6 +2309,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 st.markdown(native_stylesheet(), unsafe_allow_html=True)
+st.markdown(bubble_markup(28), unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -3117,20 +3117,33 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
     start_text = game_dt.astimezone(ET).strftime("%-I:%M %p ET") if game_dt else "Time TBD"
 
     if status == "LIVE":
-        status_class = "live"
-        status_text = live.get("status_label") or "Live"
+        outs = int(live.get("outs") or 0)
+        status_badge = "🔴 LIVE"
+        status_detail = (
+            f"{live.get('status_label') or 'In progress'} · "
+            f"{outs} {'out' if outs == 1 else 'outs'}"
+        )
         score_label = "Current score"
-        score_value = f"{away['short_name']} {int(live.get('away_runs') or 0)} · {home['short_name']} {int(live.get('home_runs') or 0)}"
+        score_value = (
+            f"{away['short_name']} {int(live.get('away_runs') or 0)} · "
+            f"{home['short_name']} {int(live.get('home_runs') or 0)}"
+        )
     elif status == "FINAL":
-        status_class = "final"
-        status_text = "Final"
+        status_badge = "✅ FINAL"
+        status_detail = "Completed"
         score_label = "Final score"
-        score_value = f"{away['short_name']} {int(live.get('away_runs') or 0)} · {home['short_name']} {int(live.get('home_runs') or 0)}"
+        score_value = (
+            f"{away['short_name']} {int(live.get('away_runs') or 0)} · "
+            f"{home['short_name']} {int(live.get('home_runs') or 0)}"
+        )
     else:
-        status_class = "preview"
-        status_text = "Upcoming"
-        score_label = "Projected runs"
-        score_value = f"{away['short_name']} {prediction['projected_away_runs']:.1f} · {home['short_name']} {prediction['projected_home_runs']:.1f}"
+        status_badge = "🕒 UPCOMING"
+        status_detail = start_text
+        score_label = "Projected score"
+        score_value = (
+            f"{away['short_name']} {prediction['projected_away_runs']:.1f} · "
+            f"{home['short_name']} {prediction['projected_home_runs']:.1f}"
+        )
 
     away_pct = prediction["away_probability"] * 100.0
     home_pct = prediction["home_probability"] * 100.0
@@ -3139,38 +3152,67 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
         if prediction["target_side"] == "away"
         else prediction["fair_home_odds"]
     )
+    target = game[prediction["target_side"]]
+    analysis_is_open = st.session_state.get("open_game_pk") == game["game_pk"]
     context = weather_text(weather, game["venue"])
     with st.container(border=True, key=f"matchup_row_{game['game_pk']}"):
-        matchup_column, pick_column, score_column = st.columns([1.6, 0.75, 0.85])
+        matchup_column, status_column = st.columns(
+            [4.75, 1.15], vertical_alignment="center"
+        )
         with matchup_column:
             away_logo, matchup_name, home_logo = st.columns(
-                [0.18, 1.62, 0.18], vertical_alignment="center"
+                [0.16, 2.1, 0.16], vertical_alignment="center"
             )
             with away_logo:
-                st.image(away["logo"], width=38)
+                st.image(away["logo"], width=35)
             with matchup_name:
                 st.markdown(f"#### {away['name']} at {home['name']}")
             with home_logo:
-                st.image(home["logo"], width=38)
+                st.image(home["logo"], width=35)
             st.caption(
-                f"{status_text} · {start_text} · "
                 f"{away.get('pitcher_name') or 'Starter TBD'} vs "
                 f"{home.get('pitcher_name') or 'Starter TBD'} · {context}"
             )
+        with status_column:
+            st.caption(status_badge)
+            st.markdown(f"**{status_detail}**")
+
+        probability_column, pick_column, score_column, quality_column, action_column = st.columns(
+            [2.1, 1.28, 1.0, 0.72, 0.82], vertical_alignment="center"
+        )
+        with probability_column:
+            st.caption("WIN PROBABILITY")
             st.progress(
                 prediction["away_probability"],
-                text=f"{away['short_name']} {away_pct:.1f}%  |  {home['short_name']} {home_pct:.1f}%",
+                text=(
+                    f"{away['short_name']} {away_pct:.1f}%  ·  "
+                    f"{home['short_name']} {home_pct:.1f}%"
+                ),
             )
         with pick_column:
-            st.metric(
-                "Locked pregame pick",
-                prediction["target_name"],
-                f"{prediction['target_probability']*100:.1f}%",
+            st.caption("LOCKED PREGAME PICK")
+            st.markdown(
+                f"**🔒 {target['short_name']} "
+                f"{prediction['target_probability']*100:.1f}%**"
             )
             st.caption(f"Fair moneyline {fmt_odds(fair_odds)}")
         with score_column:
-            st.metric(score_label, score_value)
-            st.caption(f"Data quality: {prediction['quality_score']}/100 · {prediction['quality_label']}")
+            st.caption(score_label.upper())
+            st.markdown(f"**{score_value}**")
+        with quality_column:
+            st.caption("DATA QUALITY")
+            st.markdown(f"**{prediction['quality_score']}/100**")
+            st.caption(prediction["quality_label"])
+        with action_column:
+            st.caption("RESEARCH")
+            st.button(
+                "Hide analysis" if analysis_is_open else "View analysis",
+                key=f"toggle_analysis_{game['game_pk']}",
+                on_click=toggle_game_analysis,
+                args=(game["game_pk"],),
+                help="Open this game's full model explanation directly below this row.",
+                use_container_width=True,
+            )
 
 
 def render_advanced(
@@ -3529,43 +3571,6 @@ preview_count = sum(p["game"]["live"]["status"] == "PREVIEW" for p in prediction
 final_count = sum(p["game"]["live"]["status"] == "FINAL" for p in predictions)
 render_game_center(predictions, selected_date)
 
-selected_prediction = next(
-    (
-        prediction
-        for prediction in predictions
-        if prediction["game"]["game_pk"] == st.session_state.get("open_game_pk")
-    ),
-    None,
-)
-if selected_prediction is not None:
-    selected_game_pk = selected_prediction["game"]["game_pk"]
-    selected_game = selected_prediction["game"]
-    away_logo, selected_title, home_logo, selected_close = st.columns(
-        [0.23, 4.55, 0.23, 1.0], vertical_alignment="center"
-    )
-    with away_logo:
-        st.image(selected_game["away"]["logo"], width=42)
-    with selected_title:
-        st.caption("SELECTED MATCHUP ANALYSIS")
-        st.subheader(
-            f"{selected_game['away']['name']} at {selected_game['home']['name']}"
-        )
-    with home_logo:
-        st.image(selected_game["home"]["logo"], width=42)
-    with selected_close:
-        st.button(
-            "Close analysis",
-            key="close_selected_analysis",
-            on_click=toggle_game_analysis,
-            args=(selected_game_pk,),
-            use_container_width=True,
-        )
-    render_advanced(
-        selected_prediction,
-        weather_by_game.get(selected_game_pk, {}),
-        lineups_by_game.get(selected_game_pk, {}),
-    )
-
 render_slate_insights(predictions)
 st.warning(
     "Probabilities, not promises. Every outcome can lose. The app reports uncertainty, "
@@ -3637,15 +3642,8 @@ for prediction in filtered_predictions:
     lineup = lineups_by_game.get(game_pk, {})
     render_compact_game_row(prediction, weather)
     analysis_is_open = st.session_state.get("open_game_pk") == game_pk
-    st.button(
-        "Hide full analysis" if analysis_is_open else "View full analysis",
-        key=f"toggle_analysis_{game_pk}",
-        on_click=toggle_game_analysis,
-        args=(game_pk,),
-        help="Load the full model explanation for this matchup.",
-    )
     if analysis_is_open:
-        st.caption("The selected full analysis is open above Daily Slate Insights.")
+        render_advanced(prediction, weather, lineup)
 
 st.markdown("---")
 with st.expander("Methodology, data sources and important limitations", expanded=False):
