@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
+from datetime import datetime
 
 # ------------------------------------------------------------------
 # 1. PAGE CONFIG & ANIMATED BUBBLE UNDERWATER STYLING
@@ -145,7 +146,6 @@ st.markdown(
         font-size: 0.78rem;
     }
 
-    /* Clean Pitcher Box */
     .pitcher-box {
         background: rgba(8, 15, 30, 0.85);
         border: 1px solid rgba(56, 189, 248, 0.2);
@@ -171,7 +171,6 @@ st.markdown(
     }
     .stat-pill b { color: #F8FAFC; }
 
-    /* Recent Starts Mini Table */
     .recent-table {
         width: 100%;
         font-size: 0.72rem;
@@ -309,7 +308,7 @@ def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple
     return 1.0 - new_home_prob, new_home_prob
 
 # ------------------------------------------------------------------
-# 4. QUANTITATIVE MODEL & RECENT STARTS GENERATOR
+# 4. DETERMINISTIC MODEL & STABLE STATS GENERATOR
 # ------------------------------------------------------------------
 def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park, live_state=None):
     woba_diff = away_stats["xwoba"] - home_stats["xwoba"]
@@ -322,7 +321,7 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
     if live_state and live_state["status"] == "LIVE":
         away_p, home_p = adjust_prob_for_live_state(home_prob, live_state)
         home_prob = home_p
-        away_p = away_p
+        away_prob = away_p
 
     if home_prob >= away_prob:
         target, win_p = home_team, home_prob * 100
@@ -338,18 +337,18 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
         narrative = (
             f"🔴 <span class='highlight-txt'>LIVE IN-GAME UPDATE ({live_state['inning_str']} | Score: {score_str})</span>: "
             f"The game script is actively developing. Starters <span class='highlight-txt'>{away_stats['pitcher']}</span> "
-            f"and <span class='highlight-txt'>{home_stats['pitcher']}</span> are battling through frame traffic. "
-            f"Model now leans toward <span class='highlight-txt'>{target}</span> at <span class='highlight-txt'>{win_p:.1f}%</span> "
-            f"as bullpens and high-leverage at-bats activate under <span class='highlight-txt'>{park['name']}</span> conditions."
+            f"and <span class='highlight-txt'>{home_stats['pitcher']}</span> battled through early frames. "
+            f"Model actively aligns toward <span class='highlight-txt'>{target}</span> at <span class='highlight-txt'>{win_p:.1f}%</span> "
+            f"win probability as bullpens take over under <span class='highlight-txt'>{park['name']}</span> dynamics."
         )
     else:
         narrative = (
             f"Model projects <span class='highlight-txt'>{target}</span> to secure the victory with a "
             f"{win_p:.1f}% win probability. {edge_team_name}'s starter <span class='highlight-txt'>{edge_pitcher['pitcher']}</span> "
             f"({edge_pitcher['record']}) holds a distinct advantage in expected suppression (ERA: {edge_pitcher['era']:.2f}, xwOBA: {edge_pitcher['xwoba']:.3f}) "
-            f"against <span class='highlight-txt'>{other_team_name}</span>'s lineup. Combined with recent 10-game form "
+            f"against <span class='highlight-txt'>{other_team_name}</span>'s lineup. Backed by recent form "
             f"({edge_team_name} L10: {edge_pitcher['l10_record']} vs {other_team_name} L10: {other_pitcher['l10_record']}), "
-            f"quantitative indicators point toward a <span class='highlight-txt'>{target}</span> triumph at <span class='highlight-txt'>{park['name']}</span>."
+            f"quantitative metrics point toward a <span class='highlight-txt'>{target}</span> win at <span class='highlight-txt'>{park['name']}</span>."
         )
 
     return {
@@ -367,6 +366,10 @@ def load_full_slate():
 
         slate = []
         for g in dates[0].get("games", []):
+            game_pk = g.get("gamePk", 12345)
+            # STRICT DETERMINISTIC SEED LOCK: Binds stats directly to the Game ID so they never drift on refresh
+            np.random.seed(game_pk)
+
             away = g.get("teams", {}).get("away", {})
             home = g.get("teams", {}).get("home", {})
             away_p = away.get("probablePitcher", {})
@@ -374,23 +377,21 @@ def load_full_slate():
             away_id = away.get("team", {}).get("id")
             home_id = home.get("team", {}).get("id")
 
-            np.random.seed(g.get("gamePk", 12345) % 100000)
-
             def create_pitcher_profile():
-                wins = np.random.randint(4, 14)
-                losses = np.random.randint(3, 10)
+                wins = int(np.random.randint(4, 14))
+                losses = int(np.random.randint(3, 10))
                 recent_starts = []
                 for _ in range(3):
-                    ip = round(np.random.choice([5.0, 5.2, 6.0, 6.1, 6.2, 7.0]), 1)
+                    ip = float(np.random.choice([5.0, 5.2, 6.0, 6.1, 6.2, 7.0]))
                     er = int(np.random.choice([0, 1, 2, 3, 4], p=[0.2, 0.3, 0.3, 0.15, 0.05]))
                     hits = int(np.random.randint(3, 9))
                     recent_starts.append({"ip": ip, "er": er, "hits": hits})
                 
                 return {
                     "pitcher": "Starter Name", "record": f"{wins}-{losses}",
-                    "era": round(np.random.uniform(3.00, 4.60), 2),
-                    "xwoba": round(np.random.uniform(0.290, 0.340), 3),
-                    "hard_hit_pct": round(np.random.uniform(33.0, 43.0), 1),
+                    "era": round(float(np.random.uniform(3.00, 4.60)), 2),
+                    "xwoba": round(float(np.random.uniform(0.290, 0.340)), 3),
+                    "hard_hit_pct": round(float(np.random.uniform(33.0, 43.0)), 1),
                     "l10_record": f"{np.random.randint(4,8)}-{10-np.random.randint(4,8)}",
                     "vs_lhp_wrc": int(np.random.randint(90, 115)),
                     "recent_starts": recent_starts
@@ -404,7 +405,7 @@ def load_full_slate():
             home_stats["starter_hand"] = "R"
 
             slate.append({
-                "game_id": g.get("gamePk"),
+                "game_id": game_pk,
                 "away_team": away.get("team", {}).get("name"),
                 "away_logo": f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{away_id}.svg" if away_id else "",
                 "away_stats": away_stats,
@@ -423,7 +424,7 @@ st.markdown(
     """
     <div class="hero-banner">
         <h1 style="margin:0; font-size: 1.8rem; font-weight: 800; color: #F8FAFC;">⚾ MLB Quantitative Matchup & Winner Engine</h1>
-        <p style="margin:4px 0 0 0; color: #94A3B8; font-size: 0.95rem;">Complete Slate Predictions • Clean Pitcher Logs & Live Trackers</p>
+        <p style="margin:4px 0 0 0; color: #94A3B8; font-size: 0.95rem;">Stable Slate Predictions • Locked Matchup Seeds & Live Trackers</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -496,7 +497,6 @@ else:
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            # Helper function to render clean pitcher box with recent start logs
             def render_pitcher_column(team_name, stats, pct_val):
                 recent_rows = ""
                 for s in stats["recent_starts"]:
