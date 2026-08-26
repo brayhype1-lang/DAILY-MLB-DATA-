@@ -1589,7 +1589,7 @@ def bubble_markup(count: int = 42) -> str:
         left = rng.uniform(-3, 103)
         duration = rng.uniform(18, 42)
         delay = rng.uniform(0, 32)
-        opacity = rng.uniform(0.16, 0.52)
+        opacity = rng.uniform(0.08, 0.27)
         wobble = rng.uniform(6, 12)
         bubbles.append(
             "<span class='quant-bubble' style='"
@@ -1633,7 +1633,7 @@ html, body, [class*="css"], .stApp {
 
 [data-testid="stHeader"] { background: rgba(3, 8, 23, .45); }
 [data-testid="stSidebar"] { background: rgba(3, 8, 23, .96); }
-.main .block-container { max-width: 1540px; padding-top: 1.4rem; padding-bottom: 4rem; position: relative; z-index: 5; }
+.main .block-container { max-width: 1440px; padding-top: 1.4rem; padding-bottom: 4rem; position: relative; z-index: 5; }
 h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif !important; }
 
 .quant-bubbles {
@@ -1674,7 +1674,7 @@ h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif !important; }
 .section-sub { color: var(--muted); margin-bottom: 1rem; }
 
 .game-shell {
-    margin: 1rem 0 1.35rem; padding: 1.15rem; border-radius: 18px;
+    margin: 1rem 0 1.35rem; padding: 1.25rem; border-radius: 18px;
     border: 1px solid rgba(34,211,238,.48);
     background: linear-gradient(135deg, rgba(6,24,46,.88), rgba(9,52,83,.65));
     box-shadow: 0 17px 45px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.09);
@@ -1704,8 +1704,8 @@ h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif !important; }
 
 .analysis-grid { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,.9fr) minmax(320px,1.3fr); gap: .85rem; }
 .pitcher-card, .rationale-card {
-    min-width: 0; border-radius: 14px; padding: .9rem;
-    border: 1px solid rgba(34,211,238,.35); background: rgba(3,15,31,.54);
+    min-width: 0; border-radius: 14px; padding: 1rem;
+    border: 1px solid rgba(34,211,238,.32); background: rgba(2,12,26,.78);
 }
 .pitcher-name { display: flex; justify-content: space-between; gap: .5rem; font-weight: 800; font-size: 1rem; }
 .record { color: #5eead4; font: 600 .75rem 'JetBrains Mono', monospace; }
@@ -1715,10 +1715,10 @@ h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif !important; }
 .mini-title { margin: .65rem 0 .35rem; color: #a5f3fc; font: 700 .68rem 'JetBrains Mono', monospace; letter-spacing: .06em; }
 .start-row { display: grid; grid-template-columns: 1.15fr .65fr .55fr .55fr; gap: .3rem; padding: .24rem 0; border-bottom: 1px solid rgba(148,163,184,.12); color: #cbd5e1; font: 600 .66rem 'JetBrains Mono', monospace; }
 .start-row span:nth-child(n+2) { text-align: right; color: #99f6e4; }
-.rationale-title { color: white; font: 700 .95rem 'Fredoka', sans-serif; margin-bottom: .55rem; }
-.rationale-line { color: #cbd5e1; font-size: .82rem; line-height: 1.45; margin: .36rem 0; }
+.rationale-title { color: white; font: 700 1rem 'Fredoka', sans-serif; margin-bottom: .65rem; }
+.rationale-line { color: #d5e2ef; font-size: .84rem; line-height: 1.55; margin: .46rem 0; }
 .rationale-line strong { color: #67e8f9; }
-.source-line { margin-top: .7rem; color: #8296aa; font: 600 .64rem 'JetBrains Mono', monospace; }
+.source-line { margin-top: .8rem; color: #8fa6bb; font: 600 .64rem 'JetBrains Mono', monospace; line-height: 1.45; }
 
 .stButton > button {
     border-radius: 999px !important; border: 1px solid rgba(34,211,238,.65) !important;
@@ -1726,7 +1726,63 @@ h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif !important; }
     background: linear-gradient(135deg, rgba(8,145,178,.35), rgba(15,23,42,.92)) !important;
 }
 .stButton > button:hover { border-color: #67e8f9 !important; box-shadow: 0 0 22px rgba(34,211,238,.35) !important; }
-[data-testid="stExpander"] { border-color: rgba(34,211,238,.25) !important; background: rgba(3,15,31,.42) !important; }
+[data-testid="stExpander"] {
+    border: 1px solid rgba(34,211,238,.28) !important;
+    border-radius: 14px !important;
+    background: rgba(2,12,26,.76) !important;
+    box-shadow: 0 12px 32px rgba(0,0,0,.22);
+}
+[data-testid="stExpander"] details > summary {
+    font-weight: 700 !important;
+    color: #dff8ff !important;
+    padding-top: .85rem !important;
+    padding-bottom: .85rem !important;
+}
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background: rgba(5,20,38,.80);
+    border-color: rgba(103,232,249,.20) !important;
+    border-radius: 13px !important;
+}
+[data-testid="stMetric"] {
+    background: rgba(5,20,38,.68);
+    border: 1px solid rgba(103,232,249,.16);
+    border-radius: 12px;
+    padding: .72rem .82rem;
+}
+[data-testid="stMetricLabel"] { color: #9fb3c8 !important; }
+[data-testid="stMetricValue"] { color: #f8fafc !important; }
+[data-baseweb="tab-list"] {
+    gap: .45rem;
+    background: rgba(3,15,31,.68);
+    border: 1px solid rgba(103,232,249,.16);
+    border-radius: 12px;
+    padding: .35rem;
+    margin: .75rem 0 1rem;
+}
+[data-baseweb="tab"] {
+    border-radius: 9px !important;
+    color: #a9bfd3 !important;
+    font-weight: 700 !important;
+    padding-left: .85rem !important;
+    padding-right: .85rem !important;
+}
+[aria-selected="true"][data-baseweb="tab"] {
+    color: #ecfeff !important;
+    background: rgba(8,145,178,.28) !important;
+}
+[data-baseweb="tab-highlight"] { background-color: #67e8f9 !important; }
+[data-baseweb="tab-panel"] p,
+[data-testid="stExpanderDetails"] p {
+    color: #d4e1ed;
+    font-size: .94rem;
+    line-height: 1.65;
+    max-width: 78ch;
+}
+[data-testid="stExpanderDetails"] h3,
+[data-testid="stExpanderDetails"] h4 {
+    margin-top: .45rem;
+    margin-bottom: .45rem;
+}
 
 .disclaimer { color: #cbd5e1; padding: .8rem 1rem; border-left: 3px solid #fbbf24; background: rgba(120,53,15,.15); border-radius: 8px; font-size: .83rem; }
 .data-note { color: #94a3b8; font-size: .78rem; }
@@ -1972,11 +2028,16 @@ def build_model_explanation(
             f"This game is final. {target['name']} is shown as the result winner; the probability "
             "is no longer a pregame forecast."
         )
+        short_summary = f"Final result favors {target['short_name']}."
     elif status == "LIVE":
         summary = (
             f"The live model makes {target['name']} {lean_description(target_probability)} at "
             f"{target_probability*100:.1f}%. It starts from the current score, inning, outs and "
             "occupied bases, then simulates the innings remaining."
+        )
+        short_summary = (
+            f"{target['short_name']} {target_probability*100:.1f}% live win probability based on "
+            "the current score and inning state."
         )
     else:
         summary = (
@@ -1986,6 +2047,11 @@ def build_model_explanation(
             f"{prediction['projected_home_runs']:.2f}; that is an expected margin of "
             f"{abs(prediction['projected_home_runs']-prediction['projected_away_runs']):.2f} runs, "
             "not a guarantee of the final score."
+        )
+        short_summary = (
+            f"{target['short_name']} {target_probability*100:.1f}% · projected runs "
+            f"{away['short_name']} {prediction['projected_away_runs']:.2f}, "
+            f"{home['short_name']} {prediction['projected_home_runs']:.2f}."
         )
 
     simulation_target = (
@@ -2005,6 +2071,11 @@ def build_model_explanation(
         f"{prediction['model_agreement_gap']*100:.1f}-point gap means "
         f"{agreement_description(prediction['model_agreement_gap'])}. The final pregame "
         "probability blends both estimates and shrinks the result toward 50% to reduce false precision."
+    )
+    branch_short = (
+        f"Score simulations: {simulation_target*100:.1f}% · record/home baseline: "
+        f"{record_target*100:.1f}% · disagreement: "
+        f"{prediction['model_agreement_gap']*100:.1f} points."
     )
 
     away_offense = prediction["away_offense"]
@@ -2084,22 +2155,30 @@ def build_model_explanation(
             f"It {'passes' if value.get('qualifies') else 'does not pass'} the app's minimum "
             "edge/data-quality filter."
         )
+        market_short = (
+            f"{value['team']} {fmt_odds(value['price'])} · edge {value['edge']*100:+.1f} points · "
+            f"{'qualifies' if value.get('qualifies') else 'below filter'}."
+        )
     else:
         market = (
             f"The model's fair moneyline for {target['name']} is {fmt_odds(target_fair_odds)}. "
             "No verified sportsbook price is connected, so this is a matchup projection only; "
             "the app is not claiming that a bet has positive value."
         )
+        market_short = f"Fair line {fmt_odds(target_fair_odds)} · sportsbook price not connected."
 
     return {
         "summary": summary,
+        "short_summary": short_summary,
         "simulation": simulation,
+        "branch_short": branch_short,
         "offense": offense,
         "starters": starters,
         "bullpen": bullpen,
         "environment": environment,
         "confidence": confidence,
         "market": market,
+        "market_short": market_short,
         "changes": " ".join(prediction.get("invalidation") or []),
         "opponent": opponent["name"],
     }
@@ -2140,35 +2219,30 @@ def render_game(
     support = prediction.get("support") or []
     risks = prediction.get("risks") or []
     support_html = "".join(
-        f"<div class='rationale-line'><strong>+</strong> {safe_text(reason)}</div>"
-        for reason in support[:3]
+        f"<div class='rationale-line'><strong>Why:</strong> {safe_text(reason)}</div>"
+        for reason in support[:2]
     )
     risk_html = "".join(
         f"<div class='rationale-line'><strong>Risk:</strong> {safe_text(reason)}</div>"
-        for reason in risks[:2]
+        for reason in risks[:1]
     )
 
     value = prediction.get("value")
     value_label = "Market check" if value else "Fair-price context"
     market_html = (
         f"<div class='rationale-line'><strong>{safe_text(value_label)}:</strong> "
-        f"{safe_text(explanation['market'])}</div>"
+        f"{safe_text(explanation['market_short'])}</div>"
     )
 
-    score_text = (
-        f"Projected median score: {away['short_name']} {prediction['distribution']['median_away']:.0f}, "
-        f"{home['short_name']} {prediction['distribution']['median_home']:.0f}."
-    )
     rationale = f"""
     <div class="rationale-card">
-        <div class="rationale-title">Model Explanation · Short Version</div>
-        <div class="rationale-line"><strong>Verdict:</strong> {safe_text(explanation['summary'])}</div>
-        <div class="rationale-line"><strong>Score:</strong> {safe_text(score_text)}</div>
-        <div class="rationale-line"><strong>Model branches:</strong> {safe_text(explanation['simulation'])}</div>
+        <div class="rationale-title">Why the Model Leans {safe_text(prediction['target_name'])}</div>
+        <div class="rationale-line"><strong>Verdict:</strong> {safe_text(explanation['short_summary'])}</div>
+        <div class="rationale-line"><strong>Model mix:</strong> {safe_text(explanation['branch_short'])}</div>
         {support_html}
         {risk_html}
         {market_html}
-        <div class="source-line">DATA QUALITY {prediction['quality_score']}/100 · {safe_text(prediction['quality_label'])} · open INSPECT MODEL DETAILS for the full calculation story</div>
+        <div class="source-line">DATA QUALITY {prediction['quality_score']}/100 · {safe_text(prediction['quality_label'])} · EXPAND THE BREAKDOWN BELOW FOR MORE</div>
     </div>
     """
 
@@ -2221,69 +2295,165 @@ def render_advanced(
 ) -> None:
     game = prediction["game"]
     explanation = build_model_explanation(prediction, weather, lineup)
+    target_side = prediction["target_side"]
+    target_fair_odds = (
+        prediction["fair_away_odds"] if target_side == "away" else prediction["fair_home_odds"]
+    )
     with st.expander(
-        f"Inspect full model explanation · {game['away']['short_name']} at {game['home']['short_name']}",
+        f"Open clean model breakdown · {game['away']['short_name']} at {game['home']['short_name']}",
         expanded=False,
     ):
-        st.markdown("#### How the model reached this probability")
-        st.info(explanation["summary"])
-        st.markdown(f"**1. Simulation and second opinion**  \n{explanation['simulation']}")
-        st.markdown(f"**2. Team offense**  \n{explanation['offense']}")
-        st.markdown(f"**3. Starting pitchers**  \n{explanation['starters']}")
-        st.markdown(f"**4. Bullpens**  \n{explanation['bullpen']}")
-        st.markdown(f"**5. Park and weather**  \n{explanation['environment']}")
-        st.markdown(f"**6. Confidence and missing information**  \n{explanation['confidence']}")
-        st.markdown(f"**7. Sportsbook-value test**  \n{explanation['market']}")
-        st.warning(f"What would make the model reconsider: {explanation['changes']}")
-
-        st.markdown("#### Numerical model details")
+        st.markdown("### Matchup at a glance")
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric(
-            "Projected runs",
-            f"{prediction['projected_away_runs']:.2f}–{prediction['projected_home_runs']:.2f}",
+        c1.metric("Model lean", f"{prediction['target_probability']*100:.1f}%")
+        c2.metric(
+            "Projected score",
+            f"{game['away']['short_name']} {prediction['projected_away_runs']:.1f} · "
+            f"{game['home']['short_name']} {prediction['projected_home_runs']:.1f}",
         )
-        c2.metric("Park run factor", f"{prediction['park_factor']:.3f}")
-        c3.metric("Weather factor", f"{prediction['weather_factor']:.3f}")
-        c4.metric("Model disagreement", f"{prediction['model_agreement_gap']*100:.1f} pp")
-
-        left, middle, right = st.columns(3)
-        with left:
-            st.markdown("#### Bull case")
-            for item in prediction["support"]:
-                st.markdown(f"- {item}")
-        with middle:
-            st.markdown("#### Bear case")
-            for item in prediction["risks"]:
-                st.markdown(f"- {item}")
-        with right:
-            st.markdown("#### Invalidation conditions")
-            for item in prediction["invalidation"]:
-                st.markdown(f"- {item}")
-
-        st.markdown("#### Market and simulation")
-        distribution = prediction["distribution"]
-        market_columns = st.columns(4)
-        market_columns[0].metric("Fair away ML", fmt_odds(prediction["fair_away_odds"]))
-        market_columns[1].metric("Fair home ML", fmt_odds(prediction["fair_home_odds"]))
-        market_columns[2].metric(
-            f"Over {distribution['total_line']}", f"{distribution['over_probability']*100:.1f}%"
+        c3.metric("Fair moneyline", fmt_odds(target_fair_odds))
+        c4.metric(
+            "Data quality",
+            f"{prediction['quality_score']}/100",
+            prediction["quality_label"],
         )
-        market_columns[3].metric(
-            f"Under {distribution['total_line']}", f"{distribution['under_probability']*100:.1f}%"
+        st.caption(
+            f"Model disagreement {prediction['model_agreement_gap']*100:.1f} points · "
+            f"park {prediction['park_factor']:.3f} · weather {prediction['weather_factor']:.3f}"
         )
 
-        away_lineup = lineup.get("away") or {}
-        home_lineup = lineup.get("home") or {}
-        st.markdown(
-            f"**Lineups:** {game['away']['short_name']} "
-            f"{'confirmed' if away_lineup.get('confirmed') else 'not confirmed'} · "
-            f"{game['home']['short_name']} "
-            f"{'confirmed' if home_lineup.get('confirmed') else 'not confirmed'}"
+        with st.container(border=True):
+            st.markdown(f"#### Verdict · {prediction['target_name']}")
+            st.write(explanation["summary"])
+
+        why_tab, pitching_tab, context_tab, market_tab = st.tabs(
+            ["🎯 Why the Pick", "⚾ Pitching", "🌤️ Game Context", "💵 Market & Risks"]
         )
-        if away_lineup.get("names") or home_lineup.get("names"):
-            lc1, lc2 = st.columns(2)
-            lc1.markdown("**Away batting order**\n\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(away_lineup.get("names", []))))
-            lc2.markdown("**Home batting order**\n\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(home_lineup.get("names", []))))
+
+        with why_tab:
+            why_left, why_right = st.columns(2)
+            with why_left:
+                with st.container(border=True):
+                    st.markdown("#### Probability build")
+                    st.write(explanation["simulation"])
+            with why_right:
+                with st.container(border=True):
+                    st.markdown("#### Offensive matchup")
+                    st.write(explanation["offense"])
+
+            st.markdown("#### Strongest reasons behind the lean")
+            support_columns = st.columns(min(3, max(1, len(prediction["support"]))))
+            for index, item in enumerate(prediction["support"]):
+                with support_columns[index % len(support_columns)]:
+                    with st.container(border=True):
+                        st.markdown(f"**Reason {index + 1}**")
+                        st.write(item)
+
+        with pitching_tab:
+            starter_column, bullpen_column = st.columns(2)
+            with starter_column:
+                with st.container(border=True):
+                    st.markdown("#### Starting-pitcher comparison")
+                    st.write(explanation["starters"])
+            with bullpen_column:
+                with st.container(border=True):
+                    st.markdown("#### Bullpen comparison")
+                    st.write(explanation["bullpen"])
+
+            starter_metrics = st.columns(4)
+            starter_metrics[0].metric(
+                f"{game['away']['short_name']} starter grade",
+                f"{prediction['away_starter']['quality_ra9']:.2f}",
+                help="Blended ERA/FIP/xERA/WHIP estimate; lower is better.",
+            )
+            starter_metrics[1].metric(
+                f"{game['home']['short_name']} starter grade",
+                f"{prediction['home_starter']['quality_ra9']:.2f}",
+                help="Blended ERA/FIP/xERA/WHIP estimate; lower is better.",
+            )
+            starter_metrics[2].metric(
+                f"{game['away']['short_name']} bullpen",
+                f"{prediction['away_bullpen']['quality_ra9']:.2f}",
+                help="Blended relief-pitching RA9; lower is better.",
+            )
+            starter_metrics[3].metric(
+                f"{game['home']['short_name']} bullpen",
+                f"{prediction['home_bullpen']['quality_ra9']:.2f}",
+                help="Blended relief-pitching RA9; lower is better.",
+            )
+
+        with context_tab:
+            context_left, context_right = st.columns(2)
+            with context_left:
+                with st.container(border=True):
+                    st.markdown("#### Park and weather")
+                    st.write(explanation["environment"])
+            with context_right:
+                with st.container(border=True):
+                    st.markdown("#### Confidence and missing data")
+                    st.write(explanation["confidence"])
+
+            away_lineup = lineup.get("away") or {}
+            home_lineup = lineup.get("home") or {}
+            lineup_status = (
+                f"{game['away']['short_name']}: "
+                f"{'confirmed' if away_lineup.get('confirmed') else 'not confirmed'} · "
+                f"{game['home']['short_name']}: "
+                f"{'confirmed' if home_lineup.get('confirmed') else 'not confirmed'}"
+            )
+            st.markdown(f"#### Lineups · {lineup_status}")
+            if away_lineup.get("names") or home_lineup.get("names"):
+                lc1, lc2 = st.columns(2)
+                with lc1:
+                    with st.container(border=True):
+                        st.markdown(f"**{game['away']['name']} batting order**")
+                        st.markdown(
+                            "\n".join(
+                                f"{i+1}. {name}"
+                                for i, name in enumerate(away_lineup.get("names", []))
+                            )
+                            or "Not available"
+                        )
+                with lc2:
+                    with st.container(border=True):
+                        st.markdown(f"**{game['home']['name']} batting order**")
+                        st.markdown(
+                            "\n".join(
+                                f"{i+1}. {name}"
+                                for i, name in enumerate(home_lineup.get("names", []))
+                            )
+                            or "Not available"
+                        )
+
+        with market_tab:
+            distribution = prediction["distribution"]
+            with st.container(border=True):
+                st.markdown("#### Price interpretation")
+                st.write(explanation["market"])
+
+            market_columns = st.columns(4)
+            market_columns[0].metric("Fair away ML", fmt_odds(prediction["fair_away_odds"]))
+            market_columns[1].metric("Fair home ML", fmt_odds(prediction["fair_home_odds"]))
+            market_columns[2].metric(
+                f"Over {distribution['total_line']}",
+                f"{distribution['over_probability']*100:.1f}%",
+            )
+            market_columns[3].metric(
+                f"Under {distribution['total_line']}",
+                f"{distribution['under_probability']*100:.1f}%",
+            )
+
+            risk_left, risk_right = st.columns(2)
+            with risk_left:
+                with st.container(border=True):
+                    st.markdown("#### Bear case")
+                    for item in prediction["risks"]:
+                        st.markdown(f"- {item}")
+            with risk_right:
+                with st.container(border=True):
+                    st.markdown("#### What would change the pick")
+                    for item in prediction["invalidation"]:
+                        st.markdown(f"- {item}")
 
 
 now_et = datetime.now(ET)
