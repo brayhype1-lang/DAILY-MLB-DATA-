@@ -75,14 +75,18 @@ st.markdown(
 
     .stMainBlockContainer { position: relative; z-index: 1; }
 
+    /* Upgraded Modern Hero Banner */
     .hero-banner {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(3, 45, 66, 0.75) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.35);
-        border-radius: 16px;
-        padding: 24px;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(3, 45, 66, 0.8) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        border-radius: 18px;
+        padding: 28px 32px;
         margin-bottom: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(12px);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(14px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .matchup-card {
@@ -372,7 +376,6 @@ def load_full_slate():
         for g in dates[0].get("games", []):
             game_pk = g.get("gamePk", 12345)
             
-            # STABLE RANDOM SEED LOCK BASED STRICTLY ON GAME PK
             rng = np.random.default_rng(game_pk)
 
             away = g.get("teams", {}).get("away", {})
@@ -427,20 +430,19 @@ def load_full_slate():
 st.markdown(
     """
     <div class="hero-banner">
-        <h1 style="margin:0; font-size: 1.8rem; font-weight: 800; color: #F8FAFC;">⚾ MLB Quantitative Matchup & Winner Engine</h1>
-        <p style="margin:4px 0 0 0; color: #94A3B8; font-size: 0.95rem;">Stable Slate Predictions • Locked Matchup Seeds & Live Trackers</p>
+        <div>
+            <h1 style="margin:0; font-size: 2rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
+            <p style="margin:6px 0 0 0; color: #38BDF8; font-size: 0.95rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE AUTO-SYNC • LOCKED SEEDS & PROBABILITY ENGINE</p>
+        </div>
+        <div style="text-align: right;">
+            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
+                🟢 STREAM: ACTIVE
+            </span>
+        </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
-
-col_spacer, col_btn = st.columns([4, 1])
-with col_btn:
-    if st.button("🔄 Refresh Data", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
-
-st.markdown("---")
 
 slate = load_full_slate()
 
@@ -516,25 +518,6 @@ else:
                             <div class="stat-pill">xwOBA: <b>{stats['xwoba']:.3f}</b></div>
                             <div class="stat-pill">HardHit%: <b>{stats['hard_hit_pct']}%</b></div>
                         </div>
-                        <div class="recent-starts-header">Last 3 Starts Log</div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                
-                for s in stats["recent_starts"]:
-                    st.markdown(
-                        f"""
-                        <div class="start-bubble-row">
-                            <span><b>{s['ip']}</b> IP</span>
-                            <span><b>{s['er']}</b> ER</span>
-                            <span><b>{s['hits']}</b> H</span>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                
-                st.markdown(
-                    f"""
                     </div>
                     <div style="margin-top: 6px;">
                         <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 3px; font-family: 'JetBrains Mono', monospace;">
