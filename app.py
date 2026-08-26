@@ -2606,36 +2606,104 @@ def scoreboard_rail(predictions: list[dict[str, Any]], empty_message: str) -> st
     return "".join(line.strip() for line in markup.splitlines())
 
 
+def render_native_score_card(prediction: dict[str, Any]) -> None:
+    """Render one app-like matchup tile using only stable Streamlit widgets."""
+    game = prediction["game"]
+    away, home = game["away"], game["home"]
+    live = game["live"]
+    status = live["status"]
+    game_dt = game.get("game_datetime_utc")
+    start_text = game_dt.astimezone(ET).strftime("%-I:%M %p ET") if game_dt else "Time TBD"
+
+    if status == "LIVE":
+        status_text = f"🔴 {live.get('status_label') or 'LIVE'}"
+        away_value = str(int(live.get("away_runs") or 0))
+        home_value = str(int(live.get("home_runs") or 0))
+    elif status == "FINAL":
+        status_text = "✅ FINAL"
+        away_value = str(int(live.get("away_runs") or 0))
+        home_value = str(int(live.get("home_runs") or 0))
+    else:
+        status_text = f"🕒 {start_text}"
+        away_value = f"{prediction['away_probability']*100:.0f}%"
+        home_value = f"{prediction['home_probability']*100:.0f}%"
+
+    with st.container(border=True):
+        st.caption(status_text)
+        for team, value in ((away, away_value), (home, home_value)):
+            logo_column, team_column, value_column = st.columns(
+                [0.18, 1.0, 0.28], vertical_alignment="center"
+            )
+            with logo_column:
+                st.image(team["logo"], width=30)
+            with team_column:
+                st.markdown(f"**{team['name']}**")
+                st.caption(
+                    f"{int(team.get('wins') or 0)}-{int(team.get('losses') or 0)} · "
+                    f"{team.get('pitcher_name') or 'Starter TBD'}"
+                )
+            with value_column:
+                st.markdown(f"### {value}")
+
+        st.progress(
+            prediction["target_probability"],
+            text=(
+                f"Model lean: {prediction['target_name']} "
+                f"{prediction['target_probability']*100:.1f}%"
+            ),
+        )
+        st.caption(
+            f"Projected {away['short_name']} {prediction['projected_away_runs']:.1f} · "
+            f"{home['short_name']} {prediction['projected_home_runs']:.1f}  |  "
+            f"Data {prediction['quality_score']}/100"
+        )
+        analysis_is_open = st.session_state.get("open_game_pk") == game["game_pk"]
+        st.button(
+            "Close full analysis" if analysis_is_open else "Open full analysis",
+            key=f"game_center_toggle_{game['game_pk']}",
+            on_click=toggle_game_analysis,
+            args=(game["game_pk"],),
+            type="primary" if analysis_is_open else "secondary",
+            use_container_width=True,
+        )
+
+
+def render_score_card_grid(predictions: list[dict[str, Any]], empty_message: str) -> None:
+    if not predictions:
+        st.info(empty_message)
+        return
+    for row_start in range(0, len(predictions), 3):
+        columns = st.columns(3)
+        for column, prediction in zip(columns, predictions[row_start : row_start + 3]):
+            with column:
+                render_native_score_card(prediction)
+
+
 def render_game_center(predictions: list[dict[str, Any]]) -> None:
     live_games = [p for p in predictions if p["game"]["live"]["status"] == "LIVE"]
     upcoming_games = [p for p in predictions if p["game"]["live"]["status"] == "PREVIEW"]
     final_games = [p for p in predictions if p["game"]["live"]["status"] == "FINAL"]
+
     st.subheader("Today's Game Center")
-    st.caption(
-        f"{len(predictions)} games · {len(live_games)} live · "
-        f"{len(upcoming_games)} upcoming · {len(final_games)} final"
+    all_metric, live_metric, upcoming_metric, final_metric = st.columns(4)
+    all_metric.metric("All games", len(predictions))
+    live_metric.metric("Live now", len(live_games))
+    upcoming_metric.metric("Upcoming", len(upcoming_games))
+    final_metric.metric("Final", len(final_games))
+
+    live_tab, upcoming_tab, final_tab = st.tabs(
+        [
+            f"🔴 Live ({len(live_games)})",
+            f"🕒 Upcoming ({len(upcoming_games)})",
+            f"✅ Final ({len(final_games)})",
+        ]
     )
-    rows: list[dict[str, str]] = []
-    for prediction in predictions:
-        game = prediction["game"]
-        live = game["live"]
-        game_dt = game.get("game_datetime_utc")
-        start = game_dt.astimezone(ET).strftime("%-I:%M %p ET") if game_dt else "TBD"
-        if live["status"] in ("LIVE", "FINAL"):
-            score = f"{int(live.get('away_runs') or 0)}–{int(live.get('home_runs') or 0)}"
-        else:
-            score = f"{prediction['projected_away_runs']:.1f}–{prediction['projected_home_runs']:.1f} proj."
-        rows.append(
-            {
-                "Status": live.get("status_label") or live["status"].title(),
-                "Time": start,
-                "Matchup": f"{game['away']['short_name']} at {game['home']['short_name']}",
-                "Score": score,
-                "Model lean": f"{prediction['target_name']} {prediction['target_probability']*100:.1f}%",
-                "Quality": f"{prediction['quality_score']}/100",
-            }
-        )
-    st.dataframe(rows, hide_index=True, use_container_width=True)
+    with live_tab:
+        render_score_card_grid(live_games, "No games are live right now.")
+    with upcoming_tab:
+        render_score_card_grid(upcoming_games, "No upcoming games remain on this slate.")
+    with final_tab:
+        render_score_card_grid(final_games, "No games are final yet.")
 
 
 def slate_insight_card(
@@ -3132,6 +3200,24 @@ live_count = sum(p["game"]["live"]["status"] == "LIVE" for p in predictions)
 preview_count = sum(p["game"]["live"]["status"] == "PREVIEW" for p in predictions)
 final_count = sum(p["game"]["live"]["status"] == "FINAL" for p in predictions)
 render_game_center(predictions)
+
+selected_prediction = next(
+    (
+        prediction
+        for prediction in predictions
+        if prediction["game"]["game_pk"] == st.session_state.get("open_game_pk")
+    ),
+    None,
+)
+if selected_prediction is not None:
+    selected_game_pk = selected_prediction["game"]["game_pk"]
+    st.subheader("Selected Matchup Analysis")
+    render_advanced(
+        selected_prediction,
+        weather_by_game.get(selected_game_pk, {}),
+        lineups_by_game.get(selected_game_pk, {}),
+    )
+
 render_slate_insights(predictions)
 st.warning(
     "Probabilities, not promises. Every outcome can lose. The app reports uncertainty, "
@@ -3211,7 +3297,7 @@ for prediction in filtered_predictions:
         help="Load the full model explanation for this matchup.",
     )
     if analysis_is_open:
-        render_advanced(prediction, weather, lineup)
+        st.caption("The selected full analysis is open above Daily Slate Insights.")
 
 st.markdown("---")
 with st.expander("Methodology, data sources and important limitations", expanded=False):
