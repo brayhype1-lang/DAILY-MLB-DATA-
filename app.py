@@ -2024,16 +2024,12 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
 </style>
 """
 import html
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
 import streamlit as st
-
-try:
-    from streamlit_autorefresh import st_autorefresh
-except ImportError:  # pragma: no cover - only used when a deployment omits the optional helper
-    st_autorefresh = None
 
 
 ET = ZoneInfo("America/New_York")
@@ -3047,7 +3043,7 @@ with st.sidebar:
         options=[10_000, 20_000, 30_000, 50_000, 75_000],
         value=30_000,
     )
-    auto_refresh = st.toggle("Auto-refresh live games every 30 seconds", value=True)
+    st.caption("Use either refresh button for the newest live score and lineup data.")
     if st.button("🔄 Force complete data refresh", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
@@ -3069,17 +3065,6 @@ with st.sidebar:
         "To change the time, edit DAILY_REFRESH_HOUR_ET and "
         "DAILY_REFRESH_MINUTE_ET near the top of app.py."
     )
-
-if st_autorefresh is not None:
-    milliseconds_to_daily_update = max(
-        1_000, int((next_update - now_et).total_seconds() * 1_000)
-    )
-    refresh_interval = (
-        LIVE_REFRESH_SECONDS * 1_000
-        if auto_refresh
-        else min(milliseconds_to_daily_update, 3_600_000)
-    )
-    st_autorefresh(interval=refresh_interval, limit=None, key="terminal_clock_refresh")
 
 as_of = selected_date.isoformat()
 st.markdown(
@@ -3110,31 +3095,63 @@ pitcher_ids = tuple(sorted({int(game[side]["pitcher_id"]) for game in games for 
 game_pks = tuple(game["game_pk"] for game in games)
 
 with st.spinner("Building real-stat pitcher, offense, bullpen, park and weather profiles…"):
-    try:
-        team_stats = cached_team_stats(season, as_of)
-    except DataSourceError as exc:
-        st.error(f"Team statistics are required for projections and could not be loaded: {exc}")
+    # These feeds are independent. Running them concurrently keeps a cold
+    # Community Cloud boot inside its startup window instead of making the
+    # browser wait through every network timeout one after another.
+    feed_defaults: dict[str, Any] = {
+        "team_stats": {},
+        "pitcher_profiles": {},
+        "bullpen_stats": {},
+        "pitcher_statcast": {},
+        "park_factors": {},
+        "weather_by_game": {},
+        "lineups_by_game": {},
+        "odds_events": [],
+    }
+    feed_calls: dict[str, tuple[Any, tuple[Any, ...]]] = {
+        "team_stats": (cached_team_stats, (season, as_of)),
+        "pitcher_profiles": (cached_pitchers, (pitcher_ids, season, as_of)),
+        "bullpen_stats": (cached_bullpens, (team_ids, season)),
+        "pitcher_statcast": (cached_statcast, (season,)),
+        "park_factors": (cached_park_factors, (season,)),
+        "weather_by_game": (cached_weather, (games,)),
+        "lineups_by_game": (cached_lineups, (game_pks,)),
+    }
+    if odds_api_key:
+        feed_calls["odds_events"] = (cached_odds, (odds_api_key,))
+
+    required_feed_error: Exception | None = None
+    with ThreadPoolExecutor(max_workers=len(feed_calls)) as executor:
+        futures = {
+            name: executor.submit(function, *arguments)
+            for name, (function, arguments) in feed_calls.items()
+        }
+        for name, future in futures.items():
+            try:
+                feed_defaults[name] = future.result()
+            except Exception as exc:  # Each source already normalizes network errors.
+                if name == "team_stats":
+                    required_feed_error = exc
+
+    if required_feed_error is not None:
+        st.error(
+            "Team statistics are required for projections and could not be loaded: "
+            f"{required_feed_error}"
+        )
         st.stop()
+
+    team_stats = feed_defaults["team_stats"]
     if not team_stats:
         st.error("Team statistics were empty. Predictions were withheld instead of substituting invented data.")
         st.stop()
 
-    pitcher_profiles = cached_pitchers(pitcher_ids, season, as_of)
-    bullpen_stats = cached_bullpens(team_ids, season)
-    try:
-        pitcher_statcast = cached_statcast(season)
-    except DataSourceError:
-        pitcher_statcast = {}
-    try:
-        park_factors = cached_park_factors(season)
-    except DataSourceError:
-        park_factors = {}
-    weather_by_game = cached_weather(games)
-    lineups_by_game = cached_lineups(game_pks)
-    try:
-        odds_events = cached_odds(odds_api_key) if odds_api_key else []
-    except DataSourceError:
-        odds_events = []
+    pitcher_profiles = feed_defaults["pitcher_profiles"]
+    bullpen_stats = feed_defaults["bullpen_stats"]
+    pitcher_statcast = feed_defaults["pitcher_statcast"]
+    park_factors = feed_defaults["park_factors"]
+    weather_by_game = feed_defaults["weather_by_game"]
+    lineups_by_game = feed_defaults["lineups_by_game"]
+    odds_events = feed_defaults["odds_events"]
 
 predictions: list[dict[str, Any]] = []
 for game in games:
