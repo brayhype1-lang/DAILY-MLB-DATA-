@@ -1623,8 +1623,6 @@ def bubble_markup(count: int = 24) -> str:
 def full_stylesheet() -> str:
     return """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap');
-
 :root {
     --navy-0: #030817;
     --navy-1: #07172d;
@@ -1653,13 +1651,11 @@ html, body, [class*="css"], .stApp {
 
 [data-testid="stHeader"] { background: rgba(3, 8, 23, .45); }
 [data-testid="stSidebar"] { background: rgba(3, 8, 23, .96); }
-.main .block-container { max-width: 1440px; padding-top: 1.4rem; padding-bottom: 4rem; position: relative; z-index: 5; }
+[data-testid="stMainBlockContainer"] { max-width: 1440px; padding-top: 1.4rem; padding-bottom: 4rem; }
 h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-spacing: -.025em; }
 
 .quant-bubbles {
-    position: absolute; top: 0; left: 0; right: 0; height: 980px; overflow: hidden; z-index: 0;
-    pointer-events: none; mask-image: linear-gradient(to bottom, #000 0 72%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, #000 0 72%, transparent 100%);
+    display: none;
 }
 .quant-bubble {
     position: absolute; bottom: -130px; display: block; border-radius: 999px;
@@ -1673,13 +1669,6 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
 @keyframes quantFloat { from { transform: translateY(0); } to { transform: translateY(-1050px); } }
 @keyframes quantWobble { 0%,100% { margin-left: 0; } 50% { margin-left: 34px; } }
 
-[data-testid="stVerticalBlockBorderWrapper"]:has(.top-nav-brand) {
-    position: sticky; top: .55rem; z-index: 60;
-    padding: .62rem .78rem !important; margin-bottom: .8rem;
-    border: 1px solid rgba(103,232,249,.26) !important;
-    background: rgba(2,12,26,.91) !important;
-    box-shadow: 0 14px 38px rgba(0,0,0,.34);
-}
 .top-nav-brand { display: flex; align-items: center; gap: .7rem; min-height: 44px; }
 .top-nav-mark {
     display: grid; place-items: center; width: 39px; height: 39px; border-radius: 12px;
@@ -1692,12 +1681,7 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
 .top-nav-sync strong { display: block; color: #a7f3d0; font: 700 .65rem 'IBM Plex Mono', monospace; letter-spacing: .04em; }
 .top-nav-sync small { display: block; color: #7890a6; font: 500 .59rem 'IBM Plex Mono', monospace; margin-top: .12rem; }
 .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 5px rgba(52,211,153,.10), 0 0 12px rgba(52,211,153,.58); }
-[data-testid="stVerticalBlockBorderWrapper"]:has(.top-nav-brand) [data-testid="stDateInput"] input {
-    text-align: center; color: #ecfeff !important; font-weight: 700;
-}
-[data-testid="stVerticalBlockBorderWrapper"]:has(.top-nav-brand) .stButton > button {
-    min-height: 38px !important; padding: .25rem .5rem !important; font-size: 1.1rem !important;
-}
+[data-testid="stDateInput"] input { color: #ecfeff !important; font-weight: 700; }
 
 .hero-card {
     position: relative; overflow: hidden; margin: .35rem 0 1.3rem;
@@ -1723,9 +1707,6 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     border: 1px solid rgba(103,232,249,.22); border-radius: 17px;
     padding: .78rem .85rem .15rem; margin: 1rem 0 1.1rem;
     background: rgba(2,12,26,.91); box-shadow: 0 16px 42px rgba(0,0,0,.30);
-}
-[data-testid="stMarkdownContainer"]:has(.game-center-sticky) {
-    position: sticky; top: 5.8rem; z-index: 40;
 }
 .game-center-head {
     display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;
@@ -1931,9 +1912,6 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     padding: .3rem .6rem !important; border-radius: 999px;
     border: 1px solid rgba(103,232,249,.16); background: rgba(3,15,31,.62);
 }
-[data-testid="stRadio"] label:has(input:checked) {
-    border-color: rgba(103,232,249,.46); background: rgba(8,145,178,.23);
-}
 [data-testid="stExpander"] {
     border: 1px solid rgba(34,211,238,.28) !important;
     border-radius: 14px !important;
@@ -2008,12 +1986,10 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     .game-top { align-items: stretch; flex-direction: column; }
     .status-pill { align-self: flex-start; }
     .game-center-head { align-items: flex-start; flex-direction: column; gap: .4rem; }
-    [data-testid="stMarkdownContainer"]:has(.game-center-sticky) { position: relative; top: auto; z-index: 5; }
-    [data-testid="stVerticalBlockBorderWrapper"]:has(.top-nav-brand) { position: relative; top: auto; }
     .score-card { flex-basis: 226px; }
     .compact-game { grid-template-columns: 1fr; scroll-margin-top: 1rem; }
     .compact-pick, .compact-score { padding: .72rem 0 0; border-left: 0; border-top: 1px solid rgba(148,163,184,.14); }
-    .main .block-container { padding-left: .8rem; padding-right: .8rem; }
+    [data-testid="stMainBlockContainer"] { padding-left: .8rem; padding-right: .8rem; }
 }
 
 @media (max-width: 620px) {
@@ -2046,9 +2022,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-# Safe-display mode: the full animated stylesheet can trigger a blank Chromium
-# canvas on some Community Cloud/browser combinations. Keep the application and
-# model fully functional while using Streamlit's native, stable rendering layer.
+# Browser-safe visual layer: no animated overlay, external font request, blur,
+# mask, or relational :has() selectors.
+st.markdown(full_stylesheet(), unsafe_allow_html=True)
 st.title("⚾ MLB Quantitative Matchup & Winner Engine")
 st.caption("Live MLB data · transparent probabilities · detailed matchup research")
 
