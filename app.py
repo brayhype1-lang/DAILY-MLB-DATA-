@@ -8,7 +8,7 @@ import streamlit as st
 from datetime import datetime
 
 # ------------------------------------------------------------------
-# 1. PAGE CONFIG & MODERN HUD STYLING (WITH BUBBLE BACKGROUND & GLOSSY BUTTONS)
+# 1. PAGE CONFIG & HIGH-VOLTAGE HUD STYLING (BUBBLES & BUBBLE FONT)
 # ------------------------------------------------------------------
 st.set_page_config(
     page_title="MLB Quantitative Terminal",
@@ -20,15 +20,29 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@700;800&display=swap');
 
     html, body, [class*="css"], div, span, h1, h2, h3, h4, p {
-        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Outfit', sans-serif !important;
     }
 
-    /* Restored Radial Bubble Background */
+    /* Chunky bubble font for headers and main elements */
+    h1, h2, h3, h4, .stMarkdown h3, .stMarkdown h4 {
+        font-family: 'Fredoka', cursive !important;
+        letter-spacing: 0.5px;
+    }
+
+    /* --- 3D FLOATING ORB / BUBBLE BACKGROUND --- * /
     .stApp {
-        background: radial-gradient(circle at 50% 15%, #1e293b 0%, #0f172a 45%, #070d1b 80%, #02060d 100%);
+        background-color: #070d1b;
+        background-image: 
+            radial-gradient(circle at 15% 25%, rgba(56, 189, 248, 0.22) 0%, transparent 35%),
+            radial-gradient(circle at 85% 75%, rgba(147, 51, 234, 0.18) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.12) 0%, transparent 60%),
+            radial-gradient(circle at 80% 15%, rgba(236, 72, 153, 0.15) 0%, transparent 30%),
+            radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.1) 0%, transparent 35%),
+            radial-gradient(circle at 50% 0%, #0f172a 0%, #070d1b 50%, #02060d 100%);
+        background-attachment: fixed;
         color: #F8FAFC;
     }
 
@@ -38,32 +52,33 @@ st.markdown(
 
     /* Badges */
     .badge-live {
-        background: rgba(239, 68, 68, 0.18);
-        border: 1px solid rgba(239, 68, 68, 0.5);
+        background: rgba(239, 68, 68, 0.22);
+        border: 1px solid rgba(239, 68, 68, 0.6);
         color: #FCA5A5;
         font-weight: 800;
-        padding: 2px 8px;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.65rem;
+        font-size: 0.7rem;
         font-family: 'JetBrains Mono', monospace;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
     }
     .badge-final {
-        background: rgba(51, 65, 85, 0.4);
-        border: 1px solid rgba(100, 116, 139, 0.4);
+        background: rgba(51, 65, 85, 0.5);
+        border: 1px solid rgba(100, 116, 139, 0.5);
         color: #94A3B8;
         font-weight: 700;
-        padding: 2px 8px;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.65rem;
+        font-size: 0.7rem;
     }
     .badge-upcoming {
-        background: rgba(30, 41, 59, 0.4);
-        border: 1px solid rgba(51, 65, 85, 0.4);
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(51, 65, 85, 0.5);
         color: #64748B;
-        font-weight: 600;
-        padding: 2px 8px;
+        font-weight: 700;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.65rem;
+        font-size: 0.7rem;
     }
 
     /* Base Diamonds */
@@ -78,38 +93,38 @@ st.markdown(
     .base-active {
         background-color: #38BDF8;
         border-color: #7DD3FC;
-        box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
     }
 
-    /* --- TRUE GLOSSY LIQUID-GLASS PILL BUTTONS --- */
+    /* --- ULTRA GLOSSY LIQUID-GLASS PILL BUTTONS --- */
     .stButton > button {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(30, 41, 59, 0.8) 100%) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-        border: 1px solid rgba(56, 189, 248, 0.35) !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.4) !important; /* Top glass reflection line */
-        color: #E2E8F0 !important;
-        font-family: 'Outfit', sans-serif !important;
-        font-weight: 700 !important;
-        font-size: 0.78rem !important;
-        letter-spacing: 0.6px !important;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(15, 23, 42, 0.7) 50%, rgba(30, 41, 59, 0.9) 100%) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border: 1px solid rgba(56, 189, 248, 0.45) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.6) !important;
+        color: #FFFFFF !important;
+        font-family: 'Fredoka', cursive !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        letter-spacing: 0.8px !important;
         border-radius: 50px !important;
-        padding: 0.4rem 1rem !important;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        padding: 0.45rem 1.2rem !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 16px rgba(0, 0, 0, 0.4) !important;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     
     .stButton > button:hover {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.35) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(56, 189, 248, 0.2) 100%) !important;
-        border-color: rgba(56, 189, 248, 0.9) !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.7) !important;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.45) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(56, 189, 248, 0.3) 100%) !important;
+        border-color: rgba(56, 189, 248, 1) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.9) !important;
         color: #38BDF8 !important;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 18px rgba(56, 189, 248, 0.5) !important;
-        transform: translateY(-2px) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 22px rgba(56, 189, 248, 0.7) !important;
+        transform: translateY(-2px) scale(1.02) !important;
     }
 
     .stButton > button:active {
-        transform: translateY(0px) !important;
+        transform: translateY(0px) scale(1) !important;
     }
 </style>
 """,
@@ -269,7 +284,7 @@ def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple
     return 1.0 - new_home_prob, new_home_prob
 
 # ------------------------------------------------------------------
-# 5. MODEL BREAKDOWN & SLATE LOADER
+# 5. HIGH-VOLTAGE NARRATIVE BREAKDOWN ENGINE
 # ------------------------------------------------------------------
 def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park, live_state=None):
     woba_diff = away_stats["xwoba"] - home_stats["xwoba"]
@@ -287,23 +302,25 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
     if home_prob >= away_prob:
         target, win_p = home_team, home_prob * 100
         edge_pitcher, other_pitcher = home_stats, away_stats
-        edge_team_name, other_team_name = home_team, away_team
+        edge_team_name = home_team
     else:
         target, win_p = away_team, away_prob * 100
         edge_pitcher, other_pitcher = away_stats, home_stats
-        edge_team_name, other_team_name = away_team, home_team
+        edge_team_name = away_team
 
     if live_state and live_state["status"] == "LIVE":
         score_str = f"{away_team} {live_state['away_runs']} - {home_team} {live_state['home_runs']}"
         narrative = (
-            f"LIVE GAME STREAM ACTIVE ({live_state['inning_str']} | Score: {score_str}): "
-            f"Model actively pricing live momentum. Quantitative edge leans toward {target} at {win_p:.1f}% probability."
+            f"🔥 LIVE MOMENTUM SURGE ({live_state['inning_str']} | SCORE: {score_str})! "
+            f"The quantitative engine is hammering real-time win probability shifts. "
+            f"Current leverage and bullpen pressure violently favor **{target}** to lock it down at **{win_p:.1f}%** win probability!"
         )
     else:
         narrative = (
-            f"Model projects {target} to win at {win_p:.1f}%. "
-            f"{edge_team_name}'s starter {edge_pitcher['pitcher']} holds an edge "
-            f"(ERA: {edge_pitcher['era']:.2f}, xwOBA: {edge_pitcher['xwoba']:.3f}) under {park['name']} park conditions."
+            f"🚀 QUANTITATIVE EDGE LOCK: Model projects **{target}** with a massive statistical advantage at **{win_p:.1f}%**. "
+            f"Ace starter **{edge_pitcher['pitcher']}** ({edge_pitcher['record']}) brings elite metrics "
+            f"(ERA: {edge_pitcher['era']:.2f}, xwOBA: {edge_pitcher['xwoba']:.3f}) into the hitter's crucible at **{park['name']}** ({park['run_mult']}x run factor). "
+            f"Expect heavy offensive pressure early!"
         )
 
     return {
@@ -405,7 +422,7 @@ else:
         if selected_g:
             lv = selected_g["live"]
             
-            if st.button("⬅️ Back to Scoreboard Grid", key="back_to_grid_btn"):
+            if st.button("⬅️ BACK TO SCOREBOARD", key="back_to_grid_btn"):
                 st.session_state["selected_game_id"] = None
                 st.rerun()
 
@@ -415,20 +432,20 @@ else:
             col_box1, col_box2 = st.columns(2)
             with col_box1:
                 with st.container(border=True):
-                    st.markdown("### 🏟️ Box Score Summary")
+                    st.markdown("### 🏟️ BOX SCORE RADAR")
                     sc1, sc2, sc3 = st.columns(3)
                     runs_val = lv['away_runs'] if not isinstance(lv.get('runs'), dict) else lv['runs']['away']
-                    sc1.metric("Runs", f"{runs_val} - {lv['home_runs']}")
-                    sc2.metric("Hits", f"{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}")
-                    sc3.metric("Errors", f"{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}")
+                    sc1.metric("RUNS", f"{runs_val} - {lv['home_runs']}")
+                    sc2.metric("HITS", f"{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}")
+                    sc3.metric("ERRORS", f"{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}")
             with col_box2:
                 with st.container(border=True):
-                    st.markdown("### 🌤️ Venue & Environment")
-                    st.write(f"**Ballpark:** {selected_g['park']['name']}")
+                    st.markdown("### 🌤️ BALLPARK ENVIRONMENT")
+                    st.write(f"**Venue:** {selected_g['park']['name']}")
                     st.write(f"**Weather:** {selected_g['park']['weather']['weather_desc']}")
-                    st.write(f"**Run Factor:** {selected_g['park']['run_mult']}x")
+                    st.write(f"**Park Multiplier:** {selected_g['park']['run_mult']}x")
 
-            st.markdown("### ⚡ Live Play-by-Play Feed")
+            st.markdown("### ⚡ LIVE PLAY-BY-PLAY FEED")
             with st.container(border=True):
                 plays = lv.get("recent_plays", [])
                 if plays:
@@ -442,7 +459,7 @@ else:
     # --- MAIN SCOREBOARD GRID ---
     with st.container(border=True):
         st.markdown("### ⚾ MLB QUANTITATIVE TERMINAL")
-        st.caption("LIVE SCOREBOARD • CLICK A CARD'S INSPECT BUTTON TO LAUNCH DEEP DIVE")
+        st.caption("LIVE SCOREBOARD • CLICK ANY CARD TO LAUNCH DEEP DIVE")
 
     cols_per_row = 4
     for i in range(0, len(evaluated_slate), cols_per_row):
@@ -500,12 +517,12 @@ else:
                         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
                     # Glossy Liquid-Glass pill button inside each card
-                    if st.button("🔍 Inspect Match", key=f"btn_{g_id}", use_container_width=True):
+                    if st.button("🔍 INSPECT MATCH", key=f"btn_{g_id}", use_container_width=True):
                         st.session_state["selected_game_id"] = g_id
                         st.rerun()
 
     st.markdown("---")
-    st.markdown("### 📊 Full Slate Model Predictions & Matchups")
+    st.markdown("### 📊 FULL SLATE MODEL PREDICTIONS & EDGE MATRIX")
 
     for g in evaluated_slate:
         an = g["analysis"]
@@ -513,8 +530,8 @@ else:
         home_pct = int(an["home_prob"] * 100)
 
         with st.container(border=True):
-            st.markdown(f"#### {g['away_team']} @ {g['home_team']} ({g['park']['name']})")
-            st.markdown(f"**Model Pick:** {an['target']} ({an['win_prob']}% Win Probability)")
+            st.markdown(f"#### ⚾ {g['away_team']} @ {g['home_team']} ({g['park']['name']})")
+            st.markdown(f"🔥 **MODEL LOCK:** {an['target']} ({an['win_prob']}% Win Probability)")
 
             c1, c2, c3 = st.columns(3)
             with c1:
@@ -526,5 +543,5 @@ else:
                 st.write(f"ERA: {g['home_stats']['era']:.2f} | xwOBA: {g['home_stats']['xwoba']:.3f}")
                 st.progress(home_pct / 100, text=f"Win Prob: {home_pct}%")
             with c3:
-                st.markdown("**Quantitative Rationale**")
+                st.markdown("**QUANTITATIVE BREAKDOWN**")
                 st.write(an['narrative'])
