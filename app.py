@@ -1636,12 +1636,14 @@ def native_stylesheet() -> str:
     """
     return """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+
 :root {
     --quant-bg-0: #050a12;
     --quant-bg-1: #091625;
-    --quant-panel: rgba(11, 25, 40, .86);
-    --quant-panel-strong: rgba(8, 20, 34, .95);
-    --quant-line: rgba(125, 211, 252, .20);
+    --quant-panel: rgba(10, 24, 39, .88);
+    --quant-panel-strong: rgba(7, 18, 31, .96);
+    --quant-line: rgba(125, 211, 252, .17);
     --quant-line-strong: rgba(103, 232, 249, .48);
     --quant-cyan: #5ee7f7;
     --quant-blue: #60a5fa;
@@ -1654,19 +1656,16 @@ def native_stylesheet() -> str:
 html, body, .stApp,
 [data-testid="stAppViewContainer"],
 [data-testid="stMainBlockContainer"] {
-    font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif !important;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif !important;
 }
 
 .stApp {
     color: var(--quant-text);
     background-color: var(--quant-bg-0);
     background-image:
-        radial-gradient(circle at 12% 18%, rgba(255,255,255,.10) 0 2px, rgba(84,190,255,.12) 3px 14px, rgba(31,94,151,.05) 30px, transparent 58px),
-        radial-gradient(circle at 91% 34%, rgba(255,255,255,.09) 0 2px, rgba(94,231,247,.10) 3px 10px, rgba(19,89,137,.04) 24px, transparent 48px),
-        radial-gradient(circle at 74% 82%, rgba(255,255,255,.08) 0 1px, rgba(96,165,250,.10) 2px 9px, transparent 37px),
-        radial-gradient(ellipse at 18% -5%, rgba(14,165,233,.22), transparent 42%),
-        radial-gradient(ellipse at 92% 12%, rgba(37,99,235,.15), transparent 35%),
-        linear-gradient(138deg, #050a12 0%, #0a1a2a 47%, #07111e 100%);
+        radial-gradient(ellipse at 8% -8%, rgba(14,165,233,.23), transparent 39%),
+        radial-gradient(ellipse at 98% 18%, rgba(37,99,235,.14), transparent 34%),
+        linear-gradient(138deg, #040910 0%, #091827 48%, #06111d 100%);
     background-attachment: fixed;
 }
 
@@ -1678,40 +1677,49 @@ html, body, .stApp,
     inset: 0;
     overflow: hidden;
     pointer-events: none;
-    z-index: 1;
+    z-index: 0;
+    contain: strict;
 }
 
 .quant-bubble {
     position: absolute;
-    bottom: -135px;
+    left: var(--bubble-left);
+    bottom: calc(-1 * var(--bubble-size) - 24px);
+    width: var(--bubble-size);
+    height: var(--bubble-size);
     display: block;
     border-radius: 999px;
-    border: 1px solid rgba(186,230,253,.30);
+    border: 1px solid rgba(186,230,253,.34);
     background:
-        radial-gradient(circle at 29% 24%, rgba(255,255,255,.48) 0 3%, rgba(186,230,253,.20) 8%, rgba(56,189,248,.10) 28%, rgba(15,71,112,.06) 56%, transparent 69%);
+        radial-gradient(circle at 28% 23%, rgba(255,255,255,.72) 0 2.5%, rgba(224,247,255,.30) 4%, transparent 11%),
+        radial-gradient(circle at 32% 29%, rgba(186,230,253,.20), rgba(56,189,248,.10) 28%, rgba(14,69,109,.07) 55%, transparent 72%);
     box-shadow:
-        inset -14px -16px 25px rgba(0,7,18,.46),
-        inset 8px 8px 16px rgba(255,255,255,.07),
-        0 9px 25px rgba(0,0,0,.16),
-        0 0 18px rgba(56,189,248,.09);
-    animation-name: quantBubbleRise, quantBubbleWobble;
-    animation-timing-function: linear, ease-in-out;
-    animation-iteration-count: infinite;
-    will-change: transform, margin-left;
+        inset -14px -16px 26px rgba(0,7,18,.52),
+        inset 8px 8px 17px rgba(255,255,255,.09),
+        0 10px 28px rgba(0,0,0,.18),
+        0 0 20px rgba(56,189,248,.11);
+    opacity: var(--bubble-opacity);
+    animation: quantBubbleLift var(--bubble-duration) linear var(--bubble-delay) infinite !important;
+    will-change: transform;
+    transform: translate3d(0, 0, 0) scale(.86);
 }
 
-@keyframes quantBubbleRise {
-    from { transform: translate3d(0, 0, 0) scale(.92); }
-    to { transform: translate3d(0, calc(-100vh - 270px), 0) scale(1.06); }
-}
-
-@keyframes quantBubbleWobble {
-    0%, 100% { margin-left: 0; }
-    50% { margin-left: 32px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .quant-bubble { animation-play-state: paused; }
+@keyframes quantBubbleLift {
+    0% {
+        transform: translate3d(0, 0, 0) scale(.86) rotate(0deg);
+    }
+    24% {
+        transform: translate3d(var(--bubble-drift), -27vh, 0) scale(.94) rotate(4deg);
+    }
+    52% {
+        transform: translate3d(var(--bubble-return), -58vh, 0) scale(1) rotate(-3deg);
+    }
+    78% {
+        transform: translate3d(var(--bubble-soft-drift), -88vh, 0) scale(1.04) rotate(3deg);
+    }
+    100% {
+        transform: translate3d(var(--bubble-exit-drift), calc(-100vh - 190px), 0) scale(1.08) rotate(0deg);
+    }
 }
 
 [data-testid="stAppViewContainer"] {
@@ -1735,9 +1743,9 @@ html, body, .stApp,
 
 h1, h2, h3, h4,
 [data-testid="stHeadingWithActionElements"] {
-    font-family: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif !important;
+    font-family: "Barlow Condensed", Bahnschrift, "Arial Narrow", sans-serif !important;
     font-stretch: condensed;
-    letter-spacing: -.025em !important;
+    letter-spacing: -.012em !important;
     color: var(--quant-text) !important;
 }
 
@@ -1785,7 +1793,303 @@ hr {
 }
 
 [class*="st-key-matchup_row_"] [data-testid="stVerticalBlockBorderWrapper"] {
-    border-left: 3px solid rgba(94,231,247,.62) !important;
+    position: relative;
+    overflow: hidden;
+    padding: .95rem 1.05rem .86rem !important;
+    border: 1px solid rgba(125,211,252,.16) !important;
+    border-left: 1px solid rgba(125,211,252,.16) !important;
+    border-radius: 18px !important;
+    background:
+        radial-gradient(circle at 92% 16%, rgba(96,165,250,.11), transparent 30%),
+        linear-gradient(145deg, rgba(13,31,49,.97), rgba(7,18,31,.95)) !important;
+    box-shadow:
+        0 18px 42px rgba(0,0,0,.27),
+        inset 0 1px 0 rgba(255,255,255,.045) !important;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+[class*="st-key-matchup_row_"] [data-testid="stVerticalBlockBorderWrapper"]::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--quant-cyan), var(--quant-blue));
+    box-shadow: 0 0 22px rgba(94,231,247,.30);
+}
+
+[class*="st-key-matchup_row_"]:hover [data-testid="stVerticalBlockBorderWrapper"] {
+    transform: translateY(-2px);
+    border-color: rgba(103,232,249,.34) !important;
+    box-shadow:
+        0 22px 48px rgba(0,0,0,.34),
+        0 0 28px rgba(34,211,238,.06),
+        inset 0 1px 0 rgba(255,255,255,.055) !important;
+}
+
+[class*="st-key-matchup_row_"] [data-testid="stHorizontalBlock"] {
+    gap: .82rem !important;
+}
+
+[class*="st-key-matchup_row_"] [data-testid="stProgress"] {
+    margin-top: .35rem;
+}
+
+[class*="st-key-matchup_row_"] [data-testid="stProgress"] > div {
+    height: .52rem !important;
+    border-radius: 999px !important;
+    background: rgba(4,12,22,.82) !important;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,.46);
+}
+
+[class*="st-key-matchup_row_"] [data-testid="stProgress"] p {
+    font-size: .78rem !important;
+    font-weight: 700 !important;
+    color: #c7d6e6 !important;
+}
+
+.matchup-team-stack {
+    display: grid;
+    gap: .35rem;
+    min-width: 0;
+}
+
+.matchup-team-line {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    min-width: 0;
+}
+
+.matchup-team-line img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 7px rgba(0,0,0,.42));
+    flex: 0 0 30px;
+}
+
+.matchup-team-name {
+    overflow: hidden;
+    color: #f7fbff;
+    font-family: "Barlow Condensed", Bahnschrift, sans-serif;
+    font-size: 1.23rem;
+    font-weight: 700;
+    letter-spacing: .005em;
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.matchup-at {
+    margin-left: 40px;
+    color: #71869b;
+    font-size: .64rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    line-height: .7;
+    text-transform: uppercase;
+}
+
+.matchup-kicker {
+    margin-bottom: .32rem;
+    color: #7f96ac;
+    font-size: .63rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.matchup-probability-labels {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .42rem;
+    color: #c7d6e6;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.matchup-probability-labels span:last-child {
+    text-align: right;
+}
+
+.matchup-probability-bar {
+    display: flex;
+    width: 100%;
+    height: 10px;
+    overflow: hidden;
+    border: 2px solid rgba(4,12,22,.80);
+    border-radius: 999px;
+    background: rgba(4,12,22,.82);
+    box-shadow: inset 0 1px 5px rgba(0,0,0,.58), 0 0 16px rgba(34,211,238,.05);
+}
+
+.matchup-probability-away {
+    width: var(--away-probability);
+    background: linear-gradient(90deg, var(--away-secondary), var(--away-primary));
+    box-shadow: 4px 0 12px color-mix(in srgb, var(--away-primary) 34%, transparent);
+}
+
+.matchup-probability-home {
+    flex: 1;
+    background: linear-gradient(90deg, var(--home-primary), var(--home-secondary));
+}
+
+.matchup-pick-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 82px;
+    padding: .68rem .72rem;
+    border: 1px solid rgba(110,231,183,.17);
+    border-radius: 13px;
+    background: linear-gradient(145deg, rgba(15,53,54,.44), rgba(5,18,29,.58));
+}
+
+.matchup-pick-card::after {
+    content: "";
+    position: absolute;
+    width: 54px;
+    height: 54px;
+    right: -18px;
+    bottom: -24px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(110,231,183,.16), transparent 68%);
+}
+
+.matchup-score-lines {
+    display: grid;
+    gap: .22rem;
+}
+
+.matchup-score-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .4rem;
+    color: #b8c9d9;
+    font-size: .73rem;
+    font-weight: 650;
+}
+
+.matchup-score-line strong {
+    color: #f7fbff;
+    font-family: "Barlow Condensed", Bahnschrift, sans-serif;
+    font-size: 1.14rem;
+    line-height: 1;
+}
+
+.matchup-value {
+    color: #f7fbff;
+    font-family: "Barlow Condensed", Bahnschrift, sans-serif;
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.12;
+}
+
+.matchup-value--pick {
+    color: #8ff3df;
+    font-size: 1.25rem;
+}
+
+.matchup-subvalue {
+    margin-top: .24rem;
+    color: #92a8bc;
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.matchup-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .38rem;
+    width: fit-content;
+    padding: .32rem .56rem;
+    border: 1px solid rgba(148,163,184,.18);
+    border-radius: 999px;
+    background: rgba(4,12,22,.52);
+    color: #dce8f4;
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.matchup-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #94a3b8;
+    box-shadow: 0 0 10px rgba(148,163,184,.35);
+}
+
+.matchup-status--live {
+    border-color: rgba(251,113,133,.30);
+    color: #fecdd3;
+}
+
+.matchup-status--live::before {
+    background: #fb7185;
+    box-shadow: 0 0 12px rgba(251,113,133,.72);
+    animation: quantLivePulse 1.35s ease-in-out infinite;
+}
+
+.matchup-status--final {
+    border-color: rgba(110,231,183,.27);
+    color: #bbf7d0;
+}
+
+.matchup-status--final::before {
+    background: #6ee7b7;
+    box-shadow: 0 0 10px rgba(110,231,183,.45);
+}
+
+.matchup-start {
+    margin-top: .45rem;
+    color: #eef6ff;
+    font-family: "Barlow Condensed", Bahnschrift, sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.matchup-context-strip {
+    margin-top: .18rem;
+    padding-top: .72rem;
+    border-top: 1px solid rgba(125,211,252,.11);
+    color: #8197ab;
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.matchup-quality {
+    margin-top: .45rem;
+    color: #8399ad;
+    font-size: .68rem;
+    font-weight: 700;
+}
+
+.matchup-quality strong {
+    color: #d8e6f2;
+}
+
+[class*="st-key-matchup_row_"] [data-testid="stBaseButton-secondary"] {
+    min-height: 38px;
+    border-color: rgba(103,232,249,.30) !important;
+    background: linear-gradient(135deg, rgba(8,145,178,.22), rgba(37,99,235,.16)) !important;
+    color: #e9fbff !important;
+}
+
+[class*="st-key-matchup_row_"] [data-testid="stBaseButton-secondary"]:hover {
+    border-color: rgba(103,232,249,.62) !important;
+    background: linear-gradient(135deg, rgba(8,145,178,.34), rgba(37,99,235,.26)) !important;
+}
+
+@keyframes quantLivePulse {
+    0%, 100% { opacity: .68; transform: scale(.9); }
+    50% { opacity: 1; transform: scale(1.16); }
 }
 
 [data-testid="stImage"] img {
@@ -1815,7 +2119,7 @@ hr {
 [data-testid="stBaseButton-secondary"],
 [data-testid="stPopoverButton"] button {
     border-radius: 10px !important;
-    font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif !important;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif !important;
     font-weight: 700 !important;
     letter-spacing: .01em;
     transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease;
@@ -1857,9 +2161,9 @@ hr {
 
 [data-testid="stExpander"] {
     border-color: rgba(125,211,252,.20) !important;
-    border-radius: 15px !important;
-    background: rgba(7,19,33,.76) !important;
-    box-shadow: 0 15px 38px rgba(0,0,0,.20);
+    border-radius: 0 0 17px 17px !important;
+    background: linear-gradient(150deg, rgba(7,19,33,.94), rgba(5,14,25,.92)) !important;
+    box-shadow: 0 18px 42px rgba(0,0,0,.24);
 }
 
 [data-baseweb="input"],
@@ -1877,9 +2181,9 @@ hr {
 a { color: #72e6f4; }
 
 @media (max-width: 900px) {
-    .stApp::before { width: 112px; height: 112px; right: -1.5rem; opacity: .25; }
-    .stApp::after { display: none; }
     [data-testid="stMainBlockContainer"] { padding-top: .9rem; }
+    .matchup-team-name { font-size: 1.08rem; }
+    .matchup-value { font-size: .96rem; }
 }
 </style>
 """
@@ -1890,18 +2194,20 @@ def bubble_markup(count: int = 24) -> str:
     rng = random.Random(937)
     bubbles: list[str] = []
     for _ in range(count):
-        size = rng.uniform(18, 94)
+        size = rng.uniform(16, 96)
         left = rng.uniform(-3, 103)
-        duration = rng.uniform(18, 42)
-        delay = rng.uniform(0, 32)
-        opacity = rng.uniform(0.08, 0.27)
-        wobble = rng.uniform(6, 12)
+        duration = rng.uniform(24, 46)
+        delay = rng.uniform(0, duration)
+        opacity = rng.uniform(0.10, 0.30)
+        drift = rng.uniform(16, 54) * (-1 if rng.random() < 0.5 else 1)
         bubbles.append(
             "<span class='quant-bubble' style='"
-            f"left:{left:.2f}vw;width:{size:.1f}px;height:{size:.1f}px;"
-            f"animation-duration:{duration:.1f}s,{wobble:.1f}s;"
-            f"animation-delay:-{delay:.1f}s,-{delay:.1f}s;"
-            f"opacity:{opacity:.2f}'></span>"
+            f"--bubble-left:{left:.2f}vw;--bubble-size:{size:.1f}px;"
+            f"--bubble-duration:{duration:.1f}s;--bubble-delay:-{delay:.1f}s;"
+            f"--bubble-opacity:{opacity:.2f};--bubble-drift:{drift:.1f}px;"
+            f"--bubble-return:{-drift * .55:.1f}px;"
+            f"--bubble-soft-drift:{drift * .35:.1f}px;"
+            f"--bubble-exit-drift:{-drift * .2:.1f}px' aria-hidden='true'></span>"
         )
     return "<div class='quant-bubbles'>" + "".join(bubbles) + "</div>"
 
@@ -2309,7 +2615,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 st.markdown(native_stylesheet(), unsafe_allow_html=True)
-st.markdown(bubble_markup(28), unsafe_allow_html=True)
+st.markdown(bubble_markup(34), unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -2444,7 +2750,9 @@ def native_matchup_accents(predictions: list[dict[str, Any]]) -> str:
         game_pk = int(game["game_pk"])
         away_primary, away_secondary = team_accents(game["away"].get("id"))
         home_primary, home_secondary = team_accents(game["home"].get("id"))
-        target_primary, _ = team_accents(game[prediction["target_side"]].get("id"))
+        target_primary, target_secondary = team_accents(
+            game[prediction["target_side"]].get("id")
+        )
         rules.extend(
             [
                 (
@@ -2455,8 +2763,10 @@ def native_matchup_accents(predictions: list[dict[str, Any]]) -> str:
                 ),
                 (
                     f".st-key-matchup_row_{game_pk} "
-                    "[data-testid='stVerticalBlockBorderWrapper']"
-                    f"{{border-left-color:{target_primary} !important;}}"
+                    "[data-testid='stVerticalBlockBorderWrapper']::before"
+                    "{background:linear-gradient(180deg,"
+                    f"{target_secondary},{target_primary}) !important;"
+                    f"box-shadow:0 0 22px {target_primary}66 !important;}}"
                 ),
                 (
                     f".st-key-verdict_{game_pk} "
@@ -3118,32 +3428,29 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
 
     if status == "LIVE":
         outs = int(live.get("outs") or 0)
-        status_badge = "🔴 LIVE"
+        status_label = "Live"
+        status_class = "live"
         status_detail = (
             f"{live.get('status_label') or 'In progress'} · "
             f"{outs} {'out' if outs == 1 else 'outs'}"
         )
         score_label = "Current score"
-        score_value = (
-            f"{away['short_name']} {int(live.get('away_runs') or 0)} · "
-            f"{home['short_name']} {int(live.get('home_runs') or 0)}"
-        )
+        away_score = str(int(live.get("away_runs") or 0))
+        home_score = str(int(live.get("home_runs") or 0))
     elif status == "FINAL":
-        status_badge = "✅ FINAL"
+        status_label = "Final"
+        status_class = "final"
         status_detail = "Completed"
         score_label = "Final score"
-        score_value = (
-            f"{away['short_name']} {int(live.get('away_runs') or 0)} · "
-            f"{home['short_name']} {int(live.get('home_runs') or 0)}"
-        )
+        away_score = str(int(live.get("away_runs") or 0))
+        home_score = str(int(live.get("home_runs") or 0))
     else:
-        status_badge = "🕒 UPCOMING"
+        status_label = "Upcoming"
+        status_class = "upcoming"
         status_detail = start_text
         score_label = "Projected score"
-        score_value = (
-            f"{away['short_name']} {prediction['projected_away_runs']:.1f} · "
-            f"{home['short_name']} {prediction['projected_home_runs']:.1f}"
-        )
+        away_score = f"{prediction['projected_away_runs']:.1f}"
+        home_score = f"{prediction['projected_home_runs']:.1f}"
 
     away_pct = prediction["away_probability"] * 100.0
     home_pct = prediction["home_probability"] * 100.0
@@ -3156,55 +3463,89 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
     analysis_is_open = st.session_state.get("open_game_pk") == game["game_pk"]
     context = weather_text(weather, game["venue"])
     with st.container(border=True, key=f"matchup_row_{game['game_pk']}"):
-        matchup_column, status_column = st.columns(
-            [4.75, 1.15], vertical_alignment="center"
+        team_column, probability_column, pick_column, score_column, status_column = st.columns(
+            [2.05, 1.72, 1.38, 1.08, 1.08], vertical_alignment="center"
         )
-        with matchup_column:
-            away_logo, matchup_name, home_logo = st.columns(
-                [0.16, 2.1, 0.16], vertical_alignment="center"
+        with team_column:
+            st.markdown(
+                f"""
+                <div class="matchup-team-stack">
+                    <div class="matchup-team-line">
+                        <img src="{safe_text(away['logo'])}" alt="" loading="lazy">
+                        <span class="matchup-team-name">{safe_text(away['name'])}</span>
+                    </div>
+                    <div class="matchup-at">at</div>
+                    <div class="matchup-team-line">
+                        <img src="{safe_text(home['logo'])}" alt="" loading="lazy">
+                        <span class="matchup-team-name">{safe_text(home['name'])}</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-            with away_logo:
-                st.image(away["logo"], width=35)
-            with matchup_name:
-                st.markdown(f"#### {away['name']} at {home['name']}")
-            with home_logo:
-                st.image(home["logo"], width=35)
-            st.caption(
-                f"{away.get('pitcher_name') or 'Starter TBD'} vs "
-                f"{home.get('pitcher_name') or 'Starter TBD'} · {context}"
-            )
-        with status_column:
-            st.caption(status_badge)
-            st.markdown(f"**{status_detail}**")
-
-        probability_column, pick_column, score_column, quality_column, action_column = st.columns(
-            [2.1, 1.28, 1.0, 0.72, 0.82], vertical_alignment="center"
-        )
         with probability_column:
-            st.caption("WIN PROBABILITY")
-            st.progress(
-                prediction["away_probability"],
-                text=(
-                    f"{away['short_name']} {away_pct:.1f}%  ·  "
-                    f"{home['short_name']} {home_pct:.1f}%"
-                ),
+            st.markdown(
+                f"""
+                <div style="{matchup_style(game)}--away-probability:{away_pct:.2f}%;">
+                    <div class="matchup-kicker">Pregame probability</div>
+                    <div class="matchup-probability-labels">
+                        <span>{safe_text(away['short_name'])} {away_pct:.1f}%</span>
+                        <span>{safe_text(home['short_name'])} {home_pct:.1f}%</span>
+                    </div>
+                    <div class="matchup-probability-bar" aria-label="{safe_text(away['short_name'])} {away_pct:.1f} percent, {safe_text(home['short_name'])} {home_pct:.1f} percent">
+                        <span class="matchup-probability-away"></span>
+                        <span class="matchup-probability-home"></span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
         with pick_column:
-            st.caption("LOCKED PREGAME PICK")
             st.markdown(
-                f"**🔒 {target['short_name']} "
-                f"{prediction['target_probability']*100:.1f}%**"
+                f"""
+                <div class="matchup-pick-card">
+                    <div class="matchup-kicker">🔒 Locked pick</div>
+                    <div class="matchup-value matchup-value--pick">
+                        {safe_text(target['short_name'])} {prediction['target_probability']*100:.1f}%
+                    </div>
+                    <div class="matchup-subvalue">Fair line {safe_text(fmt_odds(fair_odds))}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-            st.caption(f"Fair moneyline {fmt_odds(fair_odds)}")
         with score_column:
-            st.caption(score_label.upper())
-            st.markdown(f"**{score_value}**")
-        with quality_column:
-            st.caption("DATA QUALITY")
-            st.markdown(f"**{prediction['quality_score']}/100**")
-            st.caption(prediction["quality_label"])
+            st.markdown(
+                f"""
+                <div class="matchup-kicker">{safe_text(score_label)}</div>
+                <div class="matchup-score-lines">
+                    <div class="matchup-score-line"><span>{safe_text(away['short_name'])}</span><strong>{safe_text(away_score)}</strong></div>
+                    <div class="matchup-score-line"><span>{safe_text(home['short_name'])}</span><strong>{safe_text(home_score)}</strong></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with status_column:
+            st.markdown(
+                f"""
+                <div class="matchup-status matchup-status--{status_class}">{safe_text(status_label)}</div>
+                <div class="matchup-start">{safe_text(status_detail)}</div>
+                <div class="matchup-quality"><strong>{prediction['quality_score']}/100</strong> data · {safe_text(prediction['quality_label'])}</div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        context_column, action_column = st.columns([5.15, 1.05], vertical_alignment="center")
+        with context_column:
+            st.markdown(
+                f"""
+                <div class="matchup-context-strip">
+                    {safe_text(away.get('pitcher_name') or 'Starter TBD')} vs
+                    {safe_text(home.get('pitcher_name') or 'Starter TBD')} · {safe_text(context)}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
         with action_column:
-            st.caption("RESEARCH")
             st.button(
                 "Hide analysis" if analysis_is_open else "View analysis",
                 key=f"toggle_analysis_{game['game_pk']}",
