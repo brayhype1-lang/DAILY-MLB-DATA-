@@ -77,29 +77,30 @@ st.markdown(
         backdrop-filter: blur(12px);
     }
 
-    /* Scoreboard Grid Card Button Wrapper override */
+    /* Streamlit Button Styling */
     .stButton button {
         width: 100%;
         background: linear-gradient(145deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
         border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 16px !important;
+        border-radius: 12px !important;
         color: #F8FAFC !important;
-        padding: 12px 14px !important;
+        padding: 8px 12px !important;
+        font-weight: 600 !important;
         transition: all 0.2s ease-in-out !important;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
     }
     .stButton button:hover {
         border-color: #38BDF8 !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.3) !important;
-        background: linear-gradient(145deg, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3) !important;
+        background: linear-gradient(145deg, rgba(56, 189, 248, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
     }
 
     /* Visual Diamond HUD */
     .diamond-wrapper {
         position: relative;
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         flex-shrink: 0;
     }
     .diamond-wrapper-lg {
@@ -110,8 +111,8 @@ st.markdown(
     }
     .base {
         position: absolute;
-        width: 8px;
-        height: 8px;
+        width: 7px;
+        height: 7px;
         background: rgba(51, 65, 85, 0.8);
         border: 1px solid rgba(100, 116, 139, 0.8);
         transform: rotate(45deg);
@@ -131,9 +132,9 @@ st.markdown(
         border-color: #7dd3fc;
         box-shadow: 0 0 10px #38BDF8;
     }
-    .base-2b { top: 1px; left: 14px; }
-    .base-3b { top: 14px; left: 1px; }
-    .base-1b { top: 14px; right: 1px; }
+    .base-2b { top: 1px; left: 12px; }
+    .base-3b { top: 12px; left: 1px; }
+    .base-1b { top: 12px; right: 1px; }
 
     .base-lg-2b { top: 4px; left: 35px; }
     .base-lg-3b { top: 35px; left: 4px; }
@@ -622,31 +623,33 @@ else:
                 </div>
                 """
 
-            card_inner_html = f"""
-            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    {lv['badge_html']}
-                    {diamond_html}
-                </div>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <img src="{g['away_logo']}" width="22" height="22" />
-                        <span style="font-weight: 700; font-size: 0.88rem;">{g['away_short']}</span>
-                    </div>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['away_runs']}</span>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <img src="{g['home_logo']}" width="22" height="22" />
-                        <span style="font-weight: 700; font-size: 0.88rem;">{g['home_short']}</span>
-                    </div>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 1rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['home_runs']}</span>
-                </div>
-            </div>
-            """
-
             with cols[idx]:
-                if st.button(card_inner_html, key=f"card_{g['game_id']}", use_container_width=True):
+                st.markdown(
+                    f"""
+                    <div class="metric-bubble" style="padding: 14px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            {lv['badge_html']}
+                            {diamond_html}
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <img src="{g['away_logo']}" width="20" height="20" />
+                                <span style="font-weight: 700; font-size: 0.85rem;">{g['away_short']}</span>
+                            </div>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.95rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['away_runs']}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <img src="{g['home_logo']}" width="20" height="20" />
+                                <span style="font-weight: 700; font-size: 0.85rem;">{g['home_short']}</span>
+                            </div>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.95rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['home_runs']}</span>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                if st.button("🔍 Deep Dive", key=f"card_{g['game_id']}", use_container_width=True):
                     st.session_state["selected_game_id"] = g["game_id"]
                     st.rerun()
 
