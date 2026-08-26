@@ -35,19 +35,20 @@ st.markdown(
         color: #F8FAFC;
     }
 
-    /* Style the card selector buttons to fill the space cleanly */
+    /* Style bottom action button to look like a clean card footer action */
     [data-testid="stVerticalBlock"] [data-testid="stButton"] button {
         width: 100%;
-        background: rgba(56, 189, 248, 0.08) !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
+        background: rgba(56, 189, 248, 0.12) !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
         color: #38BDF8 !important;
         font-weight: 700 !important;
-        font-size: 0.85rem !important;
+        font-size: 0.8rem !important;
         border-radius: 6px !important;
+        padding: 6px 12px !important;
         transition: all 0.2s ease-in-out !important;
     }
     [data-testid="stVerticalBlock"] [data-testid="stButton"] button:hover {
-        background: rgba(56, 189, 248, 0.2) !important;
+        background: rgba(56, 189, 248, 0.25) !important;
         border-color: #38BDF8 !important;
         color: #F8FAFC !important;
     }
@@ -439,14 +440,10 @@ else:
             
             with cols[idx]:
                 with st.container(border=True):
-                    # Make the primary action button act as the full card trigger spanning the top
-                    if st.button(f"🔍 Inspect Matchup", key=f"card_btn_{g['game_id']}", use_container_width=True):
-                        st.session_state["selected_game_id"] = g["game_id"]
-                        st.rerun()
-
-                    st.markdown(f"<div style='margin-top: 6px;'>{lv['badge_html']}</div>", unsafe_allow_html=True)
+                    # Status Badge at the top
+                    st.markdown(lv['badge_html'], unsafe_allow_html=True)
                     
-                    # Away Team Display Row
+                    # Away Team Row
                     sc_col1, sc_col2, sc_col3 = st.columns([1, 4, 1])
                     with sc_col1:
                         if g["away_logo"]:
@@ -456,7 +453,7 @@ else:
                     with sc_col3:
                         st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
 
-                    # Home Team Display Row
+                    # Home Team Row
                     sc_col4, sc_col5, sc_col6 = st.columns([1, 4, 1])
                     with sc_col4:
                         if g["home_logo"]:
@@ -473,7 +470,7 @@ else:
                         b1 = "base-active" if lv.get("has_1b") else ""
                         
                         bases_html = f"""
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 4px; padding: 4px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 4px; padding: 2px 0;">
                             <div style="position: relative; width: 26px; height: 26px;">
                                 <!-- 2nd Base (Top) -->
                                 <div style="position: absolute; top: 0px; left: 9px;" class="base-diamond {b2}"></div>
@@ -487,7 +484,12 @@ else:
                         """
                         st.markdown(bases_html, unsafe_allow_html=True)
                     else:
-                        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+                        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+
+                    # Clean full-width action button at the bottom of the card
+                    if st.button("📊 View Deep Dive", key=f"card_btn_{g['game_id']}", use_container_width=True):
+                        st.session_state["selected_game_id"] = g["game_id"]
+                        st.rerun()
 
     st.markdown("---")
     st.markdown("### 📊 Full Slate Model Predictions & Matchups")
