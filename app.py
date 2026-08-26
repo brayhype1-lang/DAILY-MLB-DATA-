@@ -514,7 +514,7 @@ else:
                     </div>
                     """
                 
-                return f"""
+                card_html = f"""
                 <div class="pitcher-bubble-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <div>
@@ -541,12 +541,14 @@ else:
                     </div>
                 </div>
                 """
+                # CRITICAL FIX: Pass unsafe_allow_html=True so Streamlit renders the markup correctly
+                st.markdown(card_html, unsafe_allow_html=True)
 
             with c1:
-                st.markdown(render_pitcher_bubble_column(g['away_team'], g['away_stats'], away_pct), unsafe_allow_html=True)
+                render_pitcher_bubble_column(g['away_team'], g['away_stats'], away_pct)
 
             with c2:
-                st.markdown(render_pitcher_bubble_column(g['home_team'], g['home_stats'], home_pct), unsafe_allow_html=True)
+                render_pitcher_bubble_column(g['home_team'], g['home_stats'], home_pct)
 
             with c3:
                 st.markdown("**Quantitative Rationale & Matchup Breakdown**")
