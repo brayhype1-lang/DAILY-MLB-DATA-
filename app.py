@@ -85,10 +85,9 @@ st.markdown(
     /* Base Diamonds */
     .base-diamond {
         display: inline-block;
-        width: 9px;
-        height: 9px;
+        width: 8px;
+        height: 8px;
         transform: rotate(45deg);
-        margin: 0 2px;
         background-color: rgba(100, 116, 139, 0.3);
         border: 1px solid rgba(100, 116, 139, 0.5);
     }
@@ -468,15 +467,16 @@ else:
                         b1 = "base-active" if lv.get("has_1b") else ""
                         
                         bases_html = f"""
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 6px 0; font-size: 0.75rem;">
-                            <div>
-                                <div style="text-align: center; margin-left: 9px;"><span class="base-diamond {b2}"></span></div>
-                                <div style="display: flex; justify-content: space-between; width: 28px;">
-                                    <span class="base-diamond {b3}"></span>
-                                    <span class="base-diamond {b1}"></span>
-                                </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 4px; padding: 4px 0;">
+                            <div style="position: relative; width: 26px; height: 26px;">
+                                <!-- 2nd Base (Top) -->
+                                <div style="position: absolute; top: 0px; left: 9px;" class="base-diamond {b2}"></div>
+                                <!-- 3rd Base (Left) -->
+                                <div style="position: absolute; top: 9px; left: 0px;" class="base-diamond {b3}"></div>
+                                <!-- 1st Base (Right) -->
+                                <div style="position: absolute; top: 9px; left: 18px;" class="base-diamond {b1}"></div>
                             </div>
-                            <span style="color: #94A3B8; font-family: 'JetBrains Mono', monospace; font-weight: 700;">OUTS: {lv.get('outs', 0)}</span>
+                            <span style="color: #94A3B8; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.75rem;">OUTS: {lv.get('outs', 0)}</span>
                         </div>
                         """
                         st.markdown(bases_html, unsafe_allow_html=True)
