@@ -18,7 +18,7 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
 
     html, body, [class*="css"], div, span, h1, h2, h3, h4, p {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
@@ -46,6 +46,21 @@ st.markdown(
         position: absolute;
         top: 0; left: 0; width: 4px; height: 100%;
         background: #38BDF8;
+    }
+
+    /* Matchup Card Container with Hover Effect */
+    .matchup-card {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid #1E293B;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: all 0.2s ease-in-out;
+    }
+    .matchup-card:hover {
+        border-color: #38BDF8;
+        box-shadow: 0 4px 20px rgba(56, 189, 248, 0.1);
+        background: rgba(15, 23, 42, 0.9);
     }
 
     /* Model Calibration Metric Boxes */
@@ -106,6 +121,25 @@ st.markdown(
         font-weight: 700;
     }
 
+    /* Compact Pill Metrics */
+    .stat-pill-container {
+        display: flex;
+        gap: 6px;
+        margin: 8px 0;
+    }
+    .stat-pill {
+        background: #1E293B;
+        border: 1px solid #334155;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        color: #94A3B8;
+        font-family: 'JetBrains Mono', monospace !important;
+    }
+    .stat-pill b {
+        color: #F8FAFC;
+    }
+
     /* Game Narrative Box */
     .narrative-box {
         background: rgba(10, 15, 29, 0.85);
@@ -113,13 +147,13 @@ st.markdown(
         border-left: 3px solid #38BDF8;
         padding: 16px;
         border-radius: 10px;
-        font-size: 0.92rem;
+        font-size: 0.90rem;
         line-height: 1.65;
         color: #94A3B8;
     }
 
     .highlight-txt { color: #F8FAFC; font-weight: 700; }
-    .highlight-stat { color: #38BDF8; font-weight: 700; }
+    .highlight-stat { color: #38BDF8; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
     .highlight-edge { color: #34D399; font-weight: 700; }
     .highlight-weather { color: #F59E0B; font-weight: 700; }
 </style>
@@ -127,7 +161,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Fixed Quantitative Weight Defaults (Sidebar Removed)
+# Fixed Quantitative Weight Defaults
 PITCHING_WEIGHT = 1.0
 OFFENSE_WEIGHT = 1.0
 BULLPEN_WEIGHT = 1.0
@@ -176,7 +210,6 @@ def fetch_live_weather(lat: float, lon: float, is_roof: bool) -> dict:
         wind_factor = 1.0 + (wind * (0.004 if is_out else -0.003 if is_in else 0.0))
         total_impact = round(temp_factor * wind_factor, 3)
 
-        # Dynamic Weather Narrative Generation
         notes = []
         if temp >= 82:
             notes.append("Warm, high-density air boosting ball carry and fly-ball velocity")
@@ -271,7 +304,7 @@ def build_editorial_breakdown(
     else:
         target, edge, win_p = None, 0.0, home_prob * 100
         favored_starter, f_siera, f_whip = home_stats['pitcher'], home_stats['siera'], home_stats['whip']
-        opp_starter, opp_whip, opp_era, opp_siera = away_stats['pitcher'], away_stats['whip'], away_stats['era'], away_stats['siera']
+        opp_starter, opp_whip, opp_era, opp_siera = home_stats['pitcher'], home_stats['whip'], home_stats['era'], home_stats['siera']
 
     selected_team = target if target else home_team
 
@@ -440,7 +473,7 @@ else:
                     </div>
                     <div style="text-align: right;">
                         <span class="badge-edge">+{an['edge']}% EDGE</span>
-                        <div style="font-weight: 800; font-size: 1.1rem; color: #38BDF8; margin-top: 8px;">
+                        <div style="font-weight: 800; font-size: 1.1rem; color: #38BDF8; margin-top: 8px; font-family: 'JetBrains Mono', monospace;">
                             Win Prob: {an['win_prob']}%
                         </div>
                     </div>
@@ -460,18 +493,23 @@ else:
 
     for g in evaluated_slate:
         an = g["analysis"]
+        away_pct = int(an["away_prob"] * 100)
+        home_pct = int(an["home_prob"] * 100)
 
+        # Render each game inside a hoverable matchup-card container
         with st.container():
+            st.markdown('<div class="matchup-card">', unsafe_allow_html=True)
+            
             col_hdr, col_badge = st.columns([3, 1])
             with col_hdr:
                 st.markdown(
                     f"""
-                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
-                        <img src="{g['away_logo']}" width="32" height="32" />
-                        <span style="font-size: 1.2rem; font-weight: 700;">{g['away_team']}</span>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <img src="{g['away_logo']}" width="28" height="28" />
+                        <span style="font-size: 1.1rem; font-weight: 700;">{g['away_team']}</span>
                         <span style="color: #64748B; font-weight: 800;">@</span>
-                        <img src="{g['home_logo']}" width="32" height="32" />
-                        <span style="font-size: 1.2rem; font-weight: 700;">{g['home_team']}</span>
+                        <img src="{g['home_logo']}" width="28" height="28" />
+                        <span style="font-size: 1.1rem; font-weight: 700;">{g['home_team']}</span>
                         <span style="color: #475569; font-size: 0.8rem; margin-left: 8px;">({g['park']['name']} • 🌤️ {g['park']['weather']['weather_desc']})</span>
                     </div>
                     """,
@@ -480,48 +518,90 @@ else:
             with col_badge:
                 if an["target"]:
                     st.markdown(
-                        f'<div style="text-align: right; margin-top: 12px;"><span class="badge-edge">PLAY {an["target"]} (+{an["edge"]}%)</span></div>',
+                        f'<div style="text-align: right;"><span class="badge-edge">PLAY {an["target"]} (+{an["edge"]}%)</span></div>',
                         unsafe_allow_html=True,
                     )
                 else:
                     st.markdown(
-                        '<div style="text-align: right; margin-top: 12px;"><span class="badge-pass">PASS / NO EDGE</span></div>',
+                        '<div style="text-align: right;"><span class="badge-pass">PASS / NO EDGE</span></div>',
                         unsafe_allow_html=True,
                     )
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            # Away Column
+            # Away Column (Pill Metrics & Dual-Tone Bar)
             with c1:
                 st.markdown(f"**{g['away_team']}**")
                 st.caption(f"👤 Starter: {g['away_stats']['pitcher']}")
-                m1, m2, m3 = st.columns(3)
-                m1.metric("ERA", f"{g['away_stats']['era']:.2f}")
-                m2.metric("SIERA", f"{g['away_stats']['siera']:.2f}")
-                m3.metric("WHIP", f"{g['away_stats']['whip']:.2f}")
+                
+                st.markdown(
+                    f"""
+                    <div class="stat-pill-container">
+                        <div class="stat-pill">ERA: <b>{g['away_stats']['era']:.2f}</b></div>
+                        <div class="stat-pill">SIERA: <b>{g['away_stats']['siera']:.2f}</b></div>
+                        <div class="stat-pill">WHIP: <b>{g['away_stats']['whip']:.2f}</b></div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-                st.markdown(f"**Bullpen Status:** {get_fatigue_badge(g['away_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
-                st.caption(f"🎰 Market Splits: {g['away_stats']['public_bets_pct']}% Bets | {g['away_stats']['money_pct']}% Money")
+                st.markdown(f"**Bullpen:** {get_fatigue_badge(g['away_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
+                st.caption(f"🎰 Splits: {g['away_stats']['public_bets_pct']}% Bets | {g['away_stats']['money_pct']}% Money")
 
-                st.progress(int(an["away_prob"] * 100), text=f"Win Prob: {an['away_prob']*100:.1f}%")
+                # Dual-tone win probability bar track
+                st.markdown(
+                    f"""
+                    <div style="margin-top: 8px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;">
+                            <span>Win Probability</span>
+                            <span style="color: #38BDF8; font-weight: 700;">{away_pct}%</span>
+                        </div>
+                        <div style="background: #1E293B; border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
+                            <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {away_pct}%; height: 100%; border-radius: 6px;"></div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-            # Home Column
+            # Home Column (Pill Metrics & Dual-Tone Bar)
             with c2:
                 st.markdown(f"**{g['home_team']}**")
                 st.caption(f"👤 Starter: {g['home_stats']['pitcher']}")
-                h1, h2, h3 = st.columns(3)
-                h1.metric("ERA", f"{g['home_stats']['era']:.2f}")
-                h2.metric("SIERA", f"{g['home_stats']['siera']:.2f}")
-                h3.metric("WHIP", f"{g['home_stats']['whip']:.2f}")
+                
+                st.markdown(
+                    f"""
+                    <div class="stat-pill-container">
+                        <div class="stat-pill">ERA: <b>{g['home_stats']['era']:.2f}</b></div>
+                        <div class="stat-pill">SIERA: <b>{g['home_stats']['siera']:.2f}</b></div>
+                        <div class="stat-pill">WHIP: <b>{g['home_stats']['whip']:.2f}</b></div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-                st.markdown(f"**Bullpen Status:** {get_fatigue_badge(g['home_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
-                st.caption(f"🎰 Market Splits: {g['home_stats']['public_bets_pct']}% Bets | {g['home_stats']['money_pct']}% Money")
+                st.markdown(f"**Bullpen:** {get_fatigue_badge(g['home_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
+                st.caption(f"🎰 Splits: {g['home_stats']['public_bets_pct']}% Bets | {g['home_stats']['money_pct']}% Money")
 
-                st.progress(int(an["home_prob"] * 100), text=f"Win Prob: {an['home_prob']*100:.1f}%")
+                # Dual-tone win probability bar track
+                st.markdown(
+                    f"""
+                    <div style="margin-top: 8px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;">
+                            <span>Win Probability</span>
+                            <span style="color: #38BDF8; font-weight: 700;">{home_pct}%</span>
+                        </div>
+                        <div style="background: #1E293B; border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
+                            <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {home_pct}%; height: 100%; border-radius: 6px;"></div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-            # Narrative Column with Weather Impact Explicitly Mentioned
+            # Narrative Column
             with c3:
                 st.markdown("**Matchup Breakdown & Weather Context**")
                 st.markdown(f'<div class="narrative-box">{an["narrative"]}</div>', unsafe_allow_html=True)
 
-            st.divider()
+            st.markdown('</div>', unsafe_allow_html=True) # Close matchup-card div
