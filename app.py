@@ -570,15 +570,22 @@ else:
                 )
 
             st.markdown("### ⚡ Live Play-by-Play Feed")
-            with st.container():
-                st.markdown('<div class="metric-bubble">', unsafe_allow_html=True)
-                plays = lv.get("recent_plays", [])
-                if plays:
-                    for p in plays:
-                        st.markdown(f"**[{p['inning']}]** {p['description']}")
-                else:
-                    st.info("Play-by-play feed updates automatically when games are live.")
-                st.markdown('</div>', unsafe_allow_html=True)
+            plays_html = ""
+            plays = lv.get("recent_plays", [])
+            if plays:
+                for p in plays:
+                    plays_html += f"<p style='margin: 6px 0; font-size: 0.9rem;'><b>[{p['inning']}]</b> {p['description']}</p>"
+            else:
+                plays_html = "<p style='color: #94A3B8; margin: 0;'>Play-by-play feed updates automatically when games are live.</p>"
+            
+            st.markdown(
+                f"""
+                <div class="metric-bubble">
+                    {plays_html}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
             st.stop()
 
@@ -662,12 +669,31 @@ else:
         is_home_pick = (an["target"] == g["home_team"])
         pick_logo = g["home_logo"] if is_home_pick else g["away_logo"]
 
-        st.markdown('<div class="metric-bubble">', unsafe_allow_html=True)
-        
-        col_hdr, col_status = st.columns([3, 1])
-        with col_hdr:
-            st.markdown(
-                f"""
+        c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
+
+        def build_pitcher_box(stats, pct_val):
+            return f"""
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
+                <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 6px;">{stats['pitcher']} <span style="color: #38BDF8; font-family: JetBrains Mono; font-size: 0.72rem;">({stats['record']})</span></div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <span style="background: rgba(30,41,59,0.8); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: JetBrains Mono; color: #94A3B8;">ERA: <b style="color:#fff;">{stats['era']:.2f}</b></span>
+                    <span style="background: rgba(30,41,59,0.8); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: JetBrains Mono; color: #94A3B8;">xwOBA: <b style="color:#fff;">{stats['xwoba']:.3f}</b></span>
+                </div>
+            </div>
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94A3B8; margin-bottom: 3px; font-family: JetBrains Mono;">
+                    <span>Win Prob</span>
+                    <span style="color: #38BDF8; font-weight: 700;">{pct_val}%</span>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.8); border-radius: 6px; overflow: hidden; height: 6px; width: 100%;">
+                    <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {pct_val}%; height: 100%; border-radius: 6px;"></div>
+                </div>
+            </div>
+            """
+
+        card_html = f"""
+        <div class="metric-bubble">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <img src="{g['away_logo']}" width="28" height="28" />
                     <span style="font-size: 1.1rem; font-weight: 800;">{g['away_team']}</span>
@@ -676,56 +702,31 @@ else:
                     <span style="font-size: 1.1rem; font-weight: 800;">{g['home_team']}</span>
                     <span style="color: #64748B; font-size: 0.8rem; margin-left: 6px;">({g['park']['name']})</span>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        with col_status:
-            st.markdown(f'<div style="text-align: right;">{g["live"]["badge_html"]}</div>', unsafe_allow_html=True)
+                <div>{g["live"]["badge_html"]}</div>
+            </div>
 
-        st.markdown(
-            f"""
-            <div style="display: flex; align-items: center; gap: 12px; margin: 14px 0 10px 0;">
+            <div style="display: flex; align-items: center; gap: 12px; margin: 10px 0 14px 0;">
                 <img src="{pick_logo}" width="30" height="30" />
                 <div>
                     <span style="background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%); color: #FFF; font-weight: 800; padding: 5px 14px; border-radius: 20px; font-size: 0.78rem; letter-spacing: 0.04em;">MODEL PICK: {an['target']}</span>
                     <span style="color: #38BDF8; font-weight: 800; font-size: 0.88rem; margin-left: 10px; font-family: 'JetBrains Mono', monospace;">({an['win_prob']}% Win Probability)</span>
                 </div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
 
-        c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
-
-        def render_pitcher_column(stats, pct_val):
+        with c1:
+            st.markdown(f"<div class='metric-bubble'>{build_pitcher_box(g['away_stats'], away_pct)}</div>", unsafe_allow_html=True)
+        with c2:
+            st.markdown(f"<div class='metric-bubble'>{build_pitcher_box(g['home_stats'], home_pct)}</div>", unsafe_allow_html=True)
+        with c3:
             st.markdown(
                 f"""
-                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
-                    <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 6px;">{stats['pitcher']} <span style="color: #38BDF8; font-family: JetBrains Mono; font-size: 0.72rem;">({stats['record']})</span></div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <span style="background: rgba(30,41,59,0.8); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: JetBrains Mono; color: #94A3B8;">ERA: <b style="color:#fff;">{stats['era']:.2f}</b></span>
-                        <span style="background: rgba(30,41,59,0.8); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: JetBrains Mono; color: #94A3B8;">xwOBA: <b style="color:#fff;">{stats['xwoba']:.3f}</b></span>
-                    </div>
-                </div>
-                <div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94A3B8; margin-bottom: 3px; font-family: JetBrains Mono;">
-                        <span>Win Prob</span>
-                        <span style="color: #38BDF8; font-weight: 700;">{pct_val}%</span>
-                    </div>
-                    <div style="background: rgba(15, 23, 42, 0.8); border-radius: 6px; overflow: hidden; height: 6px; width: 100%;">
-                        <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {pct_val}%; height: 100%; border-radius: 6px;"></div>
-                    </div>
+                <div class="metric-bubble">
+                    <div class='stat-label' style='margin-bottom: 6px;'>Quantitative Rationale</div>
+                    <div style='font-size: 0.84rem; line-height: 1.5; color: #94A3B8;'>{an['narrative']}</div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
-
-        with c1:
-            render_pitcher_column(g['away_stats'], away_pct)
-        with c2:
-            render_pitcher_column(g['home_stats'], home_pct)
-        with c3:
-            st.markdown("<div class='stat-label' style='margin-bottom: 4px;'>Quantitative Rationale</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size: 0.84rem; line-height: 1.5; color: #94A3B8;'>{an['narrative']}</div>", unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
