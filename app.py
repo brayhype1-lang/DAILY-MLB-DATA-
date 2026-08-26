@@ -276,25 +276,29 @@ def fetch_live_game_state(game_pk: int) -> dict:
             return {
                 "status": "LIVE",
                 "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning} ({away_runs}-{home_runs})</span>',
-                "away_runs": away_runs, "home_runs": home_runs
+                "away_runs": away_runs, "home_runs": home_runs,
+                "inning_str": f"{half} {inning}"
             }
         elif abstract_state == "Final" or "Final" in detailed_state:
             return {
                 "status": "FINAL",
                 "badge_html": f'<span class="badge-final">🏁 FINAL ({away_runs}-{home_runs})</span>',
-                "away_runs": away_runs, "home_runs": home_runs
+                "away_runs": away_runs, "home_runs": home_runs,
+                "inning_str": "Final"
             }
         else:
             return {
                 "status": "PREVIEW",
                 "badge_html": f'<span class="badge-upcoming">⏰ {detailed_state}</span>',
-                "away_runs": 0, "home_runs": 0
+                "away_runs": 0, "home_runs": 0,
+                "inning_str": "Upcoming"
             }
     except Exception:
         return {
             "status": "PREVIEW",
             "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
-            "away_runs": 0, "home_runs": 0
+            "away_runs": 0, "home_runs": 0,
+            "inning_str": "Upcoming"
         }
 
 def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple[float, float]:
@@ -306,16 +310,21 @@ def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple
     new_home_prob = min(0.99, max(0.01, base_home_prob + prob_shift))
     return 1.0 - new_home_prob, new_home_prob
 
+# --------------------------------info------------------------------
+# 4. QUANTITATIVE MODEL WITH LIVE DYNAMIC NARRATIVES
 # ------------------------------------------------------------------
-# 4. QUANTITATIVE MODEL WITH DEEP PARAGRAPH RATIONALE
-# ------------------------------------------------------------------
-def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park):
+def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park, live_state=None):
     woba_diff = away_stats["xwoba"] - home_stats["xwoba"]
     split_diff = home_stats["vs_lhp_wrc"] - away_stats["vs_lhp_wrc"] if home_stats.get("starter_hand") == "L" else 0
     
     base_home_prob = 0.52 + (woba_diff * 0.8) + (split_diff * 0.001) + (0.03 if park["run_mult"] > 1.05 else -0.02)
     home_prob = min(0.85, max(0.15, base_home_prob))
     away_prob = 1.0 - home_prob
+
+    if live_state and live_state["status"] == "LIVE":
+        away_p, home_p = adjust_prob_for_live_state(home_prob, live_state)
+        home_prob = home_p
+        away_prob = away_p
 
     if home_prob >= away_prob:
         target, win_p = home_team, home_prob * 100
@@ -326,16 +335,27 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
         edge_pitcher, other_pitcher = away_stats, home_stats
         edge_team_name, other_team_name = away_team, home_team
 
-    narrative = (
-        f"The model projects <span class='highlight-txt'>{target}</span> to secure the victory with a "
-        f"{win_p:.1f}% win probability, driven by a decisive edge on the mound and favorable contact metrics. "
-        f"{edge_team_name}'s starter, <span class='highlight-txt'>{edge_pitcher['pitcher']}</span>, holds a distinct advantage "
-        f"in expected slugging and suppression, carrying an ERA of {edge_pitcher['era']:.2f} and an xwOBA of {edge_pitcher['xwoba']:.3f} "
-        f"against <span class='highlight-txt'>{other_team_name}</span>'s lineup, which counters with a hard-hit rate of {other_pitcher['hard_hit_pct']}% "
-        f"and an xwOBA of {other_pitcher['xwoba']:.3f} under <span class='highlight-txt'>{park['name']}</span> park factors ({park['weather']['weather_desc']}). "
-        f"Combined with recent 10-game momentum ({edge_team_name} L10: {edge_pitcher['l10_record']} vs {other_team_name} L10: {other_pitcher['l10_record']}), "
-        f"the quantitative indicators point clearly toward a <span class='highlight-txt'>{target}</span> triumph."
-    )
+    if live_state and live_state["status"] == "LIVE":
+        score_str = f"{away_team} {live_state['away_runs']} - {home_team} {live_state['home_runs']}"
+        narrative = (
+            f"🔴 <span class='highlight-txt'>LIVE IN-GAME UPDATE ({live_state['inning_str']} | Score: {score_str})</span>: "
+            f"The game script is actively developing on the field. Starting pitchers <span class='highlight-txt'>{away_stats['pitcher']}</span> "
+            f"and <span class='highlight-txt'>{home_stats['pitcher']}</span> are currently battling through the frame traffic. "
+            f"With the current scoreline, the win probability has adjusted dynamically. The model now leans toward <span class='highlight-txt'>{target}</span> "
+            f"at <span class='highlight-txt'>{win_p:.1f}%</span> win probability as bullpens and high-leverage at-bats come into play under "
+            f"<span class='highlight-txt'>{park['name']}</span> conditions."
+        )
+    else:
+        narrative = (
+            f"The model projects <span class='highlight-txt'>{target}</span> to secure the victory with a "
+            f"{win_p:.1f}% win probability, driven by a decisive edge on the mound and favorable contact metrics. "
+            f"{edge_team_name}'s starter, <span class='highlight-txt'>{edge_pitcher['pitcher']}</span>, holds a distinct advantage "
+            f"in expected slugging and suppression, carrying an ERA of {edge_pitcher['era']:.2f} and an xwOBA of {edge_pitcher['xwoba']:.3f} "
+            f"against <span class='highlight-txt'>{other_team_name}</span>'s lineup, which counters with a hard-hit rate of {other_pitcher['hard_hit_pct']}% "
+            f"and an xwOBA of {other_pitcher['xwoba']:.3f} under <span class='highlight-txt'>{park['name']}</span> park factors ({park['weather']['weather_desc']}). "
+            f"Combined with recent 10-game momentum ({edge_team_name} L10: {edge_pitcher['l10_record']} vs {other_team_name} L10: {other_pitcher['l10_record']}), "
+            f"the quantitative indicators point clearly toward a <span class='highlight-txt'>{target}</span> triumph."
+        )
 
     return {
         "target": target, "win_prob": round(win_p, 1),
@@ -418,21 +438,10 @@ else:
         park = get_park_factor(g["home_team"])
         live_state = fetch_live_game_state(g["game_id"])
         
-        analysis = build_editorial_breakdown(g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park)
+        analysis = build_editorial_breakdown(
+            g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park, live_state=live_state
+        )
         
-        if live_state["status"] == "LIVE":
-            away_p, home_p = adjust_prob_for_live_state(analysis["home_prob"], live_state)
-            if home_p >= away_p:
-                target, win_p = g["home_team"], home_p * 100
-            else:
-                target, win_p = g["away_team"], away_p * 100
-
-            analysis["home_prob"] = home_p
-            analysis["away_prob"] = away_p
-            analysis["target"] = target
-            analysis["win_prob"] = round(win_p, 1)
-            analysis["narrative"] = f"🔴 <span class='highlight-txt'>LIVE IN-GAME UPDATE</span>: Score is {g['away_team']} {live_state['away_runs']} - {g['home_team']} {live_state['home_runs']}. Model projects <span class='highlight-txt'>{target}</span> based on updated live script and current win probability of {win_p:.1f}%."
-
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
 
     st.markdown("### 📊 Complete Slate Breakdown & Model Winner Picks")
