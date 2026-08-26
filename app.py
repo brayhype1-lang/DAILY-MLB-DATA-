@@ -2607,7 +2607,7 @@ def scoreboard_rail(predictions: list[dict[str, Any]], empty_message: str) -> st
 
 
 def render_native_score_card(prediction: dict[str, Any]) -> None:
-    """Render one app-like matchup tile using only stable Streamlit widgets."""
+    """Render one compact scoreboard tile using only stable Streamlit widgets."""
     game = prediction["game"]
     away, home = game["away"], game["home"]
     live = game["live"]
@@ -2619,47 +2619,44 @@ def render_native_score_card(prediction: dict[str, Any]) -> None:
         status_text = f"🔴 {live.get('status_label') or 'LIVE'}"
         away_value = str(int(live.get("away_runs") or 0))
         home_value = str(int(live.get("home_runs") or 0))
+        outs = int(live.get("outs") or 0)
+        context_text = f"{outs} {'out' if outs == 1 else 'outs'} · {game['venue'].get('name') or 'Venue TBD'}"
     elif status == "FINAL":
         status_text = "✅ FINAL"
         away_value = str(int(live.get("away_runs") or 0))
         home_value = str(int(live.get("home_runs") or 0))
+        context_text = game["venue"].get("name") or "Completed"
     else:
         status_text = f"🕒 {start_text}"
         away_value = f"{prediction['away_probability']*100:.0f}%"
         home_value = f"{prediction['home_probability']*100:.0f}%"
+        context_text = (
+            f"{away.get('pitcher_name') or 'Starter TBD'} vs "
+            f"{home.get('pitcher_name') or 'Starter TBD'}"
+        )
 
     with st.container(border=True):
         st.caption(status_text)
         for team, value in ((away, away_value), (home, home_value)):
             logo_column, team_column, value_column = st.columns(
-                [0.18, 1.0, 0.28], vertical_alignment="center"
+                [0.16, 1.0, 0.22], vertical_alignment="center"
             )
             with logo_column:
-                st.image(team["logo"], width=30)
+                st.image(team["logo"], width=25)
             with team_column:
-                st.markdown(f"**{team['name']}**")
-                st.caption(
-                    f"{int(team.get('wins') or 0)}-{int(team.get('losses') or 0)} · "
-                    f"{team.get('pitcher_name') or 'Starter TBD'}"
-                )
+                st.markdown(f"**{team['short_name']}**")
+                st.caption(f"{int(team.get('wins') or 0)}-{int(team.get('losses') or 0)}")
             with value_column:
-                st.markdown(f"### {value}")
+                st.markdown(f"**{value}**")
 
-        st.progress(
-            prediction["target_probability"],
-            text=(
-                f"Model lean: {prediction['target_name']} "
-                f"{prediction['target_probability']*100:.1f}%"
-            ),
-        )
+        st.caption(context_text)
         st.caption(
-            f"Projected {away['short_name']} {prediction['projected_away_runs']:.1f} · "
-            f"{home['short_name']} {prediction['projected_home_runs']:.1f}  |  "
+            f"Lean: {prediction['target_name']} {prediction['target_probability']*100:.1f}% · "
             f"Data {prediction['quality_score']}/100"
         )
         analysis_is_open = st.session_state.get("open_game_pk") == game["game_pk"]
         st.button(
-            "Close full analysis" if analysis_is_open else "Open full analysis",
+            "Close details" if analysis_is_open else "Game details",
             key=f"game_center_toggle_{game['game_pk']}",
             on_click=toggle_game_analysis,
             args=(game["game_pk"],),
@@ -2672,9 +2669,9 @@ def render_score_card_grid(predictions: list[dict[str, Any]], empty_message: str
     if not predictions:
         st.info(empty_message)
         return
-    for row_start in range(0, len(predictions), 3):
-        columns = st.columns(3)
-        for column, prediction in zip(columns, predictions[row_start : row_start + 3]):
+    for row_start in range(0, len(predictions), 4):
+        columns = st.columns(4)
+        for column, prediction in zip(columns, predictions[row_start : row_start + 4]):
             with column:
                 render_native_score_card(prediction)
 
@@ -2685,11 +2682,10 @@ def render_game_center(predictions: list[dict[str, Any]]) -> None:
     final_games = [p for p in predictions if p["game"]["live"]["status"] == "FINAL"]
 
     st.subheader("Today's Game Center")
-    all_metric, live_metric, upcoming_metric, final_metric = st.columns(4)
-    all_metric.metric("All games", len(predictions))
-    live_metric.metric("Live now", len(live_games))
-    upcoming_metric.metric("Upcoming", len(upcoming_games))
-    final_metric.metric("Final", len(final_games))
+    st.caption(
+        f"{len(predictions)} games · {len(live_games)} live · "
+        f"{len(upcoming_games)} upcoming · {len(final_games)} final"
+    )
 
     live_tab, upcoming_tab, final_tab = st.tabs(
         [
@@ -3211,7 +3207,17 @@ selected_prediction = next(
 )
 if selected_prediction is not None:
     selected_game_pk = selected_prediction["game"]["game_pk"]
-    st.subheader("Selected Matchup Analysis")
+    selected_title, selected_close = st.columns([5.0, 1.0], vertical_alignment="center")
+    with selected_title:
+        st.subheader("Selected Matchup Analysis")
+    with selected_close:
+        st.button(
+            "Close analysis",
+            key="close_selected_analysis",
+            on_click=toggle_game_analysis,
+            args=(selected_game_pk,),
+            use_container_width=True,
+        )
     render_advanced(
         selected_prediction,
         weather_by_game.get(selected_game_pk, {}),
