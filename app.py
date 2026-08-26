@@ -1627,6 +1627,265 @@ def build_game_prediction(
 import random
 
 
+def native_stylesheet() -> str:
+    """Small, stable visual layer for the native Streamlit interface.
+
+    This intentionally styles Streamlit's own widgets instead of replacing
+    them with large custom HTML blocks. The result keeps normal widget behavior
+    while adding a sports-broadcast type system, card depth and subtle 3D orbs.
+    """
+    return """
+<style>
+:root {
+    --quant-bg-0: #050a12;
+    --quant-bg-1: #091625;
+    --quant-panel: rgba(11, 25, 40, .86);
+    --quant-panel-strong: rgba(8, 20, 34, .95);
+    --quant-line: rgba(125, 211, 252, .20);
+    --quant-line-strong: rgba(103, 232, 249, .48);
+    --quant-cyan: #5ee7f7;
+    --quant-blue: #60a5fa;
+    --quant-mint: #6ee7b7;
+    --quant-red: #fb7185;
+    --quant-text: #f5f8fc;
+    --quant-muted: #9fb0c3;
+}
+
+html, body, .stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMainBlockContainer"] {
+    font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif !important;
+}
+
+.stApp {
+    color: var(--quant-text);
+    background-color: var(--quant-bg-0);
+    background-image:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,.10) 0 2px, rgba(84,190,255,.12) 3px 14px, rgba(31,94,151,.05) 30px, transparent 58px),
+        radial-gradient(circle at 91% 34%, rgba(255,255,255,.09) 0 2px, rgba(94,231,247,.10) 3px 10px, rgba(19,89,137,.04) 24px, transparent 48px),
+        radial-gradient(circle at 74% 82%, rgba(255,255,255,.08) 0 1px, rgba(96,165,250,.10) 2px 9px, transparent 37px),
+        radial-gradient(ellipse at 18% -5%, rgba(14,165,233,.22), transparent 42%),
+        radial-gradient(ellipse at 92% 12%, rgba(37,99,235,.15), transparent 35%),
+        linear-gradient(138deg, #050a12 0%, #0a1a2a 47%, #07111e 100%);
+    background-attachment: fixed;
+}
+
+.stApp::before,
+.stApp::after {
+    content: "";
+    position: fixed;
+    display: block;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.stApp::before {
+    width: 175px;
+    height: 175px;
+    top: 9.5rem;
+    right: 4.5vw;
+    opacity: .34;
+    border: 1px solid rgba(186,230,253,.25);
+    background: radial-gradient(circle at 31% 25%, rgba(255,255,255,.45) 0 3%, rgba(125,211,252,.18) 12%, rgba(30,106,164,.12) 42%, rgba(4,19,34,.04) 67%, transparent 72%);
+    box-shadow: inset -24px -27px 42px rgba(0,5,15,.50), inset 12px 12px 24px rgba(255,255,255,.06), 0 24px 60px rgba(0,0,0,.26), 0 0 42px rgba(56,189,248,.12);
+}
+
+.stApp::after {
+    width: 96px;
+    height: 96px;
+    left: 3.5vw;
+    bottom: 6.5rem;
+    opacity: .27;
+    border: 1px solid rgba(167,243,208,.22);
+    background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.42), rgba(45,212,191,.14) 22%, rgba(10,56,78,.08) 58%, transparent 72%);
+    box-shadow: inset -16px -18px 28px rgba(0,5,15,.48), 0 17px 40px rgba(0,0,0,.24), 0 0 30px rgba(45,212,191,.09);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .stApp::before { animation: quantOrbFloat 16s ease-in-out infinite; }
+    .stApp::after { animation: quantOrbFloatSmall 19s ease-in-out infinite; }
+}
+
+@keyframes quantOrbFloat {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(-14px, 18px, 0); }
+}
+
+@keyframes quantOrbFloatSmall {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(12px, -16px, 0); }
+}
+
+[data-testid="stAppViewContainer"] {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+[data-testid="stHeader"] {
+    background: rgba(5, 10, 18, .76);
+    border-bottom: 1px solid rgba(125,211,252,.08);
+}
+
+[data-testid="stMainBlockContainer"] {
+    max-width: 1480px;
+    padding-top: 1.35rem;
+    padding-bottom: 4rem;
+}
+
+h1, h2, h3, h4,
+[data-testid="stHeadingWithActionElements"] {
+    font-family: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif !important;
+    font-stretch: condensed;
+    letter-spacing: -.025em !important;
+    color: var(--quant-text) !important;
+}
+
+h2 { letter-spacing: -.035em !important; }
+p, label, li, [data-testid="stCaptionContainer"] {
+    color: inherit;
+}
+[data-testid="stCaptionContainer"] { color: var(--quant-muted) !important; }
+
+hr {
+    border-color: rgba(125,211,252,.14) !important;
+    margin: .85rem 0 1rem !important;
+}
+
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: var(--quant-line) !important;
+    border-radius: 15px !important;
+    background: linear-gradient(148deg, rgba(13,30,48,.92), rgba(7,18,31,.88)) !important;
+    box-shadow: 0 14px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+[class*="st-key-score_card_"] [data-testid="stVerticalBlockBorderWrapper"] {
+    position: relative;
+    overflow: hidden;
+    min-height: 214px;
+    border-color: rgba(94,231,247,.25) !important;
+    background: linear-gradient(155deg, rgba(13,34,55,.97), rgba(6,18,32,.95)) !important;
+    box-shadow: 0 16px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+[class*="st-key-score_card_"] [data-testid="stVerticalBlockBorderWrapper"]::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--quant-blue), var(--quant-cyan), var(--quant-mint));
+    opacity: .85;
+}
+
+[class*="st-key-score_card_"]:hover [data-testid="stVerticalBlockBorderWrapper"] {
+    transform: translateY(-2px);
+    border-color: var(--quant-line-strong) !important;
+    box-shadow: 0 20px 42px rgba(0,0,0,.34), 0 0 24px rgba(34,211,238,.08);
+}
+
+[class*="st-key-matchup_row_"] [data-testid="stVerticalBlockBorderWrapper"] {
+    border-left: 3px solid rgba(94,231,247,.62) !important;
+}
+
+[data-testid="stImage"] img {
+    filter: drop-shadow(0 5px 8px rgba(0,0,0,.42));
+}
+
+[data-baseweb="tab-list"] {
+    gap: .35rem;
+    padding: .3rem;
+    border: 1px solid rgba(125,211,252,.14);
+    border-radius: 12px;
+    background: rgba(5,15,27,.72);
+}
+
+[data-baseweb="tab"] {
+    border-radius: 9px;
+    font-family: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif !important;
+    font-weight: 650 !important;
+    letter-spacing: .015em;
+}
+
+[aria-selected="true"][data-baseweb="tab"] {
+    background: linear-gradient(135deg, rgba(14,116,144,.48), rgba(37,99,235,.25));
+}
+
+[data-testid="stBaseButton-primary"],
+[data-testid="stBaseButton-secondary"],
+[data-testid="stPopoverButton"] button {
+    border-radius: 10px !important;
+    font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: .01em;
+    transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+
+[data-testid="stBaseButton-primary"] {
+    background: linear-gradient(135deg, #0891b2, #2563eb) !important;
+    border-color: rgba(103,232,249,.62) !important;
+    box-shadow: 0 8px 20px rgba(8,145,178,.20);
+}
+
+[data-testid="stBaseButton-secondary"] {
+    background: rgba(11,29,47,.86) !important;
+    border-color: rgba(125,211,252,.24) !important;
+}
+
+[data-testid="stBaseButton-primary"]:hover,
+[data-testid="stBaseButton-secondary"]:hover {
+    transform: translateY(-1px);
+    border-color: rgba(103,232,249,.62) !important;
+    box-shadow: 0 10px 24px rgba(0,0,0,.22), 0 0 17px rgba(34,211,238,.08);
+}
+
+[data-testid="stMetric"] {
+    padding: .72rem .8rem;
+    border: 1px solid rgba(125,211,252,.14);
+    border-radius: 12px;
+    background: rgba(5,17,30,.56);
+}
+
+[data-testid="stMetricValue"] {
+    font-family: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif !important;
+    color: #f8fbff !important;
+}
+
+[data-testid="stProgress"] > div > div {
+    background: linear-gradient(90deg, var(--quant-blue), var(--quant-cyan), var(--quant-mint)) !important;
+}
+
+[data-testid="stExpander"] {
+    border-color: rgba(125,211,252,.20) !important;
+    border-radius: 15px !important;
+    background: rgba(7,19,33,.76) !important;
+    box-shadow: 0 15px 38px rgba(0,0,0,.20);
+}
+
+[data-baseweb="input"],
+[data-baseweb="select"] > div,
+[data-testid="stDateInput"] input {
+    background: rgba(5,17,30,.90) !important;
+    border-color: rgba(125,211,252,.22) !important;
+}
+
+[data-testid="stAlert"] {
+    border-radius: 12px !important;
+    border-color: rgba(125,211,252,.16) !important;
+}
+
+a { color: #72e6f4; }
+
+@media (max-width: 900px) {
+    .stApp::before { width: 112px; height: 112px; right: -1.5rem; opacity: .25; }
+    .stApp::after { display: none; }
+    [data-testid="stMainBlockContainer"] { padding-top: .9rem; }
+}
+</style>
+"""
+
+
 def bubble_markup(count: int = 24) -> str:
     """Return deterministic decorative bubbles so reruns do not jump around."""
     rng = random.Random(937)
@@ -2050,6 +2309,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+st.markdown(native_stylesheet(), unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -2174,6 +2434,38 @@ def matchup_style(game: dict[str, Any]) -> str:
         f"--away-primary:{away_primary};--away-secondary:{away_secondary};"
         f"--home-primary:{home_primary};--home-secondary:{home_secondary};"
     )
+
+
+def native_matchup_accents(predictions: list[dict[str, Any]]) -> str:
+    """Give native cards team-colored accents without replacing their widgets."""
+    rules: list[str] = []
+    for prediction in predictions:
+        game = prediction["game"]
+        game_pk = int(game["game_pk"])
+        away_primary, away_secondary = team_accents(game["away"].get("id"))
+        home_primary, home_secondary = team_accents(game["home"].get("id"))
+        target_primary, _ = team_accents(game[prediction["target_side"]].get("id"))
+        rules.extend(
+            [
+                (
+                    f".st-key-score_card_{game_pk} "
+                    "[data-testid='stVerticalBlockBorderWrapper']::before"
+                    "{background:linear-gradient(90deg,"
+                    f"{away_secondary},{away_primary} 44%,{home_primary} 56%,{home_secondary}) !important;}}"
+                ),
+                (
+                    f".st-key-matchup_row_{game_pk} "
+                    "[data-testid='stVerticalBlockBorderWrapper']"
+                    f"{{border-left-color:{target_primary} !important;}}"
+                ),
+                (
+                    f".st-key-verdict_{game_pk} "
+                    "[data-testid='stVerticalBlockBorderWrapper']"
+                    f"{{border-left:3px solid {target_primary} !important;}}"
+                ),
+            ]
+        )
+    return "<style>" + "".join(rules) + "</style>"
 
 
 def confidence_class(label: str) -> str:
@@ -2673,14 +2965,14 @@ def render_native_score_card(prediction: dict[str, Any]) -> None:
         away_value = "—"
         home_value = "—"
 
-    with st.container(border=True):
+    with st.container(border=True, key=f"score_card_{game['game_pk']}"):
         st.caption(status_text)
         for team, value in ((away, away_value), (home, home_value)):
             logo_column, team_column, value_column = st.columns(
                 [0.16, 1.0, 0.22], vertical_alignment="center"
             )
             with logo_column:
-                st.image(team["logo"], width=25)
+                st.image(team["logo"], width=29)
             with team_column:
                 st.markdown(f"**{team['short_name']}**")
             with value_column:
@@ -2717,6 +3009,7 @@ def render_game_center(predictions: list[dict[str, Any]], selected_date: date) -
     upcoming_games = [p for p in predictions if p["game"]["live"]["status"] == "PREVIEW"]
     final_games = [p for p in predictions if p["game"]["live"]["status"] == "FINAL"]
 
+    st.markdown(native_matchup_accents(predictions), unsafe_allow_html=True)
     st.subheader("Score Center")
     st.caption(
         f"{selected_date.strftime('%A, %B %-d')} · {len(predictions)} games · {len(live_games)} live · "
@@ -2772,30 +3065,45 @@ def render_slate_insights(predictions: list[dict[str, Any]]) -> None:
     insight_columns = st.columns(4)
     insight_data = [
         (
+            strongest,
             "🔥 Strongest lean",
             f"{strongest['target_name']} {strongest['target_probability']*100:.1f}%",
             f"{strongest_game['away']['short_name']} at {strongest_game['home']['short_name']}",
         ),
         (
+            closest,
             "⚖️ Closest matchup",
             f"{closest_game['away']['short_name']} {closest['away_probability']*100:.1f}%",
             f"{closest_game['home']['short_name']} {closest['home_probability']*100:.1f}%",
         ),
         (
+            highest_total,
             "📈 Highest total",
             f"{highest_total['projected_away_runs'] + highest_total['projected_home_runs']:.1f} runs",
             f"{total_game['away']['short_name']} at {total_game['home']['short_name']}",
         ),
         (
+            best_quality,
             "✅ Best data quality",
             f"{best_quality['quality_score']}/100",
             f"{quality_game['away']['short_name']} at {quality_game['home']['short_name']}",
         ),
     ]
-    for column, (label, value, detail) in zip(insight_columns, insight_data):
+    for index, (column, (prediction, label, value, detail)) in enumerate(
+        zip(insight_columns, insight_data)
+    ):
+        game = prediction["game"]
         with column:
-            with st.container(border=True):
-                st.caption(label)
+            with st.container(border=True, key=f"insight_{index}"):
+                away_logo, home_logo, label_column = st.columns(
+                    [0.22, 0.22, 1.2], vertical_alignment="center"
+                )
+                with away_logo:
+                    st.image(game["away"]["logo"], width=27)
+                with home_logo:
+                    st.image(game["home"]["logo"], width=27)
+                with label_column:
+                    st.caption(label)
                 st.markdown(f"#### {value}")
                 st.caption(detail)
 
@@ -2832,10 +3140,18 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
         else prediction["fair_home_odds"]
     )
     context = weather_text(weather, game["venue"])
-    with st.container(border=True):
+    with st.container(border=True, key=f"matchup_row_{game['game_pk']}"):
         matchup_column, pick_column, score_column = st.columns([1.6, 0.75, 0.85])
         with matchup_column:
-            st.markdown(f"#### {away['name']} at {home['name']}")
+            away_logo, matchup_name, home_logo = st.columns(
+                [0.18, 1.62, 0.18], vertical_alignment="center"
+            )
+            with away_logo:
+                st.image(away["logo"], width=38)
+            with matchup_name:
+                st.markdown(f"#### {away['name']} at {home['name']}")
+            with home_logo:
+                st.image(home["logo"], width=38)
             st.caption(
                 f"{status_text} · {start_text} · "
                 f"{away.get('pitcher_name') or 'Starter TBD'} vs "
@@ -2876,7 +3192,12 @@ def render_advanced(
         )
         st.markdown("### Matchup at a glance")
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Model lean", f"{prediction['target_probability']*100:.1f}%")
+        c1.metric(
+            "Locked pregame pick",
+            game[target_side]["short_name"],
+            f"{prediction['target_probability']*100:.1f}% model probability",
+            delta_color="off",
+        )
         c2.metric(
             "Projected score",
             f"{game['away']['short_name']} {prediction['projected_away_runs']:.1f} · "
@@ -2893,9 +3214,13 @@ def render_advanced(
             f"park {prediction['park_factor']:.3f} · weather {prediction['weather_factor']:.3f}"
         )
 
-        with st.container(border=True):
-            st.markdown(f"#### Verdict · {prediction['target_name']}")
-            st.write(explanation["summary"])
+        with st.container(border=True, key=f"verdict_{game['game_pk']}"):
+            verdict_logo, verdict_copy = st.columns([0.12, 1.88], vertical_alignment="center")
+            with verdict_logo:
+                st.image(game[target_side]["logo"], width=48)
+            with verdict_copy:
+                st.markdown(f"#### Verdict · {prediction['target_name']}")
+                st.write(explanation["summary"])
 
         why_tab, pitching_tab, context_tab, market_tab = st.tabs(
             ["🎯 Why the Pick", "⚾ Pitching", "🌤️ Game Context", "💵 Market & Risks"]
@@ -3214,9 +3539,19 @@ selected_prediction = next(
 )
 if selected_prediction is not None:
     selected_game_pk = selected_prediction["game"]["game_pk"]
-    selected_title, selected_close = st.columns([5.0, 1.0], vertical_alignment="center")
+    selected_game = selected_prediction["game"]
+    away_logo, selected_title, home_logo, selected_close = st.columns(
+        [0.23, 4.55, 0.23, 1.0], vertical_alignment="center"
+    )
+    with away_logo:
+        st.image(selected_game["away"]["logo"], width=42)
     with selected_title:
-        st.subheader("Selected Matchup Analysis")
+        st.caption("SELECTED MATCHUP ANALYSIS")
+        st.subheader(
+            f"{selected_game['away']['name']} at {selected_game['home']['name']}"
+        )
+    with home_logo:
+        st.image(selected_game["home"]["logo"], width=42)
     with selected_close:
         st.button(
             "Close analysis",
