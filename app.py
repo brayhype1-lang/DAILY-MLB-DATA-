@@ -8,10 +8,10 @@ import streamlit as st
 from datetime import datetime
 
 # ------------------------------------------------------------------
-# 1. PAGE CONFIG & MODERN HUD STYLING
+# 1. PAGE CONFIG & PREMIUM HUD STYLING
 # ------------------------------------------------------------------
 st.set_page_config(
-    page_title="MLB Quantitative Terminal",
+    page_title="MLB Deep Quantitative Intelligence Engine",
     page_icon="⚾",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -26,6 +26,7 @@ st.markdown(
         font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
+    /* Deep Cyber-Sports Background */
     .stApp {
         background: radial-gradient(circle at 50% 0%, #0f172a 0%, #070d1b 50%, #02060d 100%);
         color: #F8FAFC;
@@ -71,74 +72,58 @@ st.markdown(
         background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
         border: 1px solid rgba(56, 189, 248, 0.2);
         border-radius: 20px;
-        padding: 24px;
-        margin-bottom: 20px;
+        padding: 20px;
+        margin-bottom: 16px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(12px);
+        transition: all 0.2s ease;
+    }
+    .metric-bubble:hover {
+        border-color: rgba(56, 189, 248, 0.5);
+        box-shadow: 0 12px 35px rgba(56, 189, 248, 0.15);
     }
 
-    /* Streamlit Button Styling */
-    .stButton button {
-        width: 100%;
-        background: linear-gradient(145deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
-        border-radius: 12px !important;
-        color: #F8FAFC !important;
-        padding: 8px 12px !important;
-        font-weight: 600 !important;
-        transition: all 0.2s ease-in-out !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+    /* Scoreboard Grid Card */
+    .score-card {
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(11, 18, 32, 0.95) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        backdrop-filter: blur(10px);
+        transition: all 0.2s ease-in-out;
     }
-    .stButton button:hover {
-        border-color: #38BDF8 !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3) !important;
-        background: linear-gradient(145deg, rgba(56, 189, 248, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+    .score-card:hover {
+        border-color: #38BDF8;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
     }
 
     /* Visual Diamond HUD */
     .diamond-wrapper {
         position: relative;
-        width: 32px;
-        height: 32px;
-        flex-shrink: 0;
-    }
-    .diamond-wrapper-lg {
-        position: relative;
-        width: 90px;
-        height: 90px;
+        width: 60px;
+        height: 60px;
         margin: 0 auto;
     }
     .base {
         position: absolute;
-        width: 7px;
-        height: 7px;
+        width: 14px;
+        height: 14px;
         background: rgba(51, 65, 85, 0.8);
         border: 1px solid rgba(100, 116, 139, 0.8);
         transform: rotate(45deg);
-        border-radius: 1px;
+        border-radius: 2px;
     }
-    .base-lg {
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        background: rgba(51, 65, 85, 0.8);
-        border: 1px solid rgba(100, 116, 139, 0.8);
-        transform: rotate(45deg);
-        border-radius: 3px;
-    }
-    .base.active, .base-lg.active {
+    .base.active {
         background: #38BDF8;
         border-color: #7dd3fc;
         box-shadow: 0 0 10px #38BDF8;
     }
-    .base-2b { top: 1px; left: 12px; }
-    .base-3b { top: 12px; left: 1px; }
-    .base-1b { top: 12px; right: 1px; }
-
-    .base-lg-2b { top: 4px; left: 35px; }
-    .base-lg-3b { top: 35px; left: 4px; }
-    .base-lg-1b { top: 35px; right: 4px; }
+    .base-2b { top: 2px; left: 23px; }
+    .base-3b { top: 23px; left: 2px; }
+    .base-1b { top: 23px; right: 2px; }
 
     /* Badges */
     .badge-live {
@@ -146,9 +131,9 @@ st.markdown(
         border: 1px solid rgba(239, 68, 68, 0.5);
         color: #FCA5A5;
         font-weight: 800;
-        padding: 3px 10px;
+        padding: 4px 10px;
         border-radius: 20px;
-        font-size: 0.68rem;
+        font-size: 0.72rem;
         font-family: 'JetBrains Mono', monospace;
         display: inline-flex;
         align-items: center;
@@ -159,18 +144,18 @@ st.markdown(
         border: 1px solid rgba(100, 116, 139, 0.4);
         color: #94A3B8;
         font-weight: 700;
-        padding: 3px 10px;
+        padding: 4px 10px;
         border-radius: 20px;
-        font-size: 0.68rem;
+        font-size: 0.72rem;
     }
     .badge-upcoming {
         background: rgba(30, 41, 59, 0.4);
         border: 1px solid rgba(51, 65, 85, 0.4);
         color: #64748B;
         font-weight: 600;
-        padding: 3px 10px;
+        padding: 4px 10px;
         border-radius: 20px;
-        font-size: 0.68rem;
+        font-size: 0.72rem;
     }
 
     .big-score {
@@ -201,8 +186,9 @@ st.markdown(
 # ------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### ⚙️ Engine Settings")
-    manual_refresh_btn = st.button("🔄 Refresh Data Now", use_container_width=True)
-    st.caption("Click the button above anytime to pull latest live scores without disrupting your workflow.")
+    auto_refresh_on = st.checkbox("Auto-Refresh Live Feeds", value=True)
+    refresh_interval = st.slider("Refresh Interval (sec)", min_value=5, max_value=60, value=15, step=5)
+    st.caption("Automatically polls the MLB API and updates all numbers live in real-time.")
 
 # ------------------------------------------------------------------
 # 3. PARK FACTORS & WEATHER ENGINE
@@ -450,7 +436,7 @@ def load_full_slate():
         return []
 
 # ------------------------------------------------------------------
-# 6. DASHBOARD RENDERING & USER CONTROL FLOW
+# 6. DASHBOARD RENDERING & REFRESH LOGIC
 # ------------------------------------------------------------------
 slate = load_full_slate()
 
@@ -488,44 +474,20 @@ else:
         if selected_g:
             lv = selected_g["live"]
             
-            if st.button("⬅️ Back to Scoreboard Grid"):
+            if st.button("⬅️ Return to Full Slate Scoreboard"):
                 st.session_state["selected_game_id"] = None
                 st.rerun()
-
-            is_live = (lv["status"] == "LIVE")
-            b1_lg = "active" if lv.get("has_1b") else ""
-            b2_lg = "active" if lv.get("has_2b") else ""
-            b3_lg = "active" if lv.get("has_3b") else ""
-
-            diamond_section = ""
-            if is_live:
-                diamond_section = f"""
-                <div style="display: flex; align-items: center; gap: 30px; background: rgba(15, 23, 42, 0.6); padding: 12px 24px; border-radius: 16px; border: 1px solid rgba(56, 189, 248, 0.2);">
-                    <div class="diamond-wrapper-lg">
-                        <div class="base-lg base-lg-2b {b2_lg}"></div>
-                        <div class="base-lg base-lg-3b {b3_lg}"></div>
-                        <div class="base-lg base-lg-1b {b1_lg}"></div>
-                    </div>
-                    <div style="text-align: left; font-family: 'JetBrains Mono', monospace;">
-                        <div style="font-size: 0.8rem; color: #94A3B8; text-transform: uppercase;">Outs</div>
-                        <div style="font-size: 2.2rem; font-weight: 800; color: #38BDF8; line-height: 1;">{lv.get('outs', 0)}</div>
-                    </div>
-                </div>
-                """
 
             st.markdown(
                 f"""
                 <div class="metric-bubble" style="margin-top: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 16px;">
-                            <img src="{selected_g['away_logo']}" width="52" height="52" />
-                            <div>
-                                <h2 style="margin:0; font-size: 1.8rem; font-weight: 800;">{selected_g['away_team']} @ {selected_g['home_team']}</h2>
-                                <div style="margin-top: 6px;">{lv['badge_html']}</div>
-                            </div>
-                            <img src="{selected_g['home_logo']}" width="52" height="52" />
+                            <img src="{selected_g['away_logo']}" width="48" height="48" />
+                            <h2 style="margin:0; font-size: 1.8rem; font-weight: 800;">{selected_g['away_team']} @ {selected_g['home_team']}</h2>
+                            <img src="{selected_g['home_logo']}" width="48" height="48" />
                         </div>
-                        {diamond_section}
+                        <div>{lv['badge_html']}</div>
                     </div>
                 </div>
                 """,
@@ -580,6 +542,10 @@ else:
                     st.info("Play-by-play feed updates automatically when games are live.")
                 st.markdown('</div>', unsafe_allow_html=True)
 
+            if auto_refresh_on:
+                time.sleep(refresh_interval)
+                st.rerun()
+
             st.stop()
 
     # --- MAIN SCOREBOARD GRID ---
@@ -588,11 +554,11 @@ else:
         <div class="metric-bubble" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <h1 style="margin:0; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE TERMINAL</h1>
-                <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.82rem; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • CLICK ANY GAME CARD FOR DEEP DIVE</p>
+                <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.82rem; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • REAL-TIME AUTOMATIC POLLING</p>
             </div>
             <div>
                 <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 6px 14px; border-radius: 12px; font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;">
-                    🟢 STABLE MODE ACTIVE
+                    🟢 LIVE SYNC ACTIVE
                 </span>
             </div>
         </div>
@@ -607,51 +573,66 @@ else:
         
         for idx, g in enumerate(row_games):
             lv = g["live"]
-            is_live_card = (lv["status"] == "LIVE")
-            
-            b1 = "active" if lv.get("has_1b") else ""
-            b2 = "active" if lv.get("has_2b") else ""
-            b3 = "active" if lv.get("has_3b") else ""
-
-            diamond_html = ""
-            if is_live_card:
-                diamond_html = f"""
-                <div class="diamond-wrapper">
-                    <div class="base base-2b {b2}"></div>
-                    <div class="base base-3b {b3}"></div>
-                    <div class="base base-1b {b1}"></div>
-                </div>
-                """
+            is_live = (lv["status"] == "LIVE")
 
             with cols[idx]:
+                st.markdown('<div class="score-card">', unsafe_allow_html=True)
+                
+                col_h1, col_h2 = st.columns([1, 1])
+                with col_h1:
+                    st.markdown(f"<span style='font-size:0.72rem; color:#94A3B8; font-family: JetBrains Mono; font-weight: 700;'>{lv['inning_str']}</span>", unsafe_allow_html=True)
+                with col_h2:
+                    st.markdown(f"<div style='text-align: right;'>{lv['badge_html']}</div>", unsafe_allow_html=True)
+
                 st.markdown(
                     f"""
-                    <div class="metric-bubble" style="padding: 14px; margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            {lv['badge_html']}
-                            {diamond_html}
+                    <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="{g['away_logo']}" width="22" height="22" style="object-fit: contain;" />
+                            <span style="font-size: 0.9rem; font-weight: 700;">{g['away_short']}</span>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <img src="{g['away_logo']}" width="20" height="20" />
-                                <span style="font-weight: 700; font-size: 0.85rem;">{g['away_short']}</span>
-                            </div>
-                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.95rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['away_runs']}</span>
+                        <span class="big-score" style="font-size: 1.4rem;">{lv['away_runs']}</span>
+                    </div>
+                    <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="{g['home_logo']}" width="22" height="22" style="object-fit: contain;" />
+                            <span style="font-size: 0.9rem; font-weight: 700;">{g['home_short']}</span>
                         </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <img src="{g['home_logo']}" width="20" height="20" />
-                                <span style="font-weight: 700; font-size: 0.85rem;">{g['home_short']}</span>
-                            </div>
-                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.95rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['home_runs']}</span>
-                        </div>
+                        <span class="big-score" style="font-size: 1.4rem;">{lv['home_runs']}</span>
                     </div>
                     """,
                     unsafe_allow_html=True
                 )
-                if st.button("🔍 Deep Dive", key=f"card_{g['game_id']}", use_container_width=True):
+
+                if is_live:
+                    b1_act = "active" if lv.get("has_1b") else ""
+                    b2_act = "active" if lv.get("has_2b") else ""
+                    b3_act = "active" if lv.get("has_3b") else ""
+                    outs_count = lv.get("outs", 0)
+
+                    st.markdown(
+                        f"""
+                        <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+                            <div class="diamond-wrapper" style="transform: scale(0.65); margin: -10px auto;">
+                                <div class="base base-2b {b2_act}"></div>
+                                <div class="base base-3b {b3_act}"></div>
+                                <div class="base base-1b {b1_act}"></div>
+                            </div>
+                            <div style="text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #94A3B8;">
+                                OUTS: <b style="color: #38BDF8; font-size: 0.9rem;">{outs_count}</b>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+
+                if st.button("📊 View Deep Dive", key=f"btn_{g['game_id']}", use_container_width=True):
                     st.session_state["selected_game_id"] = g["game_id"]
                     st.rerun()
+
+                st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("<br>### 📊 Full Slate Model Predictions & Matchups", unsafe_allow_html=True)
 
@@ -729,3 +710,7 @@ else:
             st.markdown(f"<div style='font-size: 0.84rem; line-height: 1.5; color: #94A3B8;'>{an['narrative']}</div>", unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
+
+    if auto_refresh_on:
+        time.sleep(refresh_interval)
+        st.rerun()
