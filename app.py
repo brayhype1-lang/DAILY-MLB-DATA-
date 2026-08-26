@@ -35,22 +35,23 @@ st.markdown(
         color: #F8FAFC;
     }
 
-    /* Streamlit Button Styling - Clean Matchup Links */
+    /* Make the card-trigger button span cleanly across the top */
     .stButton button {
         width: 100%;
-        background: transparent !important;
-        border: none !important;
-        color: #F8FAFC !important;
-        text-align: left !important;
-        padding: 0px !important;
+        background: rgba(56, 189, 248, 0.1) !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        border-radius: 8px !important;
+        color: #38BDF8 !important;
         font-weight: 700 !important;
-        font-size: 0.95rem !important;
-        box-shadow: none !important;
+        font-size: 0.85rem !important;
+        padding: 4px 8px !important;
+        transition: all 0.2s ease-in-out !important;
     }
     .stButton button:hover {
-        color: #38BDF8 !important;
-        background: transparent !important;
-        transform: none !important;
+        background: rgba(56, 189, 248, 0.25) !important;
+        border-color: #38BDF8 !important;
+        color: #F8FAFC !important;
+        transform: translateY(-1px) !important;
     }
 
     /* Badges */
@@ -440,17 +441,22 @@ else:
             
             with cols[idx]:
                 with st.container(border=True):
-                    st.markdown(lv['badge_html'], unsafe_allow_html=True)
+                    # Top Badge & Action Button combined cleanly as the full matchup trigger
+                    header_col1, header_col2 = st.columns([1, 1])
+                    with header_col1:
+                        st.markdown(lv['badge_html'], unsafe_allow_html=True)
+                    with header_col2:
+                        if st.button("📊 Deep Dive", key=f"dive_{g['game_id']}"):
+                            st.session_state["selected_game_id"] = g["game_id"]
+                            st.rerun()
                     
-                    # Clicking either team name triggers the deep dive view directly
+                    # Team rows (clean text display without separate buttons)
                     sc_col1, sc_col2, sc_col3 = st.columns([1, 4, 1])
                     with sc_col1:
                         if g["away_logo"]:
                             st.image(g["away_logo"], width=24)
                     with sc_col2:
-                        if st.button(f"{g['away_short']}", key=f"away_{g['game_id']}"):
-                            st.session_state["selected_game_id"] = g["game_id"]
-                            st.rerun()
+                        st.markdown(f"**{g['away_short']}**")
                     with sc_col3:
                         st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
 
@@ -459,9 +465,7 @@ else:
                         if g["home_logo"]:
                             st.image(g["home_logo"], width=24)
                     with sc_col5:
-                        if st.button(f"{g['home_short']}", key=f"home_{g['game_id']}"):
-                            st.session_state["selected_game_id"] = g["game_id"]
-                            st.rerun()
+                        st.markdown(f"**{g['home_short']}**")
                     with sc_col6:
                         st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['home_runs']}</span>", unsafe_allow_html=True)
 
