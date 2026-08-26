@@ -30,23 +30,6 @@ st.markdown(
         color: #E2E8F0;
     }
 
-    .lock-card {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        border: 1px solid #38BDF8;
-        border-radius: 16px;
-        padding: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 0 25px rgba(56, 189, 248, 0.15);
-        position: relative;
-        overflow: hidden;
-    }
-    .lock-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 4px; height: 100%;
-        background: #38BDF8;
-    }
-
     .matchup-card {
         background: rgba(15, 23, 42, 0.7);
         border: 1px solid #1E293B;
@@ -61,33 +44,15 @@ st.markdown(
         background: rgba(15, 23, 42, 0.9);
     }
 
-    .calib-card {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 16px;
-        text-align: center;
-    }
-
-    .badge-edge {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    .badge-pick {
+        background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
         color: #FFFFFF;
         font-weight: 800;
         padding: 6px 16px;
         border-radius: 30px;
         font-size: 0.82rem;
         letter-spacing: 0.05em;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-    }
-
-    .badge-pass {
-        background-color: #1E293B;
-        color: #64748B;
-        font-weight: 600;
-        padding: 6px 16px;
-        border-radius: 30px;
-        font-size: 0.82rem;
-        border: 1px solid #334155;
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
     }
 
     .badge-live {
@@ -150,13 +115,10 @@ st.markdown(
     }
 
     .highlight-txt { color: #F8FAFC; font-weight: 700; }
-    .highlight-edge { color: #34D399; font-weight: 700; }
 </style>
 """,
     unsafe_allow_html=True,
 )
-
-MIN_EDGE_THRESHOLD = 3.0
 
 # ------------------------------------------------------------------
 # 2. PARK FACTORS & WEATHER ENGINE
@@ -248,16 +210,9 @@ def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple
     return 1.0 - new_home_prob, new_home_prob
 
 # ------------------------------------------------------------------
-# 4. QUANTITATIVE MODEL WITH ADVANCED METRICS & SPLITS
+# 4. QUANTITATIVE MODEL WITH FORCED SELECTIONS
 # ------------------------------------------------------------------
-def devig_implied(odds1: int, odds2: int) -> tuple[float, float]:
-    p1 = (100 / (odds1 + 100)) if odds1 > 0 else (abs(odds1) / (abs(odds1) + 100))
-    p2 = (100 / (odds2 + 100)) if odds2 > 0 else (abs(odds2) / (abs(odds2) + 100))
-    tot = p1 + p2
-    return p1 / tot, p2 / tot
-
 def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park):
-    # Advanced weighting factor incorporating xwOBA differential & L/R splits
     woba_diff = away_stats["xwoba"] - home_stats["xwoba"]
     split_diff = home_stats["vs_lhp_wrc"] - away_stats["vs_lhp_wrc"] if home_stats.get("starter_hand") == "L" else 0
     
@@ -265,23 +220,16 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
     home_prob = min(0.85, max(0.15, base_home_prob))
     away_prob = 1.0 - home_prob
 
-    fair_away, fair_home = devig_implied(home_stats["odds"], away_stats["odds"])
-    home_edge = home_prob - fair_home
-    away_edge = away_prob - fair_away
-
-    req_edge = MIN_EDGE_THRESHOLD / 100.0
-    if home_edge >= req_edge:
-        target, edge, win_p = home_team, home_edge * 100, home_prob * 100
-    elif away_edge >= req_edge:
-        target, edge, win_p = away_team, away_edge * 100, away_prob * 100
+    # Force a winner choice for every game based on higher win probability
+    if home_prob >= away_prob:
+        target, win_p = home_team, home_prob * 100
     else:
-        target, edge, win_p = None, 0.0, home_prob * 100
+        target, win_p = away_team, away_prob * 100
 
-    selected_team = target if target else home_team
-    narrative = f"Model calculates edge for <span class='highlight-txt'>{selected_team}</span> based on xwOBA metrics (<span class='highlight-txt'>{away_stats['xwoba']:.3f} vs {home_stats['xwoba']:.3f}</span>) and recent 10-game form. Park factor ({park['name']}) favors explosive run environments."
+    narrative = f"Model projects <span class='highlight-txt'>{target}</span> to secure the victory based on xwOBA metrics (<span class='highlight-txt'>{away_stats['xwoba']:.3f} vs {home_stats['xwoba']:.3f}</span>), L10 form, and contextual park factors at {park['name']}."
 
     return {
-        "target": target, "edge": round(edge, 1), "win_prob": round(win_p, 1),
+        "target": target, "win_prob": round(win_p, 1),
         "home_prob": home_prob, "away_prob": away_prob, "narrative": narrative,
     }
 
@@ -335,8 +283,8 @@ def load_full_slate():
 # ------------------------------------------------------------------
 col_title, col_btn = st.columns([4, 1])
 with col_title:
-    st.title("⚾ MLB Quantitative Edge Engine")
-    st.caption("Advanced Metrics • xwOBA, Situational Splits & Automated Live Scores")
+    st.title("⚾ MLB Quantitative Matchup & Winner Engine")
+    st.caption("Complete Slate Predictions • xwOBA, Situational Splits & Live Trackers")
 with col_btn:
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 Refresh Data", use_container_width=True):
@@ -359,74 +307,27 @@ else:
         
         if live_state["status"] == "LIVE":
             away_p, home_p = adjust_prob_for_live_state(analysis["home_prob"], live_state)
-            fair_away, fair_home = devig_implied(g["home_stats"]["odds"], g["away_stats"]["odds"])
-            home_edge = home_p - fair_home
-            away_edge = away_p - fair_away
-            req_edge = MIN_EDGE_THRESHOLD / 100.0
-
-            if home_edge >= req_edge: target, edge, win_p = g["home_team"], home_edge * 100, home_p * 100
-            elif away_edge >= req_edge: target, edge, win_p = g["away_team"], away_edge * 100, away_p * 100
-            else: target, edge, win_p = None, 0.0, home_p * 100
+            if home_p >= away_p:
+                target, win_p = g["home_team"], home_p * 100
+            else:
+                target, win_p = g["away_team"], away_p * 100
 
             analysis["home_prob"] = home_p
             analysis["away_prob"] = away_p
             analysis["target"] = target
-            analysis["edge"] = round(edge, 1)
             analysis["win_prob"] = round(win_p, 1)
-            analysis["narrative"] = f"🔴 <span class='highlight-txt'>LIVE IN-GAME UPDATE</span>: Score is {g['away_team']} {live_state['away_runs']} - {g['home_team']} {live_state['home_runs']}. Advanced metrics and win probabilities updated."
+            analysis["narrative"] = f"🔴 <span class='highlight-txt'>LIVE IN-GAME UPDATE</span>: Score is {g['away_team']} {live_state['away_runs']} - {g['home_team']} {live_state['home_runs']}. Model projects <span class='highlight-txt'>{target}</span> based on updated live script."
 
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
 
-    top_locks = [g for g in evaluated_slate if g["analysis"]["target"] is not None]
-    top_locks = sorted(top_locks, key=lambda x: x["analysis"]["edge"], reverse=True)
+    st.markdown("### 📊 Complete Slate Breakdown & Model Winner Picks")
 
-    # FEATURED VALUE PICKS SECTION
-    st.markdown("### 🔒 Featured Value Selections")
-    if top_locks:
-        for g in top_locks[:3]:
-            an = g["analysis"]
-            is_home = (an["target"] == g["home_team"])
-            target_logo = g["home_logo"] if is_home else g["away_logo"]
-            st.markdown(
-                f"""
-            <div class="lock-card">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <img src="{target_logo}" width="56" height="56" />
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
-                                <span style="color: #38BDF8; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;">FEATURED VALUE PLAY</span>
-                                {g['live']['badge_html']}
-                            </div>
-                            <h2 style="margin: 0; color: #FFFFFF; font-size: 1.5rem; font-weight: 800;">{an['target']} Moneyline</h2>
-                            <span style="color: #64748B; font-size: 0.82rem;">{g['park']['name']} • 🌤️ {g['park']['weather']['weather_desc']}</span>
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <span class="badge-edge">+{an['edge']}% EDGE</span>
-                        <div style="font-weight: 800; font-size: 1.1rem; color: #38BDF8; margin-top: 8px; font-family: 'JetBrains Mono', monospace;">
-                            Win Prob: {an['win_prob']}%
-                        </div>
-                    </div>
-                </div>
-                <div class="narrative-box" style="margin-top: 16px;">
-                    {an['narrative']}
-                </div>
-            </div>
-            """,
-                unsafe_allow_html=True,
-            )
-    else:
-        st.info("No games currently meet the model's target threshold.")
-
-    st.markdown("---")
-    st.markdown("### 📊 Comprehensive Matchup Matrix & Live Trackers")
-
-    # DETAILED MATCHUP CARDS WITH ADVANCED METRICS
     for g in evaluated_slate:
         an = g["analysis"]
         away_pct = int(an["away_prob"] * 100)
         home_pct = int(an["home_prob"] * 100)
+        is_home_pick = (an["target"] == g["home_team"])
+        pick_logo = g["home_logo"] if is_home_pick else g["away_logo"]
 
         with st.container():
             st.markdown('<div class="matchup-card">', unsafe_allow_html=True)
@@ -441,7 +342,7 @@ else:
                         <span style="color: #64748B; font-weight: 800;">@</span>
                         <img src="{g['home_logo']}" width="26" height="26" />
                         <span style="font-size: 1.05rem; font-weight: 700;">{g['home_team']}</span>
-                        <span style="color: #475569; font-size: 0.8rem; margin-left: 8px;">({g['park']['name']})</span>
+                        <span style="color: #475569; font-size: 0.8rem; margin-left: 8px;">({g['park']['name']} • 🌤️ {g['park']['weather']['weather_desc']})</span>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -449,14 +350,21 @@ else:
             with col_status:
                 st.markdown(f'<div style="text-align: right;">{g["live"]["badge_html"]}</div>', unsafe_allow_html=True)
 
-            if an["target"]:
-                st.markdown(f'<span class="badge-edge" style="display:inline-block; margin-bottom: 12px;">PLAY {an["target"]} (+{an["edge"]}%)</span>', unsafe_allow_html=True)
-            else:
-                st.markdown('<span class="badge-pass" style="display:inline-block; margin-bottom: 12px;">PASS / NO EDGE</span>', unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <div style="display: flex; align-items: center; gap: 12px; margin: 12px 0;">
+                    <img src="{pick_logo}" width="32" height="32" />
+                    <div>
+                        <span class="badge-pick">MODEL PICK: {an['target']}</span>
+                        <span style="color: #38BDF8; font-weight: 700; font-size: 0.9rem; margin-left: 10px; font-family: 'JetBrains Mono', monospace;">({an['win_prob']}% Win Probability)</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            # Away Team Advanced Metrics Column
             with c1:
                 st.markdown(f"**{g['away_team']}** (L10: {g['away_stats']['l10_record']})")
                 st.markdown(f'<div style="color: #94A3B8; font-size: 0.82rem; margin: 4px 0;">Starter: <b>{g["away_stats"]["pitcher"]}</b></div>', unsafe_allow_html=True)
@@ -486,7 +394,6 @@ else:
                     unsafe_allow_html=True
                 )
 
-            # Home Team Advanced Metrics Column
             with c2:
                 st.markdown(f"**{g['home_team']}** (L10: {g['home_stats']['l10_record']})")
                 st.markdown(f'<div style="color: #94A3B8; font-size: 0.82rem; margin: 4px 0;">Starter: <b>{g["home_stats"]["pitcher"]}</b></div>', unsafe_allow_html=True)
@@ -505,7 +412,7 @@ else:
                     f"""
                     <div style="margin-top: 8px;">
                         <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace;">
-                            <span>Model Win Probability</span>
+                            <span>Model Prediction Breakdown</span>
                             <span style="color: #38BDF8; font-weight: 700;">{home_pct}%</span>
                         </div>
                         <div style="background: #1E293B; border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
@@ -516,9 +423,8 @@ else:
                     unsafe_allow_html=True
                 )
 
-            # Narrative Column
             with c3:
-                st.markdown("**Advanced Quantitative Edge Breakdown**")
+                st.markdown("**Quantitative Rationale & Breakdown**")
                 st.markdown(f'<div class="narrative-box">{an["narrative"]}</div>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)
