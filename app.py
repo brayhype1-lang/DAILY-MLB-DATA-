@@ -146,7 +146,6 @@ st.markdown(
         font-size: 0.78rem;
     }
 
-    /* Bubble Glassmorphism Pitcher Card */
     .pitcher-bubble-card {
         background: linear-gradient(145deg, rgba(11, 22, 42, 0.9), rgba(5, 13, 26, 0.95));
         border: 1px solid rgba(56, 189, 248, 0.3);
@@ -173,7 +172,6 @@ st.markdown(
     }
     .stat-pill b { color: #F8FAFC; }
 
-    /* Clean Bubble Rows for Recent Starts */
     .recent-starts-header {
         font-size: 0.72rem;
         font-weight: 700;
@@ -503,52 +501,61 @@ else:
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            def render_pitcher_bubble_column(team_name, stats, pct_val):
-                recent_rows = ""
-                for s in stats["recent_starts"]:
-                    recent_rows += f"""
-                    <div class="start-bubble-row">
-                        <span><b>{s['ip']}</b> IP</span>
-                        <span><b>{s['er']}</b> ER</span>
-                        <span><b>{s['hits']}</b> H</span>
-                    </div>
-                    """
-                
-                card_html = f"""
-                <div class="pitcher-bubble-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <div>
-                            <span style="font-weight: 700; font-size: 0.92rem; color: #F8FAFC;">{stats['pitcher']}</span>
-                            <span style="color: #38BDF8; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; margin-left: 6px;">({stats['record']})</span>
+            # Direct rendering helper block inside the loop to guarantee parsing
+            def render_pitcher_column(stats, pct_val):
+                st.markdown(
+                    f"""
+                    <div class="pitcher-bubble-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div>
+                                <span style="font-weight: 700; font-size: 0.92rem; color: #F8FAFC;">{stats['pitcher']}</span>
+                                <span style="color: #38BDF8; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; margin-left: 6px;">({stats['record']})</span>
+                            </div>
+                            <span style="color: #64748B; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">L10: {stats['l10_record']}</span>
                         </div>
-                        <span style="color: #64748B; font-size: 0.72rem; font-family: 'JetBrains Mono', monospace;">L10: {stats['l10_record']}</span>
+                        <div class="stat-pill-container">
+                            <div class="stat-pill">ERA: <b>{stats['era']:.2f}</b></div>
+                            <div class="stat-pill">xwOBA: <b>{stats['xwoba']:.3f}</b></div>
+                            <div class="stat-pill">HardHit%: <b>{stats['hard_hit_pct']}%</b></div>
+                        </div>
+                        <div class="recent-starts-header">Last 3 Starts Log</div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                
+                for s in stats["recent_starts"]:
+                    st.markdown(
+                        f"""
+                        <div class="start-bubble-row">
+                            <span><b>{s['ip']}</b> IP</span>
+                            <span><b>{s['er']}</b> ER</span>
+                            <span><b>{s['hits']}</b> H</span>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                
+                st.markdown(
+                    f"""
                     </div>
-                    <div class="stat-pill-container">
-                        <div class="stat-pill">ERA: <b>{stats['era']:.2f}</b></div>
-                        <div class="stat-pill">xwOBA: <b>{stats['xwoba']:.3f}</b></div>
-                        <div class="stat-pill">HardHit%: <b>{stats['hard_hit_pct']}%</b></div>
+                    <div style="margin-top: 6px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 3px; font-family: 'JetBrains Mono', monospace;">
+                            <span>Model Probability</span>
+                            <span style="color: #38BDF8; font-weight: 700;">{pct_val}%</span>
+                        </div>
+                        <div style="background: rgba(15, 23, 42, 0.6); border-radius: 6px; overflow: hidden; height: 7px; width: 100%;">
+                            <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {pct_val}%; height: 100%; border-radius: 6px;"></div>
+                        </div>
                     </div>
-                    <div class="recent-starts-header">Last 3 Starts Log</div>
-                    {recent_rows}
-                </div>
-                <div style="margin-top: 6px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94A3B8; margin-bottom: 3px; font-family: 'JetBrains Mono', monospace;">
-                        <span>Model Probability</span>
-                        <span style="color: #38BDF8; font-weight: 700;">{pct_val}%</span>
-                    </div>
-                    <div style="background: rgba(15, 23, 42, 0.6); border-radius: 6px; overflow: hidden; height: 7px; width: 100%;">
-                        <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {pct_val}%; height: 100%; border-radius: 6px;"></div>
-                    </div>
-                </div>
-                """
-                # CRITICAL FIX: Pass unsafe_allow_html=True so Streamlit renders the markup correctly
-                st.markdown(card_html, unsafe_allow_html=True)
+                    """,
+                    unsafe_allow_html=True
+                )
 
             with c1:
-                render_pitcher_bubble_column(g['away_team'], g['away_stats'], away_pct)
+                render_pitcher_column(g['away_stats'], away_pct)
 
             with c2:
-                render_pitcher_bubble_column(g['home_team'], g['home_stats'], home_pct)
+                render_pitcher_column(g['home_stats'], home_pct)
 
             with c3:
                 st.markdown("**Quantitative Rationale & Matchup Breakdown**")
