@@ -283,19 +283,22 @@ def get_park_factor(home_team: str):
 
 
 # ------------------------------------------------------------------
-# 3. LIVE SCORE & STATE ENGINE
+# 3. LIVE SCORE & STATE ENGINE (ROBUST API PARSING)
 # ------------------------------------------------------------------
-@st.cache_data(ttl=15) # Short cache for live scores
+@st.cache_data(ttl=15)
 def fetch_live_game_state(game_pk: int) -> dict:
     url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/feed/live"
     try:
         res = requests.get(url, timeout=5).json()
-        status_abstract = res.get("gameData", {}).get("status", {}).get("abstractGameState", "Preview")
+        status_data = res.get("gameData", {}).get("status", {})
+        abstract_state = status_data.get("abstractGameState", "Preview")
+        detailed_state = status_data.get("detailedState", "Scheduled")
+        
         linescore = res.get("liveData", {}).get("linescore", {})
         away_runs = linescore.get("teams", {}).get("away", {}).get("runs", 0)
         home_runs = linescore.get("teams", {}).get("home", {}).get("runs", 0)
 
-        if status_abstract == "Live":
+        if abstract_state == "Live" or "In Progress" in detailed_state or "Live" in detailed_state:
             inning = linescore.get("currentInningOrdinal", "1st")
             half = linescore.get("inningState", "Top")
             return {
@@ -304,7 +307,7 @@ def fetch_live_game_state(game_pk: int) -> dict:
                 "away_runs": away_runs,
                 "home_runs": home_runs
             }
-        elif status_abstract == "Final":
+        elif abstract_state == "Final" or "Final" in detailed_state:
             return {
                 "status": "FINAL",
                 "badge_html": f'<span class="badge-final">🏁 FINAL ({away_runs}-{home_runs})</span>',
@@ -314,7 +317,7 @@ def fetch_live_game_state(game_pk: int) -> dict:
         else:
             return {
                 "status": "PREVIEW",
-                "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
+                "badge_html": f'<span class="badge-upcoming">⏰ {detailed_state}</span>',
                 "away_runs": 0,
                 "home_runs": 0
             }
@@ -327,9 +330,6 @@ def fetch_live_game_state(game_pk: int) -> dict:
         }
 
 def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple[float, float]:
-    """
-    Adjusts pre-game win probabilities dynamically based on live score and inning progress.
-    """
     if live_state["status"] != "LIVE":
         return 1.0 - base_home_prob, base_home_prob
 
@@ -405,7 +405,7 @@ def build_editorial_breakdown(
     else:
         target, edge, win_p = None, 0.0, home_prob * 100
         favored_starter, f_siera, f_whip = home_stats['pitcher'], home_stats['siera'], home_stats['whip']
-        opp_starter, opp_whip, opp_era, opp_siera = home_stats['pitcher'], home_stats['whip'], home_stats['era'], home_stats['siera']
+        opp_starter, opp_whip, opp_era, opp_siera = away_stats['pitcher'], away_stats['whip'], away_stats['era'], away_stats['siera']
 
     selected_team = target if target else home_team
 
@@ -526,6 +526,8 @@ with col_btn:
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 Refresh Live Scores", use_container_width=True):
         st.cache_data.clear()
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
         st.rerun()
 
 # Model Calibration Tracker
@@ -581,7 +583,7 @@ else:
             analysis["narrative"] = (
                 f"🔴 <span class='highlight-txt'>LIVE IN-GAME UPDATE</span>: Score is "
                 f"{g['away_team']} {live_state['away_runs']} - {g['home_team']} {live_state['home_runs']}. "
-                f"Model has dynamically shifted win probabilities to reflect current run differential."
+                f"Model has dynamically shifted win probabilities and recommendations based on the live score differential."
             )
 
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
@@ -744,7 +746,7 @@ else:
                             <span style="color: #38BDF8; font-weight: 700;">{home_pct}%</span>
                         </div>
                         <div style="background: #1E293B; border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
-                            <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {home_pct}%; height: 100%; border-radius: 6px;"></div>
+                            <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {home_pct}%, height: 100%; border-radius: 6px;"></div>
                         </div>
                     </div>
                     """,
