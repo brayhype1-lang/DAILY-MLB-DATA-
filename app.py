@@ -202,7 +202,16 @@ st.markdown(
 )
 
 # ------------------------------------------------------------------
-# 2. PARK FACTORS & WEATHER ENGINE
+# 2. AUTO-REFRESH & LIVE TICKER CONTROLS (SIDEBAR)
+# ------------------------------------------------------------------
+with st.sidebar:
+    st.markdown("### ⚙️ Live Feed Engine")
+    auto_refresh_on = st.checkbox("Enable Auto-Refresh Loop", value=True)
+    refresh_interval = st.slider("Refresh Interval (seconds)", min_value=5, max_value=60, value=15, step=5)
+    st.caption("Automatically polls the MLB live data feeds and updates scores right in front of your eyes.")
+
+# ------------------------------------------------------------------
+# 3. PARK FACTORS & WEATHER ENGINE
 # ------------------------------------------------------------------
 PARK_FACTORS = {
     "Colorado Rockies": {"run_mult": 1.28, "name": "Coors Field", "lat": 39.756, "lon": -104.994, "roof": False},
@@ -237,9 +246,8 @@ def get_park_factor(home_team: str):
     return park
 
 # ------------------------------------------------------------------
-# 3. DETAILED LIVE SCORE & BOX SCORE FEED ENGINE
+# 4. DETAILED LIVE SCORE & BOX SCORE FEED ENGINE (NO CACHE FOR LIVE)
 # ------------------------------------------------------------------
-@st.cache_data(ttl=15)
 def fetch_live_game_state(game_pk: int) -> dict:
     url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
     try:
@@ -259,10 +267,7 @@ def fetch_live_game_state(game_pk: int) -> dict:
         away_errors = teams_linescore.get("away", {}).get("errors", 0)
         home_errors = teams_linescore.get("home", {}).get("errors", 0)
 
-        # Inning linescore breakdown table list
         innings_list = linescore.get("innings", [])
-
-        # Plays / Plays feed for live log
         plays_data = live_data.get("plays", {})
         all_plays = plays_data.get("allPlays", [])
         recent_plays = []
@@ -350,7 +355,7 @@ def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple
     return 1.0 - new_home_prob, new_home_prob
 
 # ------------------------------------------------------------------
-# 4. DETERMINISTIC MODEL & SLATE LOADER
+# 5. DETERMINISTIC MODEL & SLATE LOADER
 # ------------------------------------------------------------------
 def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park, live_state=None):
     woba_diff = away_stats["xwoba"] - home_stats["xwoba"]
@@ -456,7 +461,7 @@ def load_full_slate():
         return []
 
 # ------------------------------------------------------------------
-# 5. DASHBOARD PRESENTATION & INTERACTIVE INSPECTOR
+# 6. DASHBOARD PRESENTATION & AUTO-REFRESH LOOP
 # ------------------------------------------------------------------
 slate = load_full_slate()
 
@@ -484,17 +489,15 @@ else:
 
     evaluated_slate.sort(key=game_sort_key)
 
-    # State management for clicking into a game deep dive
     if "selected_game_id" not in st.session_state:
         st.session_state["selected_game_id"] = None
 
-    # --- IF A GAME IS SELECTED, SHOW THE DEEP DIVE INSPECTOR ---
+    # --- DEEP DIVE INSPECTOR ---
     if st.session_state["selected_game_id"] is not None:
         selected_g = next((x for x in evaluated_slate if x["game_id"] == st.session_state["selected_game_id"]), None)
         
         if selected_g:
             lv = selected_g["live"]
-            an = selected_g["analysis"]
             
             if st.button("⬅️ Back to Full Slate Scoreboard"):
                 st.session_state["selected_game_id"] = None
@@ -516,7 +519,6 @@ else:
                 unsafe_allow_html=True
             )
 
-            # Live Box Score Grid (Runs, Hits, Errors)
             col_box1, col_box2 = st.columns(2)
             with col_box1:
                 with st.container(border=True):
@@ -532,7 +534,6 @@ else:
                     st.write(f"**Weather / Conditions:** {selected_g['park']['weather']['weather_desc']}")
                     st.write(f"**Park Factor Multiplier:** {selected_g['park']['run_mult']}x Run Environment")
 
-            # Recent Plays Live Feed Log
             st.markdown("### ⚡ Live Play-by-Play Feed")
             with st.container(border=True):
                 plays = lv.get("recent_plays", [])
@@ -542,7 +543,12 @@ else:
                 else:
                     st.info("Play-by-play feed will update live once the game commences.")
 
-            st.stop() # Stop execution here so it doesn't render the main grid when viewing a deep dive
+            # Trigger auto-refresh loop on deep dive as well
+            if auto_refresh_on:
+                time.sleep(refresh_interval)
+                st.rerun()
+
+            st.stop()
 
     # --- MAIN SCOREBOARD GRID ---
     st.markdown(
@@ -551,11 +557,11 @@ else:
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <div>
                     <h1 style="margin:0; font-size: 1.5rem; font-weight: 900; color: #F8FAFC;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
-                    <p style="margin:2px 0 0 0; color: #38BDF8; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • CLICK ANY CARD FOR DEEP DIVE BOX SCORE</p>
+                    <p style="margin:2px 0 0 0; color: #38BDF8; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • AUTO-UPDATES LIVE WITHOUT REFRESHING</p>
                 </div>
                 <div>
                     <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">
-                        🟢 LIVE
+                        🟢 LIVE STREAM ACTIVE
                     </span>
                 </div>
             </div>
@@ -617,7 +623,6 @@ else:
                             unsafe_allow_html=True
                         )
 
-                    # Interactive Button to trigger deep dive page
                     if st.button("📊 Box Score & Deep Dive", key=f"btn_{g['game_id']}"):
                         st.session_state["selected_game_id"] = g["game_id"]
                         st.rerun()
@@ -707,3 +712,8 @@ else:
                 st.markdown(f'<div class="narrative-box">{an["narrative"]}</div>', unsafe_allow_html=True)
 
             st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- AUTOMATIC REFRESH LOOP TRIGGER ---
+    if auto_refresh_on:
+        time.sleep(refresh_interval)
+        st.rerun()
