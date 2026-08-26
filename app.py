@@ -1,4 +1,4 @@
-
+"""Stable configuration for the MLB Quantitative Terminal."""
 
 from __future__ import annotations
 
@@ -1310,6 +1310,8 @@ def _comparison_reasons(
     opponent_starter = home_starter if target_side == "away" else away_starter
     target_bullpen = away_bullpen if target_side == "away" else home_bullpen
     opponent_bullpen = home_bullpen if target_side == "away" else away_bullpen
+    target_pitcher_name = game[target_side].get("pitcher_name") or "Listed starter"
+    opponent_pitcher_name = game[opponent_side].get("pitcher_name") or "Opposing starter"
 
     supports: list[tuple[float, str]] = []
     risks: list[tuple[float, str]] = []
@@ -1318,17 +1320,67 @@ def _comparison_reasons(
     bullpen_delta = opponent_bullpen["quality_ra9"] - target_bullpen["quality_ra9"]
 
     if offense_delta >= 0:
-        supports.append((abs(offense_delta), f"{target_name} owns the stronger blended season/recent offense."))
+        supports.append(
+            (
+                abs(offense_delta),
+                f"{target_name}'s blended offense grades {target_offense['strength']*100:.0f} "
+                f"vs {opponent_name} {opponent_offense['strength']*100:.0f} "
+                "(100 is league average; season/recent runs and OPS are included).",
+            )
+        )
     else:
-        risks.append((abs(offense_delta), f"{opponent_name} carries the stronger offensive baseline."))
-    if starter_delta >= 0:
-        supports.append((abs(starter_delta) / 4, f"The projected starting-pitcher run prevention favors {target_name}."))
+        risks.append(
+            (
+                abs(offense_delta),
+                f"{opponent_name}'s blended offense grades {opponent_offense['strength']*100:.0f} "
+                f"vs {target_name} {target_offense['strength']*100:.0f}.",
+            )
+        )
+    if target_starter["has_stats"] and opponent_starter["has_stats"] and starter_delta >= 0:
+        supports.append(
+            (
+                abs(starter_delta) / 4,
+                f"Starter blend favors {target_pitcher_name}: {target_starter['quality_ra9']:.2f} "
+                f"vs {opponent_pitcher_name} {opponent_starter['quality_ra9']:.2f} "
+                "estimated runs allowed per nine (lower is better).",
+            )
+        )
+    elif target_starter["has_stats"] and opponent_starter["has_stats"]:
+        risks.append(
+            (
+                abs(starter_delta) / 4,
+                f"Starter blend favors {opponent_pitcher_name}: {opponent_starter['quality_ra9']:.2f} "
+                f"vs {target_pitcher_name} {target_starter['quality_ra9']:.2f} (lower is better).",
+            )
+        )
+    elif target_starter["has_stats"]:
+        supports.append(
+            (0.06, f"{target_pitcher_name} has a usable starter profile while the opposing starter remains uncertain.")
+        )
+    elif opponent_starter["has_stats"]:
+        risks.append(
+            (0.08, f"{target_pitcher_name}'s profile is incomplete while {opponent_pitcher_name} has usable data.")
+        )
     else:
-        risks.append((abs(starter_delta) / 4, f"The opposing starter grades better in the ERA/FIP/xERA blend."))
-    if bullpen_delta >= 0:
-        supports.append((abs(bullpen_delta) / 4, f"Season relief splits give {target_name} the bullpen edge."))
+        risks.append((0.10, "Both starting-pitcher profiles are incomplete or still listed as TBD."))
+    if target_bullpen["has_split"] and opponent_bullpen["has_split"] and bullpen_delta >= 0:
+        supports.append(
+            (
+                abs(bullpen_delta) / 4,
+                f"Relief pitching favors {target_name}: {target_bullpen['quality_ra9']:.2f} "
+                f"vs {opponent_name} {opponent_bullpen['quality_ra9']:.2f} blended bullpen RA9.",
+            )
+        )
+    elif target_bullpen["has_split"] and opponent_bullpen["has_split"]:
+        risks.append(
+            (
+                abs(bullpen_delta) / 4,
+                f"Relief pitching favors {opponent_name}: {opponent_bullpen['quality_ra9']:.2f} "
+                f"vs {target_name} {target_bullpen['quality_ra9']:.2f} blended bullpen RA9.",
+            )
+        )
     else:
-        risks.append((abs(bullpen_delta) / 4, f"The opposing bullpen has the stronger season relief profile."))
+        risks.append((0.04, "A complete relief-pitching split was not available for both teams."))
     if target_starter["fatigue_score"] >= 48:
         risks.append((0.16, "Starter rest and recent pitch workload add fatigue uncertainty."))
     if weather.get("precip_probability", 0) >= 35:
@@ -1505,6 +1557,13 @@ def build_game_prediction(
         "quality_score": quality_score,
         "quality_label": quality_label,
         "model_agreement_gap": agreement,
+        "simulation_home_probability": sim_home,
+        "record_home_probability": record_home,
+        "away_staff_ra9": away_staff,
+        "home_staff_ra9": home_staff,
+        "shared_environment_factor": shared_environment,
+        "league_context": league,
+        "simulations": int(simulations),
         "support": support,
         "risks": risks,
         "invalidation": invalidation,
@@ -1516,7 +1575,6 @@ def build_game_prediction(
             "bullpen splits, team offense, defense, park/weather and Monte Carlo scoring."
         ),
     }
-
 """Visual system for the Streamlit dashboard."""
 
 import random
@@ -1644,7 +1702,7 @@ h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif !important; }
 .prob-track { height: 9px; border-radius: 99px; overflow: hidden; background: rgba(15,23,42,.9); border: 1px solid rgba(103,232,249,.25); }
 .prob-fill { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #0e7490, #67e8f9); box-shadow: 0 0 14px rgba(103,232,249,.6); }
 
-.analysis-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(260px,.9fr); gap: .85rem; }
+.analysis-grid { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,.9fr) minmax(320px,1.3fr); gap: .85rem; }
 .pitcher-card, .rationale-card {
     min-width: 0; border-radius: 14px; padding: .9rem;
     border: 1px solid rgba(34,211,238,.35); background: rgba(3,15,31,.54);
@@ -1682,7 +1740,6 @@ h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif !important; }
 }
 </style>
 """
-
 """MLB Quantitative Matchup & Winner Engine.
 
 Run locally with: streamlit run app.py
@@ -1702,6 +1759,12 @@ except ImportError:  # pragma: no cover - only used when a deployment omits the 
 
 ET = ZoneInfo("America/New_York")
 
+# Change these two numbers if you want a different daily forced-update time.
+# The app also keeps live scores, lineups, weather and odds on their shorter TTLs.
+DAILY_REFRESH_HOUR_ET = 8
+DAILY_REFRESH_MINUTE_ET = 0
+LIVE_REFRESH_SECONDS = 30
+
 st.set_page_config(
     page_title="MLB Quantitative Matchup & Winner Engine",
     page_icon="⚾",
@@ -1709,6 +1772,28 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 st.markdown(full_stylesheet() + bubble_markup(), unsafe_allow_html=True)
+
+
+@st.cache_resource
+def daily_refresh_tracker() -> dict[str, str | None]:
+    """Share the last forced-refresh date across sessions in this app process."""
+    return {"completed_for": None}
+
+
+def scheduled_update_at(day: date) -> datetime:
+    return datetime(
+        day.year,
+        day.month,
+        day.day,
+        DAILY_REFRESH_HOUR_ET,
+        DAILY_REFRESH_MINUTE_ET,
+        tzinfo=ET,
+    )
+
+
+def next_scheduled_update(now_et: datetime) -> datetime:
+    scheduled = scheduled_update_at(now_et.date())
+    return scheduled if now_et < scheduled else scheduled + timedelta(days=1)
 
 
 @st.cache_data(ttl=45, show_spinner=False)
@@ -1851,9 +1936,181 @@ def weather_text(weather: dict[str, Any], venue: dict[str, Any]) -> str:
     )
 
 
-def render_game(prediction: dict[str, Any], weather: dict[str, Any]) -> str:
+def lean_description(probability: float) -> str:
+    if probability >= 0.64:
+        return "a clear model lean"
+    if probability >= 0.58:
+        return "a moderate model lean"
+    if probability >= 0.535:
+        return "a small model lean"
+    return "essentially a toss-up"
+
+
+def agreement_description(gap: float) -> str:
+    if gap <= 0.04:
+        return "close agreement between the two model branches"
+    if gap <= 0.085:
+        return "some disagreement, but not enough to erase the lean"
+    return "meaningful model disagreement, which lowers confidence"
+
+
+def build_model_explanation(
+    prediction: dict[str, Any], weather: dict[str, Any], lineup: dict[str, Any]
+) -> dict[str, str]:
+    """Translate the model inputs and intermediate estimates into plain English."""
     game = prediction["game"]
     away, home = game["away"], game["home"]
+    target_side = prediction["target_side"]
+    opponent_side = "home" if target_side == "away" else "away"
+    target = game[target_side]
+    opponent = game[opponent_side]
+    target_probability = prediction["target_probability"]
+    status = game["live"]["status"]
+
+    if status == "FINAL":
+        summary = (
+            f"This game is final. {target['name']} is shown as the result winner; the probability "
+            "is no longer a pregame forecast."
+        )
+    elif status == "LIVE":
+        summary = (
+            f"The live model makes {target['name']} {lean_description(target_probability)} at "
+            f"{target_probability*100:.1f}%. It starts from the current score, inning, outs and "
+            "occupied bases, then simulates the innings remaining."
+        )
+    else:
+        summary = (
+            f"{target['name']} is {lean_description(target_probability)} at "
+            f"{target_probability*100:.1f}%. The run model projects {away['short_name']} "
+            f"{prediction['projected_away_runs']:.2f} and {home['short_name']} "
+            f"{prediction['projected_home_runs']:.2f}; that is an expected margin of "
+            f"{abs(prediction['projected_home_runs']-prediction['projected_away_runs']):.2f} runs, "
+            "not a guarantee of the final score."
+        )
+
+    simulation_target = (
+        1.0 - prediction["simulation_home_probability"]
+        if target_side == "away"
+        else prediction["simulation_home_probability"]
+    )
+    record_target = (
+        1.0 - prediction["record_home_probability"]
+        if target_side == "away"
+        else prediction["record_home_probability"]
+    )
+    simulation = (
+        f"In {prediction['simulations']:,} score simulations, {target['short_name']} won "
+        f"{simulation_target*100:.1f}%. A separate record-and-home-field baseline gives "
+        f"{target['short_name']} {record_target*100:.1f}%. Their "
+        f"{prediction['model_agreement_gap']*100:.1f}-point gap means "
+        f"{agreement_description(prediction['model_agreement_gap'])}. The final pregame "
+        "probability blends both estimates and shrinks the result toward 50% to reduce false precision."
+    )
+
+    away_offense = prediction["away_offense"]
+    home_offense = prediction["home_offense"]
+    offense = (
+        f"{away['short_name']}: {away_offense['strength']*100:.0f} offense index, "
+        f"{away_offense['season_rpg']:.2f} season runs/game, "
+        f"{away_offense['recent_rpg']:.2f} recent-window runs/game and "
+        f"{away_offense['ops']:.3f} OPS. {home['short_name']}: "
+        f"{home_offense['strength']*100:.0f} index, {home_offense['season_rpg']:.2f} season "
+        f"runs/game, {home_offense['recent_rpg']:.2f} recent-window runs/game and "
+        f"{home_offense['ops']:.3f} OPS. An index of 100 is league average, and recent form "
+        "is intentionally regressed so a short hot streak cannot dominate the pick."
+    )
+
+    away_starter = prediction["away_starter"]
+    home_starter = prediction["home_starter"]
+    starters = (
+        f"{away.get('pitcher_name') or 'Away starter TBD'} grades "
+        f"{away_starter['quality_ra9']:.2f} in the ERA/FIP/xERA/WHIP blend over an expected "
+        f"{away_starter['expected_ip']:.1f} IP; {home.get('pitcher_name') or 'Home starter TBD'} "
+        f"grades {home_starter['quality_ra9']:.2f} over {home_starter['expected_ip']:.1f} IP. "
+        "Lower is better. The blend is pulled toward league average when the sample is small, "
+        "and rest plus recent workload can reduce expected innings."
+    )
+
+    away_bullpen = prediction["away_bullpen"]
+    home_bullpen = prediction["home_bullpen"]
+    bullpen = (
+        f"{away['short_name']} relief grade: {away_bullpen['quality_ra9']:.2f} blended RA9 "
+        f"(ERA {fmt_number(away_bullpen.get('era'), 2)}, FIP {fmt_number(away_bullpen.get('fip'), 2)}). "
+        f"{home['short_name']} relief grade: {home_bullpen['quality_ra9']:.2f} "
+        f"(ERA {fmt_number(home_bullpen.get('era'), 2)}, FIP {fmt_number(home_bullpen.get('fip'), 2)}). "
+        "Lower is better. This measures relief performance, but it does not yet know which "
+        "individual relievers are unavailable after recent usage."
+    )
+
+    environment_delta = (prediction["shared_environment_factor"] - 1.0) * 100.0
+    if environment_delta >= 2:
+        environment_direction = f"raises the expected run environment about {environment_delta:.1f}%"
+    elif environment_delta <= -2:
+        environment_direction = f"reduces the expected run environment about {abs(environment_delta):.1f}%"
+    else:
+        environment_direction = "is approximately neutral for scoring"
+    environment = (
+        f"The {prediction['park_factor']:.3f} park factor and "
+        f"{prediction['weather_factor']:.3f} weather factor combine to "
+        f"{prediction['shared_environment_factor']:.3f}, which {environment_direction}. "
+        f"Current context: {weather_text(weather, game['venue'])}."
+    )
+
+    away_confirmed = bool((lineup.get("away") or {}).get("confirmed"))
+    home_confirmed = bool((lineup.get("home") or {}).get("confirmed"))
+    if away_confirmed and home_confirmed:
+        lineup_text = "both batting orders are confirmed"
+    elif away_confirmed:
+        lineup_text = f"only the {away['short_name']} batting order is confirmed"
+    elif home_confirmed:
+        lineup_text = f"only the {home['short_name']} batting order is confirmed"
+    else:
+        lineup_text = "neither batting order is confirmed yet"
+    confidence = (
+        f"Data quality is {prediction['quality_score']}/100 ({prediction['quality_label']}); "
+        f"{lineup_text}. Confidence is a data-completeness label, not the chance the wager wins."
+    )
+
+    value = prediction.get("value")
+    target_fair_odds = (
+        prediction["fair_away_odds"] if target_side == "away" else prediction["fair_home_odds"]
+    )
+    if value:
+        market = (
+            f"Best measured comparison is {value['team']} {fmt_odds(value['price'])}: model "
+            f"{value['model_probability']*100:.1f}% vs no-vig market "
+            f"{value['market_probability']*100:.1f}%, a {value['edge']*100:+.1f}-point edge "
+            f"and {value['expected_roi']*100:+.1f}% modeled ROI. "
+            f"It {'passes' if value.get('qualifies') else 'does not pass'} the app's minimum "
+            "edge/data-quality filter."
+        )
+    else:
+        market = (
+            f"The model's fair moneyline for {target['name']} is {fmt_odds(target_fair_odds)}. "
+            "No verified sportsbook price is connected, so this is a matchup projection only; "
+            "the app is not claiming that a bet has positive value."
+        )
+
+    return {
+        "summary": summary,
+        "simulation": simulation,
+        "offense": offense,
+        "starters": starters,
+        "bullpen": bullpen,
+        "environment": environment,
+        "confidence": confidence,
+        "market": market,
+        "changes": " ".join(prediction.get("invalidation") or []),
+        "opponent": opponent["name"],
+    }
+
+
+def render_game(
+    prediction: dict[str, Any], weather: dict[str, Any], lineup: dict[str, Any]
+) -> str:
+    game = prediction["game"]
+    away, home = game["away"], game["home"]
+    explanation = build_model_explanation(prediction, weather, lineup)
     live = game["live"]
     status = live["status"]
     status_class = {
@@ -1892,20 +2149,11 @@ def render_game(prediction: dict[str, Any], weather: dict[str, Any]) -> str:
     )
 
     value = prediction.get("value")
-    if value:
-        edge_pp = value["edge"] * 100.0
-        value_label = "Qualified value" if value.get("qualifies") else "Price comparison"
-        market_html = (
-            f"<div class='rationale-line'><strong>{safe_text(value_label)}:</strong> "
-            f"{safe_text(value['team'])} {fmt_odds(value['price'])} · "
-            f"model {value['model_probability']*100:.1f}% vs no-vig market "
-            f"{value['market_probability']*100:.1f}% · edge {edge_pp:+.1f} pp</div>"
-        )
-    else:
-        market_html = (
-            "<div class='rationale-line'><strong>Market:</strong> No verified sportsbook price; "
-            "this is a game projection, not a value recommendation.</div>"
-        )
+    value_label = "Market check" if value else "Fair-price context"
+    market_html = (
+        f"<div class='rationale-line'><strong>{safe_text(value_label)}:</strong> "
+        f"{safe_text(explanation['market'])}</div>"
+    )
 
     score_text = (
         f"Projected median score: {away['short_name']} {prediction['distribution']['median_away']:.0f}, "
@@ -1913,12 +2161,14 @@ def render_game(prediction: dict[str, Any], weather: dict[str, Any]) -> str:
     )
     rationale = f"""
     <div class="rationale-card">
-        <div class="rationale-title">Quantitative Rationale & Matchup</div>
-        <div class="rationale-line">{safe_text(score_text)}</div>
+        <div class="rationale-title">Model Explanation · Short Version</div>
+        <div class="rationale-line"><strong>Verdict:</strong> {safe_text(explanation['summary'])}</div>
+        <div class="rationale-line"><strong>Score:</strong> {safe_text(score_text)}</div>
+        <div class="rationale-line"><strong>Model branches:</strong> {safe_text(explanation['simulation'])}</div>
         {support_html}
         {risk_html}
         {market_html}
-        <div class="source-line">DATA QUALITY {prediction['quality_score']}/100 · {safe_text(prediction['quality_label'])} confidence · no certainty claims</div>
+        <div class="source-line">DATA QUALITY {prediction['quality_score']}/100 · {safe_text(prediction['quality_label'])} · open INSPECT MODEL DETAILS for the full calculation story</div>
     </div>
     """
 
@@ -1966,12 +2216,27 @@ def render_game(prediction: dict[str, Any], weather: dict[str, Any]) -> str:
     return "".join(line.strip() for line in markup.splitlines())
 
 
-def render_advanced(prediction: dict[str, Any], lineup: dict[str, Any]) -> None:
+def render_advanced(
+    prediction: dict[str, Any], weather: dict[str, Any], lineup: dict[str, Any]
+) -> None:
     game = prediction["game"]
+    explanation = build_model_explanation(prediction, weather, lineup)
     with st.expander(
-        f"Inspect model details · {game['away']['short_name']} at {game['home']['short_name']}",
+        f"Inspect full model explanation · {game['away']['short_name']} at {game['home']['short_name']}",
         expanded=False,
     ):
+        st.markdown("#### How the model reached this probability")
+        st.info(explanation["summary"])
+        st.markdown(f"**1. Simulation and second opinion**  \n{explanation['simulation']}")
+        st.markdown(f"**2. Team offense**  \n{explanation['offense']}")
+        st.markdown(f"**3. Starting pitchers**  \n{explanation['starters']}")
+        st.markdown(f"**4. Bullpens**  \n{explanation['bullpen']}")
+        st.markdown(f"**5. Park and weather**  \n{explanation['environment']}")
+        st.markdown(f"**6. Confidence and missing information**  \n{explanation['confidence']}")
+        st.markdown(f"**7. Sportsbook-value test**  \n{explanation['market']}")
+        st.warning(f"What would make the model reconsider: {explanation['changes']}")
+
+        st.markdown("#### Numerical model details")
         c1, c2, c3, c4 = st.columns(4)
         c1.metric(
             "Projected runs",
@@ -2021,16 +2286,34 @@ def render_advanced(prediction: dict[str, Any], lineup: dict[str, Any]) -> None:
             lc2.markdown("**Home batting order**\n\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(home_lineup.get("names", []))))
 
 
-today_et = datetime.now(ET).date()
+now_et = datetime.now(ET)
+today_et = now_et.date()
+scheduled_today = scheduled_update_at(today_et)
+refresh_tracker = daily_refresh_tracker()
+
+# Force one full data-cache refresh on the first app run at or after the daily
+# update time. If Community Cloud is asleep then, this runs immediately when the
+# next visitor wakes the app.
+if now_et >= scheduled_today and refresh_tracker.get("completed_for") != today_et.isoformat():
+    st.cache_data.clear()
+    refresh_tracker["completed_for"] = today_et.isoformat()
+    st.session_state["slate_date"] = today_et
+
+# Keep an open browser session from remaining on yesterday's slate after midnight.
+if st.session_state.get("calendar_day") != today_et.isoformat():
+    st.session_state["calendar_day"] = today_et.isoformat()
+    st.session_state["slate_date"] = today_et
+
+next_update = next_scheduled_update(now_et)
 odds_api_key = secret_value("ODDS_API_KEY")
 
 with st.sidebar:
     st.markdown("### ⚙️ Terminal Controls")
     selected_date = st.date_input(
         "Slate date",
-        value=today_et,
         min_value=today_et,
         max_value=today_et + timedelta(days=7),
+        key="slate_date",
         help="The live prediction screen is intentionally limited to current and upcoming slates.",
     )
     simulations = st.select_slider(
@@ -2038,7 +2321,7 @@ with st.sidebar:
         options=[10_000, 20_000, 30_000, 50_000, 75_000],
         value=30_000,
     )
-    auto_refresh = st.toggle("Auto-refresh live games", value=True)
+    auto_refresh = st.toggle("Auto-refresh live games every 30 seconds", value=True)
     if st.button("🔄 Force complete data refresh", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
@@ -2050,9 +2333,27 @@ with st.sidebar:
         st.success("Sportsbook comparison enabled")
     else:
         st.info("Sportsbook odds disabled until an API key is added")
+    st.markdown("---")
+    st.markdown("### Scheduled Update")
+    st.success(
+        f"Daily forced refresh: {scheduled_today.strftime('%-I:%M %p ET')}"
+    )
+    st.caption(f"Next scheduled update: {next_update.strftime('%a, %b %-d at %-I:%M %p ET')}")
+    st.caption(
+        "To change the time, edit DAILY_REFRESH_HOUR_ET and "
+        "DAILY_REFRESH_MINUTE_ET near the top of app.py."
+    )
 
-if auto_refresh and st_autorefresh is not None:
-    st_autorefresh(interval=30_000, limit=None, key="live_slate_refresh")
+if st_autorefresh is not None:
+    milliseconds_to_daily_update = max(
+        1_000, int((next_update - now_et).total_seconds() * 1_000)
+    )
+    refresh_interval = (
+        LIVE_REFRESH_SECONDS * 1_000
+        if auto_refresh
+        else min(milliseconds_to_daily_update, 3_600_000)
+    )
+    st_autorefresh(interval=refresh_interval, limit=None, key="terminal_clock_refresh")
 
 as_of = selected_date.isoformat()
 st.markdown(
@@ -2060,7 +2361,7 @@ st.markdown(
     <div class="hero-card">
         <div class="hero-title">⚾ MLB Quantitative Matchup & Winner Engine</div>
         <div class="hero-sub">Real-source slate predictions · transparent matchup components · live game-state simulations</div>
-        <div class="hero-meta">SLATE {safe_text(selected_date.strftime('%A · %B %-d, %Y'))} · {simulations:,} SIMULATIONS PER GAME</div>
+        <div class="hero-meta">SLATE {safe_text(selected_date.strftime('%A · %B %-d, %Y'))} · {simulations:,} SIMULATIONS PER GAME · DAILY FORCED UPDATE {safe_text(scheduled_today.strftime('%-I:%M %p ET'))}</div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -2158,8 +2459,8 @@ for prediction in predictions:
     game_pk = prediction["game"]["game_pk"]
     weather = weather_by_game.get(game_pk, {})
     lineup = lineups_by_game.get(game_pk, {})
-    st.markdown(render_game(prediction, weather), unsafe_allow_html=True)
-    render_advanced(prediction, lineup)
+    st.markdown(render_game(prediction, weather, lineup), unsafe_allow_html=True)
+    render_advanced(prediction, weather, lineup)
 
 st.markdown("---")
 with st.expander("Methodology, data sources and important limitations", expanded=False):
