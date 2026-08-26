@@ -79,6 +79,29 @@ st.markdown(
         border-color: #7DD3FC;
         box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
     }
+
+    /* --- GLASSMORPHISM PILL BUTTON STYLING --- */
+    .stButton > button {
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #94A3B8 !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 0.75rem !important;
+        letter-spacing: 0.5px !important;
+        border-radius: 50px !important;
+        padding: 0.35rem 1rem !important;
+        transition: all 0.25s ease-in-out !important;
+    }
+    
+    .stButton > button:hover {
+        background: rgba(56, 189, 248, 0.12) !important;
+        border-color: rgba(56, 189, 248, 0.6) !important;
+        color: #38BDF8 !important;
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
+        transform: translateY(-1px) !important;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -385,7 +408,8 @@ else:
                 with st.container(border=True):
                     st.markdown("### 🏟️ Box Score Summary")
                     sc1, sc2, sc3 = st.columns(3)
-                    sc1.metric("Runs", f"{lv['runs']['away'] if isinstance(lv.get('runs'), dict) else lv['away_runs']} - {lv['home_runs']}")
+                    runs_val = lv['away_runs'] if not isinstance(lv.get('runs'), dict) else lv['runs']['away']
+                    sc1.metric("Runs", f"{runs_val} - {lv['home_runs']}")
                     sc2.metric("Hits", f"{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}")
                     sc3.metric("Errors", f"{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}")
             with col_box2:
@@ -466,7 +490,7 @@ else:
                     else:
                         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-                    # Fully functional Streamlit button inside each card
+                    # Glassmorphism pill button inside each card
                     if st.button("🔍 Inspect Match", key=f"btn_{g_id}", use_container_width=True):
                         st.session_state["selected_game_id"] = g_id
                         st.rerun()
