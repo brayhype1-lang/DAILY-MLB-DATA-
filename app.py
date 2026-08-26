@@ -1,4 +1,4 @@
-"""Stable configuration for the MLB Quantitative Terminal."""
+
 
 from __future__ import annotations
 
@@ -1922,7 +1922,7 @@ def render_game(prediction: dict[str, Any], weather: dict[str, Any]) -> str:
     </div>
     """
 
-    return f"""
+    markup = f"""
     <div class="game-shell">
         <div class="game-top">
             <div>
@@ -1960,6 +1960,10 @@ def render_game(prediction: dict[str, Any], weather: dict[str, Any]) -> str:
         </div>
     </div>
     """
+    # Streamlit's Markdown parser can treat indented HTML after a blank line as
+    # a fenced code block. Collapse the card to one continuous HTML line so all
+    # nested sections render as HTML on every supported Streamlit version.
+    return "".join(line.strip() for line in markup.splitlines())
 
 
 def render_advanced(prediction: dict[str, Any], lineup: dict[str, Any]) -> None:
