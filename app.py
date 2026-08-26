@@ -483,7 +483,8 @@ else:
                     else:
                         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-                    if st.button("🔍 View Deep Dive", key=f"card_{g['game_id']}", use_container_width=True):
+                    # Entire card interaction button replacing the separate footer button
+                    if st.button("📊 Open Matchup", key=f"card_{g['game_id']}", use_container_width=True):
                         st.session_state["selected_game_id"] = g["game_id"]
                         st.rerun()
 
