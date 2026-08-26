@@ -75,7 +75,6 @@ st.markdown(
 
     .stMainBlockContainer { position: relative; z-index: 1; }
 
-    /* Fix Streamlit column element opacity inheritance */
     [data-testid="column"] {
         opacity: 1 !important;
     }
@@ -238,7 +237,7 @@ def get_park_factor(home_team: str):
     return park
 
 # ------------------------------------------------------------------
-# 3. AUTOMATED LIVE SCORE ENGINE (WITH OUTS & BASERUNNERS)
+# 3. DETAILED LIVE SCORE & BOX SCORE FEED ENGINE
 # ------------------------------------------------------------------
 @st.cache_data(ttl=15)
 def fetch_live_game_state(game_pk: int) -> dict:
@@ -255,6 +254,25 @@ def fetch_live_game_state(game_pk: int) -> dict:
         teams_linescore = linescore.get("teams", {})
         away_runs = teams_linescore.get("away", {}).get("runs", 0)
         home_runs = teams_linescore.get("home", {}).get("runs", 0)
+        away_hits = teams_linescore.get("away", {}).get("hits", 0)
+        home_hits = teams_linescore.get("home", {}).get("hits", 0)
+        away_errors = teams_linescore.get("away", {}).get("errors", 0)
+        home_errors = teams_linescore.get("home", {}).get("errors", 0)
+
+        # Inning linescore breakdown table list
+        innings_list = linescore.get("innings", [])
+
+        # Plays / Plays feed for live log
+        plays_data = live_data.get("plays", {})
+        all_plays = plays_data.get("allPlays", [])
+        recent_plays = []
+        for p in reversed(all_plays[-10:]):
+            result = p.get("result", {})
+            about = p.get("about", {})
+            recent_plays.append({
+                "inning": about.get("inningOrdinal", ""),
+                "description": result.get("description", "")
+            })
 
         if abstract_state == "Live" or "In Progress" in detailed_state or detailed_state == "Warmup":
             inning = linescore.get("currentInning", 1)
@@ -275,9 +293,13 @@ def fetch_live_game_state(game_pk: int) -> dict:
                 "sort_priority": sort_val,
                 "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning_ordinal}</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
+                "away_hits": away_hits, "home_hits": home_hits,
+                "away_errors": away_errors, "home_errors": home_errors,
                 "inning_str": f"{half} {inning_ordinal}",
                 "outs": outs,
-                "has_1b": has_1b, "has_2b": has_2b, "has_3b": has_3b
+                "has_1b": has_1b, "has_2b": has_2b, "has_3b": has_3b,
+                "innings_list": innings_list,
+                "recent_plays": recent_plays
             }
         elif abstract_state == "Final" or "Final" in detailed_state:
             return {
@@ -285,8 +307,12 @@ def fetch_live_game_state(game_pk: int) -> dict:
                 "sort_priority": 9999,
                 "badge_html": '<span class="badge-final">🏁 FINAL</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
+                "away_hits": away_hits, "home_hits": home_hits,
+                "away_errors": away_errors, "home_errors": home_errors,
                 "inning_str": "Final",
-                "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0
+                "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0,
+                "innings_list": innings_list,
+                "recent_plays": recent_plays
             }
         else:
             return {
@@ -294,8 +320,12 @@ def fetch_live_game_state(game_pk: int) -> dict:
                 "sort_priority": -100,
                 "badge_html": f'<span class="badge-upcoming">⏰ {detailed_state}</span>',
                 "away_runs": 0, "home_runs": 0,
+                "away_hits": 0, "home_hits": 0,
+                "away_errors": 0, "home_errors": 0,
                 "inning_str": "Upcoming",
-                "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0
+                "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0,
+                "innings_list": [],
+                "recent_plays": []
             }
     except Exception:
         return {
@@ -303,8 +333,12 @@ def fetch_live_game_state(game_pk: int) -> dict:
             "sort_priority": -100,
             "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
             "away_runs": 0, "home_runs": 0,
+            "away_hits": 0, "home_hits": 0,
+            "away_errors": 0, "home_errors": 0,
             "inning_str": "Upcoming",
-            "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0
+            "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0,
+            "innings_list": [],
+            "recent_plays": []
         }
 
 def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple[float, float]:
@@ -316,7 +350,7 @@ def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple
     return 1.0 - new_home_prob, new_home_prob
 
 # ------------------------------------------------------------------
-# 4. DETERMINISTIC MODEL & STABLE STATS GENERATOR
+# 4. DETERMINISTIC MODEL & SLATE LOADER
 # ------------------------------------------------------------------
 def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park, live_state=None):
     woba_diff = away_stats["xwoba"] - home_stats["xwoba"]
@@ -422,7 +456,7 @@ def load_full_slate():
         return []
 
 # ------------------------------------------------------------------
-# 5. DASHBOARD PRESENTATION & COMPACT SCORE CARDS
+# 5. DASHBOARD PRESENTATION & INTERACTIVE INSPECTOR
 # ------------------------------------------------------------------
 slate = load_full_slate()
 
@@ -450,13 +484,74 @@ else:
 
     evaluated_slate.sort(key=game_sort_key)
 
+    # State management for clicking into a game deep dive
+    if "selected_game_id" not in st.session_state:
+        st.session_state["selected_game_id"] = None
+
+    # --- IF A GAME IS SELECTED, SHOW THE DEEP DIVE INSPECTOR ---
+    if st.session_state["selected_game_id"] is not None:
+        selected_g = next((x for x in evaluated_slate if x["game_id"] == st.session_state["selected_game_id"]), None)
+        
+        if selected_g:
+            lv = selected_g["live"]
+            an = selected_g["analysis"]
+            
+            if st.button("⬅️ Back to Full Slate Scoreboard"):
+                st.session_state["selected_game_id"] = None
+                st.rerun()
+
+            st.markdown(
+                f"""
+                <div class="hero-banner" style="margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <img src="{selected_g['away_logo']}" width="40" height="40" />
+                            <h2 style="margin:0; font-size: 1.6rem; color: #F8FAFC;">{selected_g['away_team']} @ {selected_g['home_team']}</h2>
+                            <img src="{selected_g['home_logo']}" width="40" height="40" />
+                        </div>
+                        <div>{lv['badge_html']}</div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # Live Box Score Grid (Runs, Hits, Errors)
+            col_box1, col_box2 = st.columns(2)
+            with col_box1:
+                with st.container(border=True):
+                    st.markdown("### 🏟️ Box Score Summary")
+                    sc_col1, sc_col2, sc_col3 = st.columns(3)
+                    sc_col1.metric("Runs", f"{lv['away_runs']} - {lv['home_runs']}")
+                    sc_col2.metric("Hits", f"{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}")
+                    sc_col3.metric("Errors", f"{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}")
+            with col_box2:
+                with st.container(border=True):
+                    st.markdown("### 🌤️ Venue & Environment")
+                    st.write(f"**Ballpark:** {selected_g['park']['name']}")
+                    st.write(f"**Weather / Conditions:** {selected_g['park']['weather']['weather_desc']}")
+                    st.write(f"**Park Factor Multiplier:** {selected_g['park']['run_mult']}x Run Environment")
+
+            # Recent Plays Live Feed Log
+            st.markdown("### ⚡ Live Play-by-Play Feed")
+            with st.container(border=True):
+                plays = lv.get("recent_plays", [])
+                if plays:
+                    for p in plays:
+                        st.markdown(f"<span style='color: #38BDF8; font-family: JetBrains Mono;'>[{p['inning']}]</span> {p['description']}", unsafe_allow_html=True)
+                else:
+                    st.info("Play-by-play feed will update live once the game commences.")
+
+            st.stop() # Stop execution here so it doesn't render the main grid when viewing a deep dive
+
+    # --- MAIN SCOREBOARD GRID ---
     st.markdown(
         """
         <div class="hero-banner">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <div>
                     <h1 style="margin:0; font-size: 1.5rem; font-weight: 900; color: #F8FAFC;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
-                    <p style="margin:2px 0 0 0; color: #38BDF8; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • SMART SORTED</p>
+                    <p style="margin:2px 0 0 0; color: #38BDF8; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • CLICK ANY CARD FOR DEEP DIVE BOX SCORE</p>
                 </div>
                 <div>
                     <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">
@@ -480,14 +575,12 @@ else:
 
             with cols[idx]:
                 with st.container(border=True):
-                    # Header: Inning & Status
                     col_h1, col_h2 = st.columns([2, 1])
                     with col_h1:
                         st.caption(lv['inning_str'])
                     with col_h2:
                         st.markdown(f"<div style='text-align: right;'><span style='font-size:0.65rem; color:#38BDF8;'>{lv['status']}</span></div>", unsafe_allow_html=True)
 
-                    # Teams & Scores
                     st.markdown(
                         f"""
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: #F8FAFC; margin-bottom: 4px;">
@@ -508,7 +601,6 @@ else:
                         unsafe_allow_html=True
                     )
 
-                    # Clean Outs & Diamond Bases Footer for Live Games
                     if is_live:
                         b1 = "◆" if lv.get("has_1b") else "◇"
                         b2 = "◆" if lv.get("has_2b") else "◇"
@@ -517,13 +609,18 @@ else:
 
                         st.markdown(
                             f"""
-                            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; color: #94A3B8;">
+                            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; color: #94A3B8; margin-bottom: 8px;">
                                 <div>Bases: {b2} {b3} {b1}</div>
                                 <div>Outs: <b style="color: #F8FAFC;">{outs_count}</b></div>
                             </div>
                             """,
                             unsafe_allow_html=True
                         )
+
+                    # Interactive Button to trigger deep dive page
+                    if st.button("📊 Box Score & Deep Dive", key=f"btn_{g['game_id']}"):
+                        st.session_state["selected_game_id"] = g["game_id"]
+                        st.rerun()
 
     st.markdown("<br>### 📊 Complete Slate Breakdown & Model Winner Picks", unsafe_allow_html=True)
 
