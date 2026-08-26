@@ -8,7 +8,7 @@ import streamlit as st
 from datetime import datetime
 
 # ------------------------------------------------------------------
-# 1. PAGE CONFIG & MODERN HUD STYLING
+# 1. PAGE CONFIG & MODERN HUD STYLING (WITH BUBBLE BACKGROUND & GLOSSY BUTTONS)
 # ------------------------------------------------------------------
 st.set_page_config(
     page_title="MLB Quantitative Terminal",
@@ -26,8 +26,9 @@ st.markdown(
         font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
+    /* Restored Radial Bubble Background */
     .stApp {
-        background: radial-gradient(circle at 50% 0%, #0f172a 0%, #070d1b 50%, #02060d 100%);
+        background: radial-gradient(circle at 50% 15%, #1e293b 0%, #0f172a 45%, #070d1b 80%, #02060d 100%);
         color: #F8FAFC;
     }
 
@@ -80,27 +81,35 @@ st.markdown(
         box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
     }
 
-    /* --- GLASSMORPHISM PILL BUTTON STYLING --- */
+    /* --- TRUE GLOSSY LIQUID-GLASS PILL BUTTONS --- */
     .stButton > button {
-        background: rgba(255, 255, 255, 0.03) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #94A3B8 !important;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(30, 41, 59, 0.8) 100%) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(56, 189, 248, 0.35) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.4) !important; /* Top glass reflection line */
+        color: #E2E8F0 !important;
         font-family: 'Outfit', sans-serif !important;
-        font-weight: 600 !important;
-        font-size: 0.75rem !important;
-        letter-spacing: 0.5px !important;
+        font-weight: 700 !important;
+        font-size: 0.78rem !important;
+        letter-spacing: 0.6px !important;
         border-radius: 50px !important;
-        padding: 0.35rem 1rem !important;
-        transition: all 0.25s ease-in-out !important;
+        padding: 0.4rem 1rem !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     
     .stButton > button:hover {
-        background: rgba(56, 189, 248, 0.12) !important;
-        border-color: rgba(56, 189, 248, 0.6) !important;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.35) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(56, 189, 248, 0.2) 100%) !important;
+        border-color: rgba(56, 189, 248, 0.9) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.7) !important;
         color: #38BDF8 !important;
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important;
-        transform: translateY(-1px) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 18px rgba(56, 189, 248, 0.5) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    .stButton > button:active {
+        transform: translateY(0px) !important;
     }
 </style>
 """,
@@ -490,7 +499,7 @@ else:
                     else:
                         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-                    # Glassmorphism pill button inside each card
+                    # Glossy Liquid-Glass pill button inside each card
                     if st.button("🔍 Inspect Match", key=f"btn_{g_id}", use_container_width=True):
                         st.session_state["selected_game_id"] = g_id
                         st.rerun()
