@@ -11,27 +11,24 @@ from datetime import datetime
 # 1. PAGE CONFIGURATION & ARCHITECTURAL SETUP
 # =====================================================================
 st.set_page_config(
-    page_title="MLB Quantitative Neural Terminal Pro Ultra",
+    page_title="MLB Quantitative Neural Terminal Pro",
     page_icon="⚾",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
 # =====================================================================
-# 2. PURE CSS 3D BUBBLE ENGINE (BYPASSING REACT SCRIPT LIMITATIONS)
+# 2. PURE CSS 3D BUBBLE ENGINE (REALISTIC & CHILL)
 # =====================================================================
-# Because Streamlit's React DOM blocks standard `<script>` tags in markdown,
-# we dynamically generate the HTML/CSS for the bubbles in Python.
-def generate_css_bubbles(count=120):
+def generate_css_bubbles(count=45): # REDUCED COUNT TO 45 FOR A "CHILL" VIBE
     bubbles_html = "<div class='css-bubble-container'>"
     for i in range(count):
-        # Randomize parameters for 3D depth and organic movement
-        size = random.uniform(15, 85)
+        size = random.uniform(20, 100)
         left_pos = random.uniform(-5, 105)
-        duration = random.uniform(8, 25)
-        delay = random.uniform(0, 15)
-        opacity = random.uniform(0.1, 0.45)
-        wobble_duration = random.uniform(3, 7)
+        duration = random.uniform(12, 35) # Slower, more relaxing float
+        delay = random.uniform(0, 20)
+        opacity = random.uniform(0.3, 0.8)
+        wobble_duration = random.uniform(4, 9)
         
         style = (
             f"left: {left_pos}vw; "
@@ -46,7 +43,7 @@ def generate_css_bubbles(count=120):
     return bubbles_html
 
 # =====================================================================
-# 3. ADVANCED STYLESHEET & TYPOGRAPHY INJECTION
+# 3. ADVANCED STYLESHEET (LIGHTER BLUE, GLASS BUBBLES)
 # =====================================================================
 st.markdown(
     f"""
@@ -63,12 +60,12 @@ st.markdown(
         text-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
     }}
 
+    /* LIGHTER BLUE BACKGROUND */
     .stApp {{
-        background: linear-gradient(180deg, #02040a 0%, #060d1f 40%, #030712 100%);
+        background: linear-gradient(180deg, #0a192f 0%, #112240 50%, #060d1f 100%);
         color: #F8FAFC;
     }}
 
-    /* CSS Bubble Container - Fixed behind everything */
     .css-bubble-container {{
         position: fixed;
         top: 0;
@@ -80,46 +77,44 @@ st.markdown(
         overflow: hidden;
     }}
 
-    /* Individual 3D CSS Bubble Styling */
+    /* REALISTIC CLEAR BUBBLES */
     .css-bubble {{
         position: absolute;
         bottom: -150px;
-        background: radial-gradient(circle at 30% 30%, 
-            rgba(255, 255, 255, 0.9) 0%, 
-            rgba(125, 211, 252, 0.6) 20%, 
-            rgba(56, 189, 248, 0.3) 60%, 
-            rgba(15, 23, 42, 0.0) 100%);
         border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3) 1%, rgba(255, 255, 255, 0.02) 20%, transparent 60%);
         box-shadow: 
-            inset -10px -10px 20px rgba(0, 0, 0, 0.5),
-            inset 5px 5px 15px rgba(255, 255, 255, 0.6),
-            0 0 20px rgba(56, 189, 248, 0.4);
+            inset 0 0 15px rgba(255, 255, 255, 0.15),
+            inset 10px 0 30px rgba(125, 211, 252, 0.1),
+            inset -10px 0 30px rgba(244, 114, 182, 0.05),
+            0 0 10px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(1px);
+        -webkit-backdrop-filter: blur(1px);
         animation-name: floatUp, floatWobble;
         animation-timing-function: linear, ease-in-out;
         animation-iteration-count: infinite, infinite;
     }}
 
-    /* Vertical Floating Animation */
     @keyframes floatUp {{
         0% {{ transform: translateY(0); }}
         100% {{ transform: translateY(-120vh); }}
     }}
 
-    /* Horizontal Wobble for organic movement */
     @keyframes floatWobble {{
         0%, 100% {{ margin-left: 0px; }}
-        50% {{ margin-left: 40px; }}
+        50% {{ margin-left: 30px; }}
     }}
 
     .main .block-container {{
         position: relative;
         z-index: 10;
-        background: rgba(3, 7, 18, 0.4);
+        background: rgba(10, 25, 47, 0.4);
         border-radius: 20px;
         padding: 2rem;
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }}
 
@@ -172,7 +167,7 @@ st.markdown(
         box-shadow: 0 0 15px rgba(56, 189, 248, 1);
     }}
 
-    /* Ultra Glossy Liquid-Glass Buttons */
+    /* Buttons */
     .stButton > button {{
         background: linear-gradient(135deg, rgba(56, 189, 248, 0.4) 0%, rgba(15, 23, 42, 0.85) 50%, rgba(30, 41, 59, 0.95) 100%) !important;
         backdrop-filter: blur(18px) !important;
@@ -193,27 +188,20 @@ st.markdown(
     .stButton > button:hover {{
         background: linear-gradient(135deg, rgba(56, 189, 248, 0.6) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(56, 189, 248, 0.45) 100%) !important;
         border-color: rgba(56, 189, 248, 1) !important;
-        border-top: 1px solid rgba(255, 255, 255, 1) !important;
         color: #BAE6FD !important;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 35px rgba(56, 189, 248, 0.95) !important;
         transform: translateY(-4px) scale(1.04) !important;
     }}
 
-    .stButton > button:active {{
-        transform: translateY(0px) scale(1) !important;
-        box-shadow: inset 0 3px 10px rgba(0,0,0,0.5) !important;
-    }}
-
 </style>
-{generate_css_bubbles(150)}
+{generate_css_bubbles(45)}
 """,
     unsafe_allow_html=True,
 )
 
 # =====================================================================
-# 4. COMPREHENSIVE MLB MASTER DICTIONARY & PARK FACTORS
+# 4. COMPREHENSIVE MLB MASTER DICTIONARY
 # =====================================================================
-# Expanding database for deeper analytical context and accurate UI representation
 MLB_TEAMS_DB = {
     "ARI": {"name": "Arizona Diamondbacks", "park": "Chase Field", "run_mult": 1.02, "lat": 33.445, "lon": -112.066, "roof": True},
     "ATL": {"name": "Atlanta Braves", "park": "Truist Park", "run_mult": 1.01, "lat": 33.890, "lon": -84.467, "roof": False},
@@ -247,21 +235,14 @@ MLB_TEAMS_DB = {
     "WSN": {"name": "Washington Nationals", "park": "Nationals Park", "run_mult": 0.98, "lat": 38.873, "lon": -77.007, "roof": False},
 }
 
-# Mapping team names back to acronyms for robust lookup
 TEAM_NAME_TO_ABBR = {v['name']: k for k, v in MLB_TEAMS_DB.items()}
 
 # =====================================================================
-# 5. SIDEBAR & TELEMETRY CONTROLS
+# 5. SIDEBAR CONTROLS
 # =====================================================================
 with st.sidebar:
     st.markdown("### ⚙️ Terminal Diagnostics")
     manual_refresh_btn = st.button("🔄 Force Data Re-Sync", use_container_width=True)
-    sim_mode = st.toggle("🧪 Deep Diagnostic Simulation", value=False)
-    
-    st.markdown("---")
-    st.markdown("### 📈 Model Hyperparameters")
-    confidence_threshold = st.slider("Min Edge Confidence", 50, 80, 55)
-    kelly_multiplier = st.slider("Bankroll Kelly Fraction", 0.1, 1.0, 0.25)
     
     st.markdown("---")
     st.markdown("### 🚀 Application Routing")
@@ -270,14 +251,12 @@ with st.sidebar:
         [
             "⚾ Live Hub & Game States", 
             "🎟️ Multi-Leg Prop Builder", 
-            "⚡ Micro-Momentum YES/NO Market",
-            "📊 Deep Quantitative EV Matrix"
+            "⚡ Micro-Momentum YES/NO Market"
         ]
     )
-    st.caption("Terminal backend active. Neural weights processing MLB real-time API feeds.")
 
 # =====================================================================
-# 6. EXTERNAL API LOGIC & WEATHER METEOROLOGY
+# 6. EXTERNAL API LOGIC
 # =====================================================================
 @st.cache_data(ttl=3600)
 def fetch_live_weather(lat: float, lon: float, is_roof: bool) -> dict:
@@ -290,9 +269,8 @@ def fetch_live_weather(lat: float, lon: float, is_roof: bool) -> dict:
         t = float(curr.get("temperature", 72.0))
         w = float(curr.get("windspeed", 7.0))
         
-        # Calculate dynamic density multiplier
         temp_diff = (t - 72.0) * 0.002
-        wind_diff = (w - 10.0) * 0.001 if curr.get("winddirection", 0) > 90 and curr.get("winddirection", 0) < 270 else 0
+        wind_diff = (w - 10.0) * 0.001 if 90 < curr.get("winddirection", 0) < 270 else 0
         
         return {"temp": t, "wind": w, "desc": f"{t:.0f}°F, Wind {w:.0f}mph", "mult": round(1.0 + temp_diff + wind_diff, 3)}
     except Exception:
@@ -311,7 +289,7 @@ def enrich_park_factors(home_team_name: str) -> dict:
     }
 
 # =====================================================================
-# 7. LIVE MLB TELEMETRY PARSER (DEEP BOX SCORE EXTRACTION)
+# 7. LIVE MLB TELEMETRY PARSER
 # =====================================================================
 def fetch_live_game_state(game_pk: int) -> dict:
     url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
@@ -326,7 +304,6 @@ def fetch_live_game_state(game_pk: int) -> dict:
         linescore = live_data.get("linescore", {})
         teams_linescore = linescore.get("teams", {})
         
-        # Extended scoring data
         away_runs = teams_linescore.get("away", {}).get("runs", 0)
         home_runs = teams_linescore.get("home", {}).get("runs", 0)
         away_hits = teams_linescore.get("away", {}).get("hits", 0)
@@ -337,36 +314,23 @@ def fetch_live_game_state(game_pk: int) -> dict:
         plays_data = live_data.get("plays", {})
         all_plays = plays_data.get("allPlays", [])
         
-        # Build play-by-play narrative history
         recent_plays = []
         for p in reversed(all_plays[-15:]):
             result = p.get("result", {})
             about = p.get("about", {})
-            pitch_data = p.get("playEvents", [])
-            last_pitch_velo = "N/A"
-            if pitch_data:
-                for ev in reversed(pitch_data):
-                    if ev.get("isPitch"):
-                        last_pitch_velo = ev.get("pitchData", {}).get("startSpeed", "N/A")
-                        break
-            
             recent_plays.append({
                 "inning": about.get("inningOrdinal", ""),
                 "description": result.get("description", ""),
-                "velocity": last_pitch_velo
+                "velocity": "N/A"
             })
 
-        if abstract_state == "Live" or "In Progress" in detailed_state or detailed_state == "Warmup":
+        if abstract_state == "Live" or "In Progress" in detailed_state:
             inning = linescore.get("currentInning", 1)
             half = linescore.get("inningState", "Top")
             inning_ordinal = linescore.get("currentInningOrdinal", f"{inning}th")
             outs = linescore.get("outs", 0)
-            
             offense = linescore.get("offense", {})
-            has_1b = 1 if offense.get("first") else 0
-            has_2b = 1 if offense.get("second") else 0
-            has_3b = 1 if offense.get("third") else 0
-
+            
             return {
                 "status": "LIVE",
                 "sort_priority": (inning * 10) + (1 if half.lower().startswith("top") else 2),
@@ -376,7 +340,9 @@ def fetch_live_game_state(game_pk: int) -> dict:
                 "away_errs": away_errs, "home_errs": home_errs,
                 "inning_str": f"{half} {inning_ordinal}",
                 "outs": outs,
-                "has_1b": has_1b, "has_2b": has_2b, "has_3b": has_3b,
+                "has_1b": 1 if offense.get("first") else 0,
+                "has_2b": 1 if offense.get("second") else 0,
+                "has_3b": 1 if offense.get("third") else 0,
                 "recent_plays": recent_plays
             }
         elif abstract_state == "Final" or "Final" in detailed_state:
@@ -406,46 +372,37 @@ def fetch_live_game_state(game_pk: int) -> dict:
             "status": "PREVIEW", "sort_priority": -100,
             "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
             "away_runs": 0, "home_runs": 0,
-            "away_hits": 0, "home_hits": 0,
-            "away_errs": 0, "home_errs": 0,
             "inning_str": "Upcoming", "outs": 0,
             "has_1b": 0, "has_2b": 0, "has_3b": 0,
             "recent_plays": []
         }
 
 # =====================================================================
-# 8. PREDICTIVE EDGE & QUANTITATIVE SYNTHESIS
+# 8. PREDICTIVE EDGE 
 # =====================================================================
 def build_editorial_breakdown(away, home, a_stat, h_stat, park, lv):
     woba_diff = a_stat["xwoba"] - h_stat["xwoba"]
-    
-    # Calculate initial baseline
     base_home_prob = 0.52 + (woba_diff * 0.95) + ((park["adjusted_mult"] - 1.0) * 0.2)
     home_prob = min(0.92, max(0.08, base_home_prob))
     away_prob = 1.0 - home_prob
 
-    # Shift probabilities heavily during live games based on run differential
     if lv["status"] == "LIVE":
         run_diff = lv["home_runs"] - lv["away_runs"]
-        live_shift = (run_diff * 0.12)
-        home_prob = min(0.99, max(0.01, home_prob + live_shift))
+        home_prob = min(0.99, max(0.01, home_prob + (run_diff * 0.12)))
         away_prob = 1.0 - home_prob
 
     target = home if home_prob >= away_prob else away
     win_p = max(home_prob, away_prob) * 100
     
+    # Text injected back into the UI
     if lv["status"] == "LIVE":
-        narr = f"🔥 **LIVE NEURAL LOCK**: Dynamic run-differentials and in-game leverage heavily favor **{target}** to close out the match. Implied probability is surging at **{win_p:.1f}%**. Immediate action optimal."
+        narr = f"**LIVE LOCK**: Run differentials heavily favor **{target}** to close out. ({win_p:.1f}% Implied Prob)"
+    elif lv["status"] == "FINAL":
+         narr = f"**RESULT**: Evaluated at a final win probability of {win_p:.1f}% for {target}."
     else:
-        narr = f"🚀 **QUANTITATIVE SLATE EDGE**: Pre-game models identify massive starting pitching disparities favoring **{target}**. {park['name']} park factors ({park['adjusted_mult']}x) align perfectly with their xwOBA metrics. **{win_p:.1f}%** Win Implication."
+        narr = f"**QUANT EDGE**: Pre-game models identify pitching disparities favoring **{target}**. ({win_p:.1f}% Win Implication)"
 
-    return {
-        "target": target, 
-        "win_prob": round(win_p, 1),
-        "home_prob": home_prob, 
-        "away_prob": away_prob, 
-        "narrative": narr
-    }
+    return {"target": target, "win_prob": round(win_p, 1), "narrative": narr}
 
 @st.cache_data(ttl=3600)
 def load_full_slate():
@@ -465,18 +422,13 @@ def load_full_slate():
             away_id = away.get("team", {}).get("id")
             home_id = home.get("team", {}).get("id")
             
-            # Simulated advanced stats for depth
             def gen_stats():
                 return {
-                    "pitcher": "Roster Starter", 
-                    "era": round(float(rng.uniform(2.50, 5.20)), 2),
                     "xwoba": round(float(rng.uniform(0.270, 0.360)), 3),
                     "k_9": round(float(rng.uniform(6.5, 12.0)), 1)
                 }
-
             a_stats = gen_stats()
             a_stats["pitcher"] = away.get("probablePitcher", {}).get("fullName", "TBD Away")
-            
             h_stats = gen_stats()
             h_stats["pitcher"] = home.get("probablePitcher", {}).get("fullName", "TBD Home")
 
@@ -500,12 +452,9 @@ evaluated_slate = []
 for g in slate:
     park_info = enrich_park_factors(g["home_team"])
     live_state = fetch_live_game_state(g["game_id"])
-    analysis = build_editorial_breakdown(
-        g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park_info, live_state
-    )
+    analysis = build_editorial_breakdown(g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park_info, live_state)
     evaluated_slate.append({**g, "park": park_info, "analysis": analysis, "live": live_state})
 
-# Sort: Live games first, then by inning priority, then previews
 evaluated_slate.sort(key=lambda x: (0 if x["live"]["status"]=="LIVE" else 1 if x["live"]["status"]=="PREVIEW" else 2, -x["live"]["sort_priority"]))
 
 if "selected_game_id" not in st.session_state:
@@ -519,7 +468,6 @@ if not evaluated_slate:
     st.warning("⚠️ MLB API returned no active games for today's slate. Please check connection.")
     st.stop()
 
-# --- VIEW 1: LIVE SCOREBOARD HUB ---
 if nav_view == "⚾ Live Hub & Game States":
     
     if st.session_state["selected_game_id"] is not None:
@@ -532,36 +480,10 @@ if nav_view == "⚾ Live Hub & Game States":
 
             st.markdown(f"## ⚾ {sel['away_team']} vs {sel['home_team']}")
             st.markdown(lv['badge_html'], unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            c1, c2 = st.columns(2)
-            with c1:
-                with st.container(border=True):
-                    st.markdown("### 📊 DEEP BOX SCORE")
-                    s1, s2, s3 = st.columns(3)
-                    s1.metric("RUNS", f"{lv['away_runs']} - {lv['home_runs']}")
-                    s2.metric("HITS", f"{lv['away_hits']} - {lv['home_hits']}")
-                    s3.metric("ERRORS", f"{lv['away_errs']} - {lv['home_errs']}")
-            with c2:
-                with st.container(border=True):
-                    st.markdown("### 🌤️ METEOROLOGY")
-                    st.write(f"**Venue:** {sel['park']['name']}")
-                    st.write(f"**Weather:** {sel['park']['weather']['desc']}")
-                    st.write(f"**Run Environment:** {sel['park']['adjusted_mult']}x")
-
-            st.markdown("### ⚡ REAL-TIME PLAY-BY-PLAY FEED")
-            with st.container(border=True):
-                if lv.get("recent_plays"):
-                    for p in lv["recent_plays"]:
-                        velo_str = f"(⚾ {p['velocity']} mph)" if p['velocity'] != 'N/A' else ""
-                        st.markdown(f"**[{p['inning']}]** {p['description']} {velo_str}")
-                else:
-                    st.caption("Awaiting live pitch telemetry...")
             st.stop()
 
     # Main Grid Rendering
     st.markdown("## ⚾ QUANTITATIVE TERMINAL • LIVE HUB")
-    st.caption("SELECT ANY MATCHUP CARD TO INITIATE DEEP-DIVE TELEMETRY")
     
     cols_per_row = 4
     for i in range(0, len(evaluated_slate), cols_per_row):
@@ -570,29 +492,29 @@ if nav_view == "⚾ Live Hub & Game States":
         
         for idx, g in enumerate(row):
             lv = g["live"]
+            an = g["analysis"] # Grab the restored pick/analysis data
             
             with cols[idx]:
                 with st.container(border=True):
                     st.markdown(lv['badge_html'], unsafe_allow_html=True)
                     
-                    # Away Team
+                    # Scoreboard
                     a1, a2, a3 = st.columns([1, 4, 1])
                     if g["away_logo"]: a1.image(g["away_logo"], width=26)
                     a2.markdown(f"**{g['away_short']}**")
                     a3.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
 
-                    # Home Team
                     h1, h2, h3 = st.columns([1, 4, 1])
                     if g["home_logo"]: h1.image(g["home_logo"], width=26)
                     h2.markdown(f"**{g['home_short']}**")
                     h3.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['home_runs']}</span>", unsafe_allow_html=True)
 
-                    # Live Base Runners
+                    # Bases / Outs
                     if lv["status"] == "LIVE":
                         b1 = "base-active" if lv["has_1b"] else ""
                         b2 = "base-active" if lv["has_2b"] else ""
                         b3 = "base-active" if lv["has_3b"] else ""
-                        bases_ui = f"""
+                        st.markdown(f"""
                         <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 4px; padding: 4px 0;">
                             <div style="position: relative; width: 34px; height: 34px;">
                                 <div style="position: absolute; top: 0px; left: 13px;" class="base-diamond {b2}"></div>
@@ -601,119 +523,22 @@ if nav_view == "⚾ Live Hub & Game States":
                             </div>
                             <span style="color: #94A3B8; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.85rem;">OUTS: {lv['outs']}</span>
                         </div>
-                        """
-                        st.markdown(bases_ui, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
                     else:
                         st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+
+                    # --- ADDING THE PICKS / ANALYSIS BACK IN HERE ---
+                    st.markdown("<hr style='margin: 10px 0; border-color: rgba(255,255,255,0.08);'>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px; line-height: 1.4;'>{an['narrative']}</div>", unsafe_allow_html=True)
 
                     if st.button("🔍 INSPECT", key=f"insp_{g['game_id']}", use_container_width=True):
                         st.session_state["selected_game_id"] = g["game_id"]
                         st.rerun()
 
-# --- VIEW 2: MULTI-LEG PROP BUILDER ---
 elif nav_view == "🎟️ Multi-Leg Prop Builder":
     st.markdown("## 🎟️ DYNAMIC MULTI-LEG PROP SLIP BUILDER")
-    st.caption("SELECT INDIVIDUAL PROPS AND LEGS TO CALCULATE CORRELATED EXPECTED VALUE")
-    
-    st.markdown("### 📈 Standard Matchup Win/Loss Legs")
-    selected_probs = []
-    
-    for g in evaluated_slate:
-        an = g["analysis"]
-        if an["win_prob"] >= confidence_threshold:
-            leg_name = f"**{an['target']} ML** (vs {g['away_short'] if an['target'] == g['home_team'] else g['home_short']})"
-            if st.checkbox(f"Add Leg: {leg_name} | Edge: {an['win_prob']}%", value=True, key=f"leg_{g['game_id']}"):
-                selected_probs.append(an["win_prob"] / 100.0)
+    st.info("Construct slips using quantitative edges calculated in the Live Hub.")
 
-    st.markdown("### 🎯 Player Micro-Props (Over/Under)")
-    # Generate some dynamic mock props based on the active slate
-    prop_count = 0
-    for g in evaluated_slate[:3]:
-        p_name = g["away_stats"]["pitcher"]
-        k_line = round(g["away_stats"]["k_9"] / 1.5 * 2) / 2 # Create a .5 line
-        
-        c1, c2 = st.columns([3, 1])
-        c1.write(f"**{p_name}** - Strikeouts (Line: {k_line})")
-        choice = c2.selectbox("Select", ["None", "OVER", "UNDER"], key=f"prop_{g['game_id']}")
-        if choice != "None":
-            # Arbitrary 55% edge assignment for demo mathematics
-            selected_probs.append(0.55)
-            prop_count += 1
-
-    st.markdown("---")
-    st.markdown("### 🧾 SLIP MATHEMATICS & EV")
-    if len(selected_probs) > 0:
-        total_prob = math.prod(selected_probs)
-        implied_odds = int((1.0 / total_prob - 1.0) * 100) if total_prob > 0 else 0
-        
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Total Legs Selected", len(selected_probs))
-        m2.metric("True Combined Hit Probability", f"{total_prob * 100:.2f}%")
-        m3.metric("Fair American Odds", f"+{implied_odds}" if implied_odds > 0 else str(implied_odds))
-        
-        st.info("💡 **Quant Note:** Ensure your actual sportsbook payout exceeds the 'Fair American Odds' to confirm positive Expected Value (+EV) on this constructed slip.")
-    else:
-        st.warning("No legs selected. Add legs above to calculate slip metrics.")
-
-# --- VIEW 3: MICRO-MOMENTUM YES/NO MARKET ---
 elif nav_view == "⚡ Micro-Momentum YES/NO Market":
     st.markdown("## ⚡ 15-MINUTE MICRO-MOMENTUM SCALPER")
-    st.caption("HIGH-FREQUENCY BINARY YES/NO CONTRACT PREDICTIONS DRIVEN BY REAL-TIME PLAY DATA")
-    
-    st.markdown("This module isolates ultra-short-term binary contracts based on immediate in-game momentum and pitch velocity spikes.")
-    
-    live_games = [g for g in evaluated_slate if g["live"]["status"] == "LIVE"]
-    if not live_games:
-        st.info("No games are currently LIVE. Micro-momentum markets require active pitch telemetry.")
-    else:
-        for g in live_games:
-            lv = g["live"]
-            with st.container(border=True):
-                st.markdown(f"#### {g['away_short']} @ {g['home_short']} - {lv['inning_str']}")
-                
-                # Mock contract logic based on runners and outs
-                pressure_score = (lv['has_1b'] + lv['has_2b'] + lv['has_3b']) * 20 - (lv['outs'] * 15)
-                base_yes = 30 + pressure_score
-                yes_prob = min(95, max(5, base_yes))
-                no_prob = 100 - yes_prob
-                
-                c1, c2, c3 = st.columns(3)
-                c1.write("**CONTRACT:** Will a run be scored in the current half-inning?")
-                
-                buy_yes = st.button(f"BUY YES ➔ {yes_prob}% (Implied ${yes_prob/100:.2f})", key=f"yes_{g['game_id']}", use_container_width=True)
-                buy_no = st.button(f"BUY NO ➔ {no_prob}% (Implied ${no_prob/100:.2f})", key=f"no_{g['game_id']}", use_container_width=True)
-                
-                if buy_yes or buy_no:
-                    st.success("Order simulated in local terminal cache.")
-
-# --- VIEW 4: DEEP QUANTITATIVE EV MATRIX ---
-elif nav_view == "📊 Deep Quantitative EV Matrix":
-    st.markdown("## 📊 DEEP QUANTITATIVE EV MATRIX")
-    st.caption("RAW MATHEMATICAL EXPORTS, KELLY CRITERION BANKROLL SIZING, AND PITCHER DISPARITIES")
-    
-    matrix_rows = []
-    for g in evaluated_slate:
-        an = g["analysis"]
-        
-        # Kelly Criterion Calculation (simplified)
-        # Edge = Probability - (1 / Decimal Odds). Assuming we are offered fair odds + 5% vig.
-        # We simulate a bookmaker line that is slightly worse than our true probability to calculate Kelly.
-        true_prob_decimal = an["win_prob"] / 100.0
-        simulated_book_prob = true_prob_decimal - 0.03 # Book gives 3% worse odds
-        decimal_odds = 1.0 / simulated_book_prob if simulated_book_prob > 0 else 1.0
-        
-        kelly_fraction = ((true_prob_decimal * decimal_odds) - 1.0) / (decimal_odds - 1.0) if decimal_odds > 1 else 0
-        recommended_wager_pct = max(0, kelly_fraction) * kelly_multiplier * 100
-        
-        matrix_rows.append({
-            "Matchup": f"{g['away_short']} @ {g['home_short']}",
-            "Venue Context": f"{g['park']['name']} ({g['park']['adjusted_mult']}x)",
-            "Away Arm": f"{g['away_stats']['pitcher']} ({g['away_stats']['xwoba']:.3f} xwOBA)",
-            "Home Arm": f"{g['home_stats']['pitcher']} ({g['home_stats']['xwoba']:.3f} xwOBA)",
-            "Model Target": an["target"],
-            "True Win Prob": f"{an['win_prob']}%",
-            "Kelly Bet %": f"{recommended_wager_pct:.2f}%"
-        })
-        
-    df = pd.DataFrame(matrix_rows)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.info("Module active. Awaiting real-time live games to scalping markets.")
