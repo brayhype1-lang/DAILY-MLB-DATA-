@@ -2022,9 +2022,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-# Browser-safe visual layer: no animated overlay, external font request, blur,
-# mask, or relational :has() selectors.
-st.markdown(full_stylesheet(), unsafe_allow_html=True)
 st.title("⚾ MLB Quantitative Matchup & Winner Engine")
 st.caption("Live MLB data · transparent probabilities · detailed matchup research")
 
@@ -2613,26 +2610,32 @@ def render_game_center(predictions: list[dict[str, Any]]) -> None:
     live_games = [p for p in predictions if p["game"]["live"]["status"] == "LIVE"]
     upcoming_games = [p for p in predictions if p["game"]["live"]["status"] == "PREVIEW"]
     final_games = [p for p in predictions if p["game"]["live"]["status"] == "FINAL"]
-    rail = scoreboard_rail(predictions, "No games are available for this slate.")
-    markup = f"""
-    <div class="game-center-sticky">
-        <div class="game-center-head">
-            <div>
-                <div class="game-center-title">Today's Game Center</div>
-                <div class="game-center-sub">Swipe or scroll through the slate · select a card to jump to its matchup</div>
-            </div>
-            <span class="live-indicator">{len(live_games)} LIVE NOW</span>
-        </div>
-        <div class="game-center-counts">
-            <span class="game-count active">ALL {len(predictions)}</span>
-            <span class="game-count live">LIVE {len(live_games)}</span>
-            <span class="game-count">UPCOMING {len(upcoming_games)}</span>
-            <span class="game-count">FINAL {len(final_games)}</span>
-        </div>
-        {rail}
-    </div>
-    """
-    st.markdown("".join(line.strip() for line in markup.splitlines()), unsafe_allow_html=True)
+    st.subheader("Today's Game Center")
+    st.caption(
+        f"{len(predictions)} games · {len(live_games)} live · "
+        f"{len(upcoming_games)} upcoming · {len(final_games)} final"
+    )
+    rows: list[dict[str, str]] = []
+    for prediction in predictions:
+        game = prediction["game"]
+        live = game["live"]
+        game_dt = game.get("game_datetime_utc")
+        start = game_dt.astimezone(ET).strftime("%-I:%M %p ET") if game_dt else "TBD"
+        if live["status"] in ("LIVE", "FINAL"):
+            score = f"{int(live.get('away_runs') or 0)}–{int(live.get('home_runs') or 0)}"
+        else:
+            score = f"{prediction['projected_away_runs']:.1f}–{prediction['projected_home_runs']:.1f} proj."
+        rows.append(
+            {
+                "Status": live.get("status_label") or live["status"].title(),
+                "Time": start,
+                "Matchup": f"{game['away']['short_name']} at {game['home']['short_name']}",
+                "Score": score,
+                "Model lean": f"{prediction['target_name']} {prediction['target_probability']*100:.1f}%",
+                "Quality": f"{prediction['quality_score']}/100",
+            }
+        )
+    st.dataframe(rows, hide_index=True, use_container_width=True)
 
 
 def slate_insight_card(
@@ -2663,49 +2666,39 @@ def render_slate_insights(predictions: list[dict[str, Any]]) -> None:
     closest_game = closest["game"]
     total_game = highest_total["game"]
     quality_game = best_quality["game"]
-    cards = "".join(
-        [
-            slate_insight_card(
-                strongest,
-                "🔥",
-                "Strongest lean",
-                f"{strongest['target_name']} {strongest['target_probability']*100:.1f}%",
-                f"{strongest_game['away']['short_name']} at {strongest_game['home']['short_name']} · fair {fmt_odds(strongest['fair_away_odds'] if strongest['target_side']=='away' else strongest['fair_home_odds'])}",
-            ),
-            slate_insight_card(
-                closest,
-                "⚖️",
-                "Closest matchup",
-                f"{closest_game['away']['short_name']} {closest['away_probability']*100:.1f}% · {closest_game['home']['short_name']} {closest['home_probability']*100:.1f}%",
-                f"Only {abs(closest['home_probability']-closest['away_probability'])*100:.1f} points separate the teams",
-            ),
-            slate_insight_card(
-                highest_total,
-                "📈",
-                "Highest projected total",
-                f"{highest_total['projected_away_runs'] + highest_total['projected_home_runs']:.1f} runs",
-                f"{total_game['away']['short_name']} {highest_total['projected_away_runs']:.1f} · {total_game['home']['short_name']} {highest_total['projected_home_runs']:.1f}",
-            ),
-            slate_insight_card(
-                best_quality,
-                "✅",
-                "Best data quality",
-                f"{best_quality['quality_score']}/100 · {best_quality['quality_label']}",
-                f"{quality_game['away']['short_name']} at {quality_game['home']['short_name']} · completeness, not win certainty",
-            ),
-        ]
-    )
-    markup = f"""
-    <div class="insights-head">
-        <div class="section-title">Daily Slate Insights</div>
-        <div class="section-sub">Fastest way to understand what stands out before opening each matchup</div>
-    </div>
-    <div class="insights-grid">{cards}</div>
-    """
-    st.markdown("".join(line.strip() for line in markup.splitlines()), unsafe_allow_html=True)
+    st.subheader("Daily Slate Insights")
+    insight_columns = st.columns(4)
+    insight_data = [
+        (
+            "🔥 Strongest lean",
+            f"{strongest['target_name']} {strongest['target_probability']*100:.1f}%",
+            f"{strongest_game['away']['short_name']} at {strongest_game['home']['short_name']}",
+        ),
+        (
+            "⚖️ Closest matchup",
+            f"{closest_game['away']['short_name']} {closest['away_probability']*100:.1f}%",
+            f"{closest_game['home']['short_name']} {closest['home_probability']*100:.1f}%",
+        ),
+        (
+            "📈 Highest total",
+            f"{highest_total['projected_away_runs'] + highest_total['projected_home_runs']:.1f} runs",
+            f"{total_game['away']['short_name']} at {total_game['home']['short_name']}",
+        ),
+        (
+            "✅ Best data quality",
+            f"{best_quality['quality_score']}/100",
+            f"{quality_game['away']['short_name']} at {quality_game['home']['short_name']}",
+        ),
+    ]
+    for column, (label, value, detail) in zip(insight_columns, insight_data):
+        with column:
+            with st.container(border=True):
+                st.caption(label)
+                st.markdown(f"#### {value}")
+                st.caption(detail)
 
 
-def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any]) -> str:
+def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any]) -> None:
     game = prediction["game"]
     away, home = game["away"], game["home"]
     live = game["live"]
@@ -2737,37 +2730,25 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
         else prediction["fair_home_odds"]
     )
     context = weather_text(weather, game["venue"])
-    return "".join(
-        line.strip()
-        for line in f"""
-        <div class="compact-game" id="game-{int(game['game_pk'])}" style="{matchup_style(game)}">
-            <div class="compact-main">
-                <div class="compact-status-row">
-                    <span class="score-card-status {status_class}">{safe_text(status_text)}</span>
-                    <span class="compact-time">{safe_text(start_text)}</span>
-                </div>
-                <div class="compact-teams">
-                    <span class="compact-team"><img src="{safe_text(away['logo'])}" alt="">{safe_text(away['name'])}</span>
-                    <span class="compact-at">AT</span>
-                    <span class="compact-team"><img src="{safe_text(home['logo'])}" alt="">{safe_text(home['name'])}</span>
-                </div>
-                <div class="compact-starters">{safe_text(away.get('pitcher_name') or 'Starter TBD')} vs {safe_text(home.get('pitcher_name') or 'Starter TBD')} · {safe_text(context)}</div>
-                <div class="compact-prob-labels"><span>{safe_text(away['short_name'])} {away_pct:.1f}%</span><span>{safe_text(home['short_name'])} {home_pct:.1f}%</span></div>
-                <div class="compact-prob-track"><span class="compact-away" style="width:{away_pct:.1f}%"></span><span class="compact-home" style="width:{home_pct:.1f}%"></span></div>
-            </div>
-            <div class="compact-pick">
-                <div class="compact-kicker">MODEL LEAN</div>
-                <div class="compact-pick-name">{safe_text(prediction['target_name'])}</div>
-                <div class="compact-pick-prob">{prediction['target_probability']*100:.1f}% · Fair ML {fmt_odds(fair_odds)}</div>
-            </div>
-            <div class="compact-score">
-                <div class="compact-kicker">{safe_text(score_label)}</div>
-                <div class="compact-score-value">{safe_text(score_value)}</div>
-                <span class="quality-badge {confidence_class(prediction['quality_label'])}" title="Data completeness, not win probability">{prediction['quality_score']}/100 {safe_text(prediction['quality_label'])}</span>
-            </div>
-        </div>
-        """.splitlines()
-    )
+    with st.container(border=True):
+        matchup_column, pick_column, score_column = st.columns([1.6, 0.75, 0.85])
+        with matchup_column:
+            st.markdown(f"#### {away['name']} at {home['name']}")
+            st.caption(
+                f"{status_text} · {start_text} · "
+                f"{away.get('pitcher_name') or 'Starter TBD'} vs "
+                f"{home.get('pitcher_name') or 'Starter TBD'} · {context}"
+            )
+            st.progress(
+                prediction["away_probability"],
+                text=f"{away['short_name']} {away_pct:.1f}%  |  {home['short_name']} {home_pct:.1f}%",
+            )
+        with pick_column:
+            st.metric("Model lean", prediction["target_name"], f"{prediction['target_probability']*100:.1f}%")
+            st.caption(f"Fair moneyline {fmt_odds(fair_odds)}")
+        with score_column:
+            st.metric(score_label, score_value)
+            st.caption(f"Data quality: {prediction['quality_score']}/100 · {prediction['quality_label']}")
 
 
 def render_advanced(
@@ -2783,7 +2764,6 @@ def render_advanced(
         f"Full analysis · {game['away']['short_name']} at {game['home']['short_name']}",
         expanded=True,
     ):
-        st.markdown(render_game(prediction, weather, lineup), unsafe_allow_html=True)
         st.markdown("### Matchup at a glance")
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Model lean", f"{prediction['target_probability']*100:.1f}%")
@@ -2961,15 +2941,8 @@ odds_api_key = secret_value("ODDS_API_KEY")
 with st.container(border=True):
     nav_brand, nav_date, nav_sync = st.columns([1.55, 1.35, 1.0], vertical_alignment="center")
     with nav_brand:
-        st.markdown(
-            """
-            <div class="top-nav-brand">
-                <div class="top-nav-mark">⚾</div>
-                <div><div class="top-nav-title">MLB Quant Terminal</div><div class="top-nav-sub">Daily matchup intelligence</div></div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown("#### ⚾ MLB Quant Terminal")
+        st.caption("Daily matchup intelligence")
     with nav_date:
         previous_day, date_picker, next_day = st.columns([0.42, 2.4, 0.42], vertical_alignment="center")
         current_slate_date = st.session_state.get("slate_date", today_et)
@@ -3005,12 +2978,7 @@ with st.container(border=True):
     with nav_sync:
         sync_copy, sync_button = st.columns([1.45, 0.72], vertical_alignment="center")
         with sync_copy:
-            st.markdown(
-                f"""
-                <div class="top-nav-sync"><span class="sync-dot"></span><div><strong>LIVE DATA SYNC</strong><small>{safe_text(now_et.strftime('%-I:%M:%S %p ET'))}</small></div></div>
-                """,
-                unsafe_allow_html=True,
-            )
+            st.caption(f"🟢 LIVE DATA SYNC\n\n{now_et.strftime('%-I:%M:%S %p ET')}")
         with sync_button:
             if st.button("↻", key="top_refresh", use_container_width=True, help="Refresh all data"):
                 st.cache_data.clear()
@@ -3047,17 +3015,14 @@ with st.sidebar:
     )
 
 as_of = selected_date.isoformat()
-st.markdown(
-    f"""
-    <div class="hero-card">
-        <div class="hero-eyebrow">DAILY MLB COMMAND CENTER</div>
-        <div class="hero-title">{safe_text(selected_date.strftime('%A, %B %-d'))} Slate</div>
-        <div class="hero-sub">Live scores · upcoming games · transparent probabilities · full matchup research</div>
-        <div class="hero-meta">SLATE {safe_text(selected_date.strftime('%A · %B %-d, %Y'))} · {simulations:,} SIMULATIONS PER GAME · DAILY FORCED UPDATE {safe_text(scheduled_today.strftime('%-I:%M %p ET'))}</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+with st.container(border=True):
+    st.caption("DAILY MLB COMMAND CENTER")
+    st.header(f"{selected_date.strftime('%A, %B %-d')} Slate")
+    st.write("Live scores · upcoming games · transparent probabilities · full matchup research")
+    st.caption(
+        f"{simulations:,} simulations per game · daily forced update "
+        f"{scheduled_today.strftime('%-I:%M %p ET')}"
+    )
 try:
     with st.spinner("Syncing the MLB slate and official game states…"):
         games = cached_schedule(as_of)
@@ -3168,16 +3133,14 @@ preview_count = sum(p["game"]["live"]["status"] == "PREVIEW" for p in prediction
 final_count = sum(p["game"]["live"]["status"] == "FINAL" for p in predictions)
 render_game_center(predictions)
 render_slate_insights(predictions)
-st.markdown(
-    "<div class='disclaimer'><strong>Probabilities, not promises.</strong> Every outcome can lose. "
-    "The app reports uncertainty, leaves missing fields missing and does not label anything a lock or guarantee. "
-    "Only risk money you can afford to lose.</div>",
-    unsafe_allow_html=True,
+st.warning(
+    "Probabilities, not promises. Every outcome can lose. The app reports uncertainty, "
+    "leaves missing fields missing, and does not label anything a lock or guarantee."
 )
-st.markdown("<div class='section-title'>Complete Matchup Research</div>", unsafe_allow_html=True)
-st.markdown(
-    f"<div class='section-sub'>{len(predictions)} games · {live_count} live · {preview_count} upcoming · {final_count} final · refreshed {datetime.now(ET).strftime('%-I:%M:%S %p ET')}</div>",
-    unsafe_allow_html=True,
+st.subheader("Complete Matchup Research")
+st.caption(
+    f"{len(predictions)} games · {live_count} live · {preview_count} upcoming · "
+    f"{final_count} final · refreshed {datetime.now(ET).strftime('%-I:%M:%S %p ET')}"
 )
 
 filter_column, sort_column, search_column = st.columns([1.35, 1.1, 1.1], vertical_alignment="bottom")
@@ -3238,7 +3201,7 @@ for prediction in filtered_predictions:
     game_pk = prediction["game"]["game_pk"]
     weather = weather_by_game.get(game_pk, {})
     lineup = lineups_by_game.get(game_pk, {})
-    st.markdown(render_compact_game_row(prediction, weather), unsafe_allow_html=True)
+    render_compact_game_row(prediction, weather)
     analysis_is_open = st.session_state.get("open_game_pk") == game_pk
     st.button(
         "Hide full analysis" if analysis_is_open else "View full analysis",
