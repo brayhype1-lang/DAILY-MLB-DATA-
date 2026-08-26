@@ -1,7 +1,3 @@
-streamlit
-requests
-numpy
-scipy
-scikit-learn
-pydantic
-pandas
+streamlit>=1.41,<2
+streamlit-autorefresh>=1.0.1,<2
+numpy>=1.26,<3
