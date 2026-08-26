@@ -75,15 +75,68 @@ st.markdown(
 
     .stMainBlockContainer { position: relative; z-index: 1; }
 
-    /* Upgraded Modern Hero Banner */
+    /* Hero Banner HUD */
     .hero-banner {
         background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(3, 45, 66, 0.8) 100%);
         border: 1px solid rgba(56, 189, 248, 0.4);
         border-radius: 18px;
-        padding: 28px 32px;
+        padding: 24px 28px;
         margin-bottom: 24px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(14px);
+    }
+
+    /* Live Scores Ticker Carousel Container */
+    .ticker-scroll-wrap {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 6px 2px 10px 2px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(56, 189, 248, 0.4) rgba(15, 23, 42, 0.5);
+    }
+    .ticker-scroll-wrap::-webkit-scrollbar {
+        height: 6px;
+    }
+    .ticker-scroll-wrap::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 4px;
+    }
+    .ticker-scroll-wrap::-webkit-scrollbar-thumb {
+        background: rgba(56, 189, 248, 0.4);
+        border-radius: 4px;
+    }
+
+    /* Score Pill Component */
+    .score-pill {
+        background: rgba(11, 22, 42, 0.85);
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        border-radius: 12px;
+        padding: 10px 14px;
+        min-width: 175px;
+        flex-shrink: 0;
+        box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .score-pill-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.7rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: 700;
+    }
+    .score-pill-body {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #F8FAFC;
+    }
+    .team-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -125,29 +178,28 @@ st.markdown(
         border: 1px solid rgba(239, 68, 68, 0.6);
         color: #FCA5A5;
         font-weight: 800;
-        padding: 5px 14px;
-        border-radius: 20px;
-        font-size: 0.78rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.68rem;
         font-family: 'JetBrains Mono', monospace;
-        box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
     }
     .badge-final {
         background: rgba(51, 65, 85, 0.5);
         border: 1px solid rgba(100, 116, 139, 0.5);
         color: #94A3B8;
         font-weight: 700;
-        padding: 5px 14px;
-        border-radius: 20px;
-        font-size: 0.78rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.68rem;
     }
     .badge-upcoming {
         background: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(51, 65, 85, 0.5);
         color: #64748B;
         font-weight: 600;
-        padding: 5px 14px;
-        border-radius: 20px;
-        font-size: 0.78rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.68rem;
     }
 
     .pitcher-bubble-card {
@@ -163,7 +215,7 @@ st.markdown(
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        margin: 8px 0;
+        margin: 8px 0 2px 0;
     }
     .stat-pill {
         background: rgba(15, 23, 42, 0.85);
@@ -175,29 +227,6 @@ st.markdown(
         font-family: 'JetBrains Mono', monospace !important;
     }
     .stat-pill b { color: #F8FAFC; }
-
-    .recent-starts-header {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: #64748B;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin: 10px 0 4px 2px;
-    }
-    .start-bubble-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(15, 23, 42, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        padding: 5px 10px;
-        border-radius: 8px;
-        margin-bottom: 4px;
-        font-size: 0.75rem;
-        font-family: 'JetBrains Mono', monospace;
-        color: #CBD5E1;
-    }
-    .start-bubble-row span b { color: #38BDF8; }
 
     .narrative-box {
         background: rgba(3, 15, 29, 0.9);
@@ -282,14 +311,14 @@ def fetch_live_game_state(game_pk: int) -> dict:
             half = linescore.get("inningState", "Top")
             return {
                 "status": "LIVE",
-                "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning} ({away_runs}-{home_runs})</span>',
+                "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning}</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
                 "inning_str": f"{half} {inning}"
             }
         elif abstract_state == "Final" or "Final" in detailed_state:
             return {
                 "status": "FINAL",
-                "badge_html": f'<span class="badge-final">🏁 FINAL ({away_runs}-{home_runs})</span>',
+                "badge_html": '<span class="badge-final">🏁 FINAL</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
                 "inning_str": "Final"
             }
@@ -375,7 +404,6 @@ def load_full_slate():
         slate = []
         for g in dates[0].get("games", []):
             game_pk = g.get("gamePk", 12345)
-            
             rng = np.random.default_rng(game_pk)
 
             away = g.get("teams", {}).get("away", {})
@@ -384,24 +412,19 @@ def load_full_slate():
             home_p = home.get("probablePitcher", {})
             away_id = away.get("team", {}).get("id")
             home_id = home.get("team", {}).get("id")
+            
+            away_short = away.get("team", {}).get("teamName", "Away")
+            home_short = home.get("team", {}).get("teamName", "Home")
 
             def create_pitcher_profile():
                 wins = int(rng.integers(4, 14))
                 losses = int(rng.integers(3, 10))
-                recent_starts = []
-                for _ in range(3):
-                    ip = float(rng.choice([5.0, 5.2, 6.0, 6.1, 6.2, 7.0]))
-                    er = int(rng.choice([0, 1, 2, 3, 4], p=[0.2, 0.3, 0.3, 0.15, 0.05]))
-                    hits = int(rng.integers(3, 9))
-                    recent_starts.append({"ip": ip, "er": er, "hits": hits})
-                
                 return {
                     "pitcher": "Starter Name", "record": f"{wins}-{losses}",
                     "era": round(float(rng.uniform(3.00, 4.60)), 2),
                     "xwoba": round(float(rng.uniform(0.290, 0.340)), 3),
                     "hard_hit_pct": round(float(rng.uniform(33.0, 43.0)), 1),
                     "vs_lhp_wrc": int(rng.integers(90, 115)),
-                    "recent_starts": recent_starts
                 }
 
             away_stats = create_pitcher_profile()
@@ -414,9 +437,11 @@ def load_full_slate():
             slate.append({
                 "game_id": game_pk,
                 "away_team": away.get("team", {}).get("name"),
+                "away_short": away_short,
                 "away_logo": f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{away_id}.svg" if away_id else "",
                 "away_stats": away_stats,
                 "home_team": home.get("team", {}).get("name"),
+                "home_short": home_short,
                 "home_logo": f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{home_id}.svg" if home_id else "",
                 "home_stats": home_stats,
             })
@@ -425,25 +450,8 @@ def load_full_slate():
         return []
 
 # ------------------------------------------------------------------
-# 5. DASHBOARD PRESENTATION
+# 5. DASHBOARD PRESENTATION & LIVE SCORE TICKER
 # ------------------------------------------------------------------
-st.markdown(
-    """
-    <div class="hero-banner">
-        <div>
-            <h1 style="margin:0; font-size: 2rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
-            <p style="margin:6px 0 0 0; color: #38BDF8; font-size: 0.95rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE AUTO-SYNC • LOCKED SEEDS & PROBABILITY ENGINE</p>
-        </div>
-        <div style="text-align: right;">
-            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
-                🟢 STREAM: ACTIVE
-            </span>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
 slate = load_full_slate()
 
 if not slate:
@@ -457,6 +465,50 @@ else:
             g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park, live_state=live_state
         )
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
+
+    # Build Live Score Ticker HTML
+    ticker_pills_html = ""
+    for g in evaluated_slate:
+        lv = g["live"]
+        ticker_pills_html += f"""
+        <div class="score-pill">
+            <div class="score-pill-header">
+                <span>{lv['badge_html']}</span>
+            </div>
+            <div class="score-pill-body">
+                <div class="team-row">
+                    <span>{g['away_short']}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">{lv['away_runs']}</span>
+                </div>
+                <div class="team-row">
+                    <span>{g['home_short']}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">{lv['home_runs']}</span>
+                </div>
+            </div>
+        </div>
+        """
+
+    st.markdown(
+        f"""
+        <div class="hero-banner">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <div>
+                    <h1 style="margin:0; font-size: 1.7rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
+                    <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.88rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE AUTO-SYNC TICKER • LOCKED SEEDS & PROBABILITY ENGINE</p>
+                </div>
+                <div style="text-align: right;">
+                    <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 6px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
+                        🟢 SYNC ACTIVE
+                    </span>
+                </div>
+            </div>
+            <div class="ticker-scroll-wrap">
+                {ticker_pills_html}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown("### 📊 Complete Slate Breakdown & Model Winner Picks")
 
@@ -507,7 +559,7 @@ else:
                 st.markdown(
                     f"""
                     <div class="pitcher-bubble-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                             <div>
                                 <span style="font-weight: 700; font-size: 0.92rem; color: #F8FAFC;">{stats['pitcher']}</span>
                                 <span style="color: #38BDF8; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; margin-left: 6px;">({stats['record']})</span>
