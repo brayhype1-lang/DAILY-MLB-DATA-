@@ -1,5 +1,6 @@
 import math
 import re
+import time
 import numpy as np
 import pandas as pd
 import requests
@@ -72,7 +73,7 @@ st.markdown(
         text-align: center;
     }
 
-    /* Badges */
+    /* Badges & Live Tickers */
     .badge-edge {
         background: linear-gradient(135deg, #10B981 0%, #059669 100%);
         color: #FFFFFF;
@@ -92,6 +93,37 @@ st.markdown(
         border-radius: 30px;
         font-size: 0.82rem;
         border: 1px solid #334155;
+    }
+
+    .badge-live {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid #EF4444;
+        color: #FCA5A5;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .badge-final {
+        background: rgba(51, 65, 85, 0.5);
+        border: 1px solid #475569;
+        color: #94A3B8;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+    }
+
+    .badge-upcoming {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid #334155;
+        color: #64748B;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
     }
 
     .badge-fatigue-high {
@@ -251,7 +283,52 @@ def get_park_factor(home_team: str):
 
 
 # ------------------------------------------------------------------
-# 3. QUANTITATIVE MODELING ENGINE
+# 3. LIVE SCORE & STATE ENGINE
+# ------------------------------------------------------------------
+@st.cache_data(ttl=15) # Short cache for live scores
+def fetch_live_game_state(game_pk: int) -> dict:
+    url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/feed/live"
+    try:
+        res = requests.get(url, timeout=5).json()
+        status_abstract = res.get("gameData", {}).get("status", {}).get("abstractGameState", "Preview")
+        linescore = res.get("liveData", {}).get("linescore", {})
+        away_runs = linescore.get("teams", {}).get("away", {}).get("runs", 0)
+        home_runs = linescore.get("teams", {}).get("home", {}).get("runs", 0)
+
+        if status_abstract == "Live":
+            inning = linescore.get("currentInningOrdinal", "1st")
+            half = linescore.get("inningState", "Top")
+            return {
+                "status": "LIVE",
+                "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning} ({away_runs}-{home_runs})</span>',
+                "away_runs": away_runs,
+                "home_runs": home_runs
+            }
+        elif status_abstract == "Final":
+            return {
+                "status": "FINAL",
+                "badge_html": f'<span class="badge-final">🏁 FINAL ({away_runs}-{home_runs})</span>',
+                "away_runs": away_runs,
+                "home_runs": home_runs
+            }
+        else:
+            return {
+                "status": "PREVIEW",
+                "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
+                "away_runs": 0,
+                "home_runs": 0
+            }
+    except Exception:
+        return {
+            "status": "PREVIEW",
+            "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
+            "away_runs": 0,
+            "home_runs": 0
+        }
+
+
+# ------------------------------------------------------------------
+# 4. QUANTITATIVE MODELING ENGINE
 # ------------------------------------------------------------------
 def devig_implied(odds1: int, odds2: int) -> tuple[float, float]:
     p1 = (100 / (odds1 + 100)) if odds1 > 0 else (abs(odds1) / (abs(odds1) + 100))
@@ -329,7 +406,7 @@ def build_editorial_breakdown(
 
 
 # ------------------------------------------------------------------
-# 4. DATA FETCHING & MARKET ENRICHMENT
+# 5. DATA FETCHING & MARKET ENRICHMENT
 # ------------------------------------------------------------------
 @st.cache_data(ttl=3600)
 def fetch_advanced_pitcher(person_id: int, name: str):
@@ -415,10 +492,17 @@ def get_fatigue_badge(pitches: int) -> str:
 
 
 # ------------------------------------------------------------------
-# 5. DASHBOARD PRESENTATION
+# 6. DASHBOARD PRESENTATION
 # ------------------------------------------------------------------
-st.title("⚾ MLB Quantitative Edge Engine")
-st.caption("Multi-Factor Intelligence • Automated Live Weather Analysis • Bullpen Fatigue & Market Splits")
+col_title, col_btn = st.columns([4, 1])
+with col_title:
+    st.title("⚾ MLB Quantitative Edge Engine")
+    st.caption("Multi-Factor Intelligence • Live In-Game Score Tracker • Bullpen Fatigue & Weather Engine")
+with col_btn:
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔄 Refresh Live Scores", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
 
 # Model Calibration Tracker
 st.markdown("### 📈 Model Calibration & Hit Rate Tracker")
@@ -445,7 +529,8 @@ else:
         analysis = build_editorial_breakdown(
             g["away_team"], g["home_team"], g["away_stats"], g["home_stats"], park
         )
-        evaluated_slate.append({**g, "park": park, "analysis": analysis})
+        live_state = fetch_live_game_state(g["game_id"])
+        evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
 
     top_locks = [g for g in evaluated_slate if g["analysis"]["target"] is not None]
     top_locks = sorted(top_locks, key=lambda x: x["analysis"]["edge"], reverse=True)
@@ -466,7 +551,10 @@ else:
                     <div style="display: flex; align-items: center; gap: 16px;">
                         <img src="{target_logo}" width="56" height="56" />
                         <div>
-                            <span style="color: #38BDF8; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;">FEATURED FULL GAME PICK</span>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                                <span style="color: #38BDF8; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;">FEATURED FULL GAME PICK</span>
+                                {g['live']['badge_html']}
+                            </div>
                             <h2 style="margin: 0; color: #FFFFFF; font-size: 1.5rem; font-weight: 800;">{an['target']} Moneyline</h2>
                             <span style="color: #64748B; font-size: 0.82rem;">{g['park']['name']} • 🌤️ {g['park']['weather']['weather_desc']}</span>
                         </div>
@@ -489,22 +577,21 @@ else:
         st.info("No games currently meet the model's target threshold.")
 
     st.markdown("---")
-    st.markdown("### 📊 Daily Matchup Analysis")
+    st.markdown("### 📊 Daily Matchup Analysis & Live Scores")
 
     for g in evaluated_slate:
         an = g["analysis"]
         away_pct = int(an["away_prob"] * 100)
         home_pct = int(an["home_prob"] * 100)
 
-        # Render each game inside a hoverable matchup-card container
         with st.container():
             st.markdown('<div class="matchup-card">', unsafe_allow_html=True)
             
-            col_hdr, col_badge = st.columns([3, 1])
+            col_hdr, col_status = st.columns([3, 1])
             with col_hdr:
                 st.markdown(
                     f"""
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
                         <img src="{g['away_logo']}" width="28" height="28" />
                         <span style="font-size: 1.1rem; font-weight: 700;">{g['away_team']}</span>
                         <span style="color: #64748B; font-weight: 800;">@</span>
@@ -515,21 +602,18 @@ else:
                     """,
                     unsafe_allow_html=True,
                 )
-            with col_badge:
-                if an["target"]:
-                    st.markdown(
-                        f'<div style="text-align: right;"><span class="badge-edge">PLAY {an["target"]} (+{an["edge"]}%)</span></div>',
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.markdown(
-                        '<div style="text-align: right;"><span class="badge-pass">PASS / NO EDGE</span></div>',
-                        unsafe_allow_html=True,
-                    )
+            with col_status:
+                st.markdown(f'<div style="text-align: right;">{g["live"]["badge_html"]}</div>', unsafe_allow_html=True)
+
+            # Sub-header badge for model edge
+            if an["target"]:
+                st.markdown(f'<span class="badge-edge" style="display:inline-block; margin-bottom: 12px;">PLAY {an["target"]} (+{an["edge"]}%)</span>', unsafe_allow_html=True)
+            else:
+                st.markdown('<span class="badge-pass" style="display:inline-block; margin-bottom: 12px;">PASS / NO EDGE</span>', unsafe_allow_html=True)
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            # Away Column (Pill Metrics, Pitcher Logo & Dual-Tone Bar)
+            # Away Column
             with c1:
                 st.markdown(f"**{g['away_team']}**")
                 st.markdown(
@@ -556,7 +640,6 @@ else:
                 st.markdown(f"**Bullpen:** {get_fatigue_badge(g['away_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
                 st.caption(f"🎰 Splits: {g['away_stats']['public_bets_pct']}% Bets | {g['away_stats']['money_pct']}% Money")
 
-                # Dual-tone win probability bar track
                 st.markdown(
                     f"""
                     <div style="margin-top: 8px;">
@@ -572,7 +655,7 @@ else:
                     unsafe_allow_html=True
                 )
 
-            # Home Column (Pill Metrics, Pitcher Logo & Dual-Tone Bar)
+            # Home Column
             with c2:
                 st.markdown(f"**{g['home_team']}**")
                 st.markdown(
@@ -599,7 +682,6 @@ else:
                 st.markdown(f"**Bullpen:** {get_fatigue_badge(g['home_stats']['bp_pitch_count_3d'])}", unsafe_allow_html=True)
                 st.caption(f"🎰 Splits: {g['home_stats']['public_bets_pct']}% Bets | {g['home_stats']['money_pct']}% Money")
 
-                # Dual-tone win probability bar track
                 st.markdown(
                     f"""
                     <div style="margin-top: 8px;">
@@ -620,4 +702,4 @@ else:
                 st.markdown("**Matchup Breakdown & Weather Context**")
                 st.markdown(f'<div class="narrative-box">{an["narrative"]}</div>', unsafe_allow_html=True)
 
-            st.markdown('</div>', unsafe_allow_html=True) # Close matchup-card div
+            st.markdown('</div>', unsafe_allow_html=True)
