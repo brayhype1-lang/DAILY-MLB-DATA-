@@ -29,116 +29,29 @@ st.markdown(
     .stApp {
         background: radial-gradient(circle at 50% 0%, #0f172a 0%, #070d1b 50%, #02060d 100%);
         color: #F8FAFC;
-        overflow-x: hidden;
     }
 
-    /* Floating Ambient Bubbles */
-    .bubbles-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 0;
-        pointer-events: none;
-        overflow: hidden;
-    }
-    .bubble {
-        position: absolute;
-        bottom: -50px;
-        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.25), rgba(56, 189, 248, 0.08));
-        border: 1px solid rgba(56, 189, 248, 0.15);
-        border-radius: 50%;
-        animation: riseUp linear infinite;
-    }
-    @keyframes riseUp {
-        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
-        20% { opacity: 0.5; }
-        80% { opacity: 0.5; }
-        100% { transform: translateY(-110vh) translateX(20px) scale(1.05); opacity: 0; }
-    }
-    .bubble:nth-child(1) { left: 8%; width: 22px; height: 22px; animation-duration: 12s; animation-delay: 0s; }
-    .bubble:nth-child(2) { left: 22%; width: 34px; height: 34px; animation-duration: 16s; animation-delay: 3s; }
-    .bubble:nth-child(3) { left: 40%; width: 14px; height: 14px; animation-duration: 9s; animation-delay: 1s; }
-    .bubble:nth-child(4) { left: 60%; width: 40px; height: 40px; animation-duration: 20s; animation-delay: 5s; }
-    .bubble:nth-child(5) { left: 78%; width: 26px; height: 26px; animation-duration: 14s; animation-delay: 2s; }
-    .bubble:nth-child(6) { left: 91%; width: 18px; height: 18px; animation-duration: 10s; animation-delay: 4s; }
-
-    .stMainBlockContainer { position: relative; z-index: 1; padding-top: 2rem; }
-
-    /* Clean Card Bubbles */
-    .metric-bubble {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.2);
-        border-radius: 20px;
-        padding: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(12px);
+    /* Clean Native-Style Card Container Overlay */
+    div.element-container div.stMarkdown {
+        color: #F8FAFC;
     }
 
     /* Streamlit Button Styling */
     .stButton button {
         width: 100%;
-        background: linear-gradient(145deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
-        border: 1px solid rgba(56, 189, 248, 0.25) !important;
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
         border-radius: 12px !important;
         color: #F8FAFC !important;
         padding: 8px 12px !important;
         font-weight: 600 !important;
         transition: all 0.2s ease-in-out !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
     }
     .stButton button:hover {
         border-color: #38BDF8 !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 20px rgba(56, 189, 248, 0.3) !important;
-        background: linear-gradient(145deg, rgba(56, 189, 248, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        background: linear-gradient(145deg, rgba(56, 189, 248, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
     }
-
-    /* Visual Diamond HUD */
-    .diamond-wrapper {
-        position: relative;
-        width: 32px;
-        height: 32px;
-        flex-shrink: 0;
-    }
-    .diamond-wrapper-lg {
-        position: relative;
-        width: 90px;
-        height: 90px;
-        margin: 0 auto;
-    }
-    .base {
-        position: absolute;
-        width: 7px;
-        height: 7px;
-        background: rgba(51, 65, 85, 0.8);
-        border: 1px solid rgba(100, 116, 139, 0.8);
-        transform: rotate(45deg);
-        border-radius: 1px;
-    }
-    .base-lg {
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        background: rgba(51, 65, 85, 0.8);
-        border: 1px solid rgba(100, 116, 139, 0.8);
-        transform: rotate(45deg);
-        border-radius: 3px;
-    }
-    .base.active, .base-lg.active {
-        background: #38BDF8;
-        border-color: #7dd3fc;
-        box-shadow: 0 0 10px #38BDF8;
-    }
-    .base-2b { top: 1px; left: 12px; }
-    .base-3b { top: 12px; left: 1px; }
-    .base-1b { top: 12px; right: 1px; }
-
-    .base-lg-2b { top: 4px; left: 35px; }
-    .base-lg-3b { top: 35px; left: 4px; }
-    .base-lg-1b { top: 35px; right: 4px; }
 
     /* Badges */
     .badge-live {
@@ -150,9 +63,6 @@ st.markdown(
         border-radius: 20px;
         font-size: 0.68rem;
         font-family: 'JetBrains Mono', monospace;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
     }
     .badge-final {
         background: rgba(51, 65, 85, 0.4);
@@ -172,37 +82,18 @@ st.markdown(
         border-radius: 20px;
         font-size: 0.68rem;
     }
-
-    .big-score {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: #F8FAFC;
-    }
-    .stat-label {
-        color: #94A3B8;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 600;
-    }
 </style>
-
-<div class="bubbles-container">
-    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
-    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
-</div>
 """,
     unsafe_allow_html=True,
 )
 
 # ------------------------------------------------------------------
-# 2. SIDEBAR CONTROLS (NO AUTO-REFRESH)
+# 2. SIDEBAR CONTROLS
 # ------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### ⚙️ Engine Settings")
     manual_refresh_btn = st.button("🔄 Refresh Data Now", use_container_width=True)
-    st.caption("Manual refresh mode active. Page will never auto-refresh or jump.")
+    st.caption("Manual refresh mode active.")
 
 # ------------------------------------------------------------------
 # 3. PARK FACTORS & WEATHER ENGINE
@@ -377,14 +268,12 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
         score_str = f"{away_team} {live_state['away_runs']} - {home_team} {live_state['home_runs']}"
         narrative = (
             f"LIVE GAME STREAM ACTIVE ({live_state['inning_str']} | Score: {score_str}): "
-            f"Model is actively pricing live momentum. Starters {away_stats['pitcher']} "
-            f"and {home_stats['pitcher']} have shaped the script. "
-            f"Quantitative edge leans toward {target} at {win_p:.1f}% probability."
+            f"Model actively pricing live momentum. Quantitative edge leans toward {target} at {win_p:.1f}% probability."
         )
     else:
         narrative = (
             f"Model projects {target} to win at {win_p:.1f}%. "
-            f"{edge_team_name}'s starter {edge_pitcher['pitcher']} holds a suppression advantage "
+            f"{edge_team_name}'s starter {edge_pitcher['pitcher']} holds an edge "
             f"(ERA: {edge_pitcher['era']:.2f}, xwOBA: {edge_pitcher['xwoba']:.3f}) under {park['name']} park conditions."
         )
 
@@ -423,7 +312,6 @@ def load_full_slate():
                     "pitcher": "Starter Name", "record": f"{wins}-{losses}",
                     "era": round(float(rng.uniform(3.00, 4.60)), 2),
                     "xwoba": round(float(rng.uniform(0.290, 0.340)), 3),
-                    "hard_hit_pct": round(float(rng.uniform(33.0, 43.0)), 1),
                     "vs_lhp_wrc": int(rng.integers(90, 115)),
                 }
 
@@ -450,7 +338,7 @@ def load_full_slate():
         return []
 
 # ------------------------------------------------------------------
-# 6. DASHBOARD RENDERING & USER CONTROL FLOW
+# 6. DASHBOARD RENDERING
 # ------------------------------------------------------------------
 slate = load_full_slate()
 
@@ -492,120 +380,39 @@ else:
                 st.session_state["selected_game_id"] = None
                 st.rerun()
 
-            is_live = (lv["status"] == "LIVE")
-            b1_lg = "active" if lv.get("has_1b") else ""
-            b2_lg = "active" if lv.get("has_2b") else ""
-            b3_lg = "active" if lv.get("has_3b") else ""
-
-            diamond_section = ""
-            if is_live:
-                diamond_section = f"""
-                <div style="display: flex; align-items: center; gap: 30px; background: rgba(15, 23, 42, 0.6); padding: 12px 24px; border-radius: 16px; border: 1px solid rgba(56, 189, 248, 0.2);">
-                    <div class="diamond-wrapper-lg">
-                        <div class="base-lg base-lg-2b {b2_lg}"></div>
-                        <div class="base-lg base-lg-3b {b3_lg}"></div>
-                        <div class="base-lg base-lg-1b {b1_lg}"></div>
-                    </div>
-                    <div style="text-align: left; font-family: 'JetBrains Mono', monospace;">
-                        <div style="font-size: 0.8rem; color: #94A3B8; text-transform: uppercase;">Outs</div>
-                        <div style="font-size: 2.2rem; font-weight: 800; color: #38BDF8; line-height: 1;">{lv.get('outs', 0)}</div>
-                    </div>
-                </div>
-                """
-
-            st.markdown(
-                f"""
-                <div class="metric-bubble" style="margin-top: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-                        <div style="display: flex; align-items: center; gap: 16px;">
-                            <img src="{selected_g['away_logo']}" width="52" height="52" />
-                            <div>
-                                <h2 style="margin:0; font-size: 1.8rem; font-weight: 800;">{selected_g['away_team']} @ {selected_g['home_team']}</h2>
-                                <div style="margin-top: 6px;">{lv['badge_html']}</div>
-                            </div>
-                            <img src="{selected_g['home_logo']}" width="52" height="52" />
-                        </div>
-                        {diamond_section}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.markdown(f"## ⚾ {selected_g['away_team']} @ {selected_g['home_team']}")
+            st.markdown(lv['badge_html'], unsafe_allow_html=True)
 
             col_box1, col_box2 = st.columns(2)
             with col_box1:
-                st.markdown(
-                    f"""
-                    <div class="metric-bubble">
-                        <h3 style="margin-top:0; font-size: 1.1rem; color: #38BDF8;">🏟️ Box Score Summary</h3>
-                        <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 15px;">
-                            <div>
-                                <div class="stat-label">Runs</div>
-                                <div class="big-score">{lv['away_runs']} - {lv['home_runs']}</div>
-                            </div>
-                            <div>
-                                <div class="stat-label">Hits</div>
-                                <div class="big-score" style="font-size: 1.4rem; margin-top: 5px;">{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}</div>
-                            </div>
-                            <div>
-                                <div class="stat-label">Errors</div>
-                                <div class="big-score" style="font-size: 1.4rem; margin-top: 5px;">{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}</div>
-                            </div>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                with st.container(border=True):
+                    st.markdown("### 🏟️ Box Score Summary")
+                    sc1, sc2, sc3 = st.columns(3)
+                    sc1.metric("Runs", f"{lv['away_runs']} - {lv['home_runs']}")
+                    sc2.metric("Hits", f"{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}")
+                    sc3.metric("Errors", f"{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}")
             with col_box2:
-                st.markdown(
-                    f"""
-                    <div class="metric-bubble">
-                        <h3 style="margin-top:0; font-size: 1.1rem; color: #38BDF8;">🌤️ Venue & Environment</h3>
-                        <p style="margin: 8px 0;"><b>Ballpark:</b> {selected_g['park']['name']}</p>
-                        <p style="margin: 8px 0;"><b>Weather:</b> {selected_g['park']['weather']['weather_desc']}</p>
-                        <p style="margin: 8px 0;"><b>Environment Multiplier:</b> {selected_g['park']['run_mult']}x Run Factor</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                with st.container(border=True):
+                    st.markdown("### 🌤️ Venue & Environment")
+                    st.write(f"**Ballpark:** {selected_g['park']['name']}")
+                    st.write(f"**Weather:** {selected_g['park']['weather']['weather_desc']}")
+                    st.write(f"**Run Factor:** {selected_g['park']['run_mult']}x")
 
             st.markdown("### ⚡ Live Play-by-Play Feed")
-            plays_html = ""
-            plays = lv.get("recent_plays", [])
-            if plays:
-                for p in plays:
-                    plays_html += f"<p style='margin: 6px 0; font-size: 0.9rem;'><b>[{p['inning']}]</b> {p['description']}</p>"
-            else:
-                plays_html = "<p style='color: #94A3B8; margin: 0;'>Play-by-play feed updates automatically when games are live.</p>"
-            
-            st.markdown(
-                f"""
-                <div class="metric-bubble">
-                    {plays_html}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            with st.container(border=True):
+                plays = lv.get("recent_plays", [])
+                if plays:
+                    for p in plays:
+                        st.markdown(f"**[{p['inning']}]** {p['description']}")
+                else:
+                    st.caption("Play-by-play feed updates automatically when games are live.")
 
             st.stop()
 
     # --- MAIN SCOREBOARD GRID ---
-    st.markdown(
-        """
-        <div class="metric-bubble" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h1 style="margin:0; font-size: 1.6rem; font-weight: 900; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE TERMINAL</h1>
-                <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.82rem; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • CLICK ANY GAME CARD FOR DEEP DIVE</p>
-            </div>
-            <div>
-                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 6px 14px; border-radius: 12px; font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;">
-                    🟢 STABLE MODE ACTIVE
-                </span>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    with st.container(border=True):
+        st.markdown("### ⚾ MLB QUANTITATIVE TERMINAL")
+        st.caption("LIVE SCOREBOARD • CLICK ANY GAME CARD FOR DEEP DIVE")
 
     cols_per_row = 4
     for i in range(0, len(evaluated_slate), cols_per_row):
@@ -614,119 +421,41 @@ else:
         
         for idx, g in enumerate(row_games):
             lv = g["live"]
-            is_live_card = (lv["status"] == "LIVE")
-            
-            b1 = "active" if lv.get("has_1b") else ""
-            b2 = "active" if lv.get("has_2b") else ""
-            b3 = "active" if lv.get("has_3b") else ""
-
-            diamond_html = ""
-            if is_live_card:
-                diamond_html = f"""
-                <div class="diamond-wrapper">
-                    <div class="base base-2b {b2}"></div>
-                    <div class="base base-3b {b3}"></div>
-                    <div class="base base-1b {b1}"></div>
-                </div>
-                """
-
             with cols[idx]:
-                st.markdown(
-                    f"""
-                    <div class="metric-bubble" style="padding: 14px; margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            {lv['badge_html']}
-                            {diamond_html}
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <img src="{g['away_logo']}" width="20" height="20" />
-                                <span style="font-weight: 700; font-size: 0.85rem;">{g['away_short']}</span>
-                            </div>
-                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.95rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['away_runs']}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <img src="{g['home_logo']}" width="20" height="20" />
-                                <span style="font-weight: 700; font-size: 0.85rem;">{g['home_short']}</span>
-                            </div>
-                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.95rem; color: {'#38BDF8' if is_live_card else '#F8FAFC'};">{lv['home_runs']}</span>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-                if st.button("🔍 Deep Dive", key=f"card_{g['game_id']}", use_container_width=True):
-                    st.session_state["selected_game_id"] = g["game_id"]
-                    st.rerun()
+                with st.container(border=True):
+                    st.markdown(lv['badge_html'], unsafe_allow_html=True)
+                    
+                    sc_col1, sc_col2 = st.columns([4, 1])
+                    with sc_col1:
+                        st.text(f"{g['away_short']}\n{g['home_short']}")
+                    with sc_col2:
+                        st.text(f"{lv['away_runs']}\n{lv['home_runs']}")
 
-    st.markdown("<br>### 📊 Full Slate Model Predictions & Matchups", unsafe_allow_html=True)
+                    if st.button("🔍 Deep Dive", key=f"card_{g['game_id']}", use_container_width=True):
+                        st.session_state["selected_game_id"] = g["game_id"]
+                        st.rerun()
+
+    st.markdown("---")
+    st.markdown("### 📊 Full Slate Model Predictions & Matchups")
 
     for g in evaluated_slate:
         an = g["analysis"]
         away_pct = int(an["away_prob"] * 100)
         home_pct = int(an["home_prob"] * 100)
-        is_home_pick = (an["target"] == g["home_team"])
-        pick_logo = g["home_logo"] if is_home_pick else g["away_logo"]
 
-        c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
+        with st.container(border=True):
+            st.markdown(f"#### {g['away_team']} @ {g['home_team']} ({g['park']['name']})")
+            st.markdown(f"**Model Pick:** {an['target']} ({an['win_prob']}% Win Probability)")
 
-        def build_pitcher_box(stats, pct_val):
-            return f"""
-            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 14px; padding: 12px; margin-bottom: 10px;">
-                <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 6px;">{stats['pitcher']} <span style="color: #38BDF8; font-family: JetBrains Mono; font-size: 0.72rem;">({stats['record']})</span></div>
-                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <span style="background: rgba(30,41,59,0.8); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: JetBrains Mono; color: #94A3B8;">ERA: <b style="color:#fff;">{stats['era']:.2f}</b></span>
-                    <span style="background: rgba(30,41,59,0.8); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-family: JetBrains Mono; color: #94A3B8;">xwOBA: <b style="color:#fff;">{stats['xwoba']:.3f}</b></span>
-                </div>
-            </div>
-            <div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #94A3B8; margin-bottom: 3px; font-family: JetBrains Mono;">
-                    <span>Win Prob</span>
-                    <span style="color: #38BDF8; font-weight: 700;">{pct_val}%</span>
-                </div>
-                <div style="background: rgba(15, 23, 42, 0.8); border-radius: 6px; overflow: hidden; height: 6px; width: 100%;">
-                    <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {pct_val}%; height: 100%; border-radius: 6px;"></div>
-                </div>
-            </div>
-            """
-
-        card_html = f"""
-        <div class="metric-bubble">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="{g['away_logo']}" width="28" height="28" />
-                    <span style="font-size: 1.1rem; font-weight: 800;">{g['away_team']}</span>
-                    <span style="color: #64748B; font-weight: 700;">@</span>
-                    <img src="{g['home_logo']}" width="28" height="28" />
-                    <span style="font-size: 1.1rem; font-weight: 800;">{g['home_team']}</span>
-                    <span style="color: #64748B; font-size: 0.8rem; margin-left: 6px;">({g['park']['name']})</span>
-                </div>
-                <div>{g["live"]["badge_html"]}</div>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 12px; margin: 10px 0 14px 0;">
-                <img src="{pick_logo}" width="30" height="30" />
-                <div>
-                    <span style="background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%); color: #FFF; font-weight: 800; padding: 5px 14px; border-radius: 20px; font-size: 0.78rem; letter-spacing: 0.04em;">MODEL PICK: {an['target']}</span>
-                    <span style="color: #38BDF8; font-weight: 800; font-size: 0.88rem; margin-left: 10px; font-family: 'JetBrains Mono', monospace;">({an['win_prob']}% Win Probability)</span>
-                </div>
-            </div>
-        </div>
-        """
-        st.markdown(card_html, unsafe_allow_html=True)
-
-        with c1:
-            st.markdown(f"<div class='metric-bubble'>{build_pitcher_box(g['away_stats'], away_pct)}</div>", unsafe_allow_html=True)
-        with c2:
-            st.markdown(f"<div class='metric-bubble'>{build_pitcher_box(g['home_stats'], home_pct)}</div>", unsafe_allow_html=True)
-        with c3:
-            st.markdown(
-                f"""
-                <div class="metric-bubble">
-                    <div class='stat-label' style='margin-bottom: 6px;'>Quantitative Rationale</div>
-                    <div style='font-size: 0.84rem; line-height: 1.5; color: #94A3B8;'>{an['narrative']}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                st.markdown(f"**{g['away_stats']['pitcher']}** ({g['away_stats']['record']})")
+                st.write(f"ERA: {g['away_stats']['era']:.2f} | xwOBA: {g['away_stats']['xwoba']:.3f}")
+                st.progress(away_pct / 100, text=f"Win Prob: {away_pct}%")
+            with c2:
+                st.markdown(f"**{g['home_stats']['pitcher']}** ({g['home_stats']['record']})")
+                st.write(f"ERA: {g['home_stats']['era']:.2f} | xwOBA: {g['home_stats']['xwoba']:.3f}")
+                st.progress(home_pct / 100, text=f"Win Prob: {home_pct}%")
+            with c3:
+                st.markdown("**Quantitative Rationale**")
+                st.write(an['narrative'])
