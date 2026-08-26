@@ -1599,7 +1599,7 @@ def build_game_prediction(
 import random
 
 
-def bubble_markup(count: int = 42) -> str:
+def bubble_markup(count: int = 24) -> str:
     """Return deterministic decorative bubbles so reruns do not jump around."""
     rng = random.Random(937)
     bubbles: list[str] = []
@@ -1666,7 +1666,6 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     border: 1px solid rgba(255,255,255,.30);
     background: radial-gradient(circle at 28% 25%, rgba(255,255,255,.34) 0 3%, rgba(125,211,252,.08) 24%, transparent 62%);
     box-shadow: inset 0 0 18px rgba(255,255,255,.12), 0 0 16px rgba(34,211,238,.10);
-    backdrop-filter: blur(1px);
     animation-name: quantFloat, quantWobble;
     animation-timing-function: linear, ease-in-out;
     animation-iteration-count: infinite;
@@ -1680,7 +1679,6 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     border: 1px solid rgba(103,232,249,.26) !important;
     background: rgba(2,12,26,.91) !important;
     box-shadow: 0 14px 38px rgba(0,0,0,.34);
-    backdrop-filter: blur(20px);
 }
 .top-nav-brand { display: flex; align-items: center; gap: .7rem; min-height: 44px; }
 .top-nav-mark {
@@ -1707,7 +1705,6 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     border: 1px solid rgba(103,232,249,.55);
     background: linear-gradient(110deg, rgba(8,47,73,.82), rgba(14,116,144,.28), rgba(15,23,42,.78));
     box-shadow: 0 20px 55px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.15);
-    backdrop-filter: blur(18px);
 }
 .hero-card:after {
     content: ''; position: absolute; inset: 0;
@@ -1726,7 +1723,6 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     border: 1px solid rgba(103,232,249,.22); border-radius: 17px;
     padding: .78rem .85rem .15rem; margin: 1rem 0 1.1rem;
     background: rgba(2,12,26,.91); box-shadow: 0 16px 42px rgba(0,0,0,.30);
-    backdrop-filter: blur(20px);
 }
 [data-testid="stMarkdownContainer"]:has(.game-center-sticky) {
     position: sticky; top: 5.8rem; z-index: 40;
@@ -1876,7 +1872,6 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     border: 1px solid rgba(34,211,238,.48);
     background: linear-gradient(135deg, rgba(6,24,46,.88), rgba(9,52,83,.65));
     box-shadow: 0 17px 45px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.09);
-    backdrop-filter: blur(14px);
     scroll-margin-top: 4.5rem;
 }
 .game-shell:before {
@@ -2087,6 +2082,12 @@ def shift_slate_date(days: int) -> None:
         current = current.date()
     target = max(today, min(current + timedelta(days=days), today + timedelta(days=7)))
     st.session_state["slate_date"] = target
+
+
+def toggle_game_analysis(game_pk: int) -> None:
+    """Keep only one heavyweight matchup report mounted in the browser."""
+    current = st.session_state.get("open_game_pk")
+    st.session_state["open_game_pk"] = None if current == game_pk else game_pk
 
 
 @st.cache_data(ttl=45, show_spinner=False)
@@ -2803,8 +2804,8 @@ def render_advanced(
         prediction["fair_away_odds"] if target_side == "away" else prediction["fair_home_odds"]
     )
     with st.expander(
-        f"View full analysis · {game['away']['short_name']} at {game['home']['short_name']}",
-        expanded=game["live"]["status"] == "LIVE",
+        f"Full analysis · {game['away']['short_name']} at {game['home']['short_name']}",
+        expanded=True,
     ):
         st.markdown(render_game(prediction, weather, lineup), unsafe_allow_html=True)
         st.markdown("### Matchup at a glance")
@@ -3241,7 +3242,16 @@ for prediction in filtered_predictions:
     weather = weather_by_game.get(game_pk, {})
     lineup = lineups_by_game.get(game_pk, {})
     st.markdown(render_compact_game_row(prediction, weather), unsafe_allow_html=True)
-    render_advanced(prediction, weather, lineup)
+    analysis_is_open = st.session_state.get("open_game_pk") == game_pk
+    st.button(
+        "Hide full analysis" if analysis_is_open else "View full analysis",
+        key=f"toggle_analysis_{game_pk}",
+        on_click=toggle_game_analysis,
+        args=(game_pk,),
+        help="Load the full model explanation for this matchup.",
+    )
+    if analysis_is_open:
+        render_advanced(prediction, weather, lineup)
 
 st.markdown("---")
 with st.expander("Methodology, data sources and important limitations", expanded=False):
