@@ -7,7 +7,7 @@ import requests
 import streamlit as st
 
 # ------------------------------------------------------------------
-# 1. PAGE CONFIG & MODERN UI STYLING
+# 1. PAGE CONFIG & ENHANCED DECORATIVE STYLING
 # ------------------------------------------------------------------
 st.set_page_config(
     page_title="MLB Deep Quantitative Intelligence Engine",
@@ -26,24 +26,39 @@ st.markdown(
     }
 
     .stApp {
-        background: radial-gradient(circle at top center, #0F172A 0%, #070A10 100%);
+        background: radial-gradient(circle at top center, #0B0F19 0%, #030712 100%);
         color: #E2E8F0;
     }
 
-    .matchup-card {
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid #1E293B;
-        border-radius: 14px;
-        padding: 20px;
-        margin-bottom: 20px;
-        transition: all 0.2s ease-in-out;
-    }
-    .matchup-card:hover {
-        border-color: #38BDF8;
-        box-shadow: 0 4px 20px rgba(56, 189, 248, 0.1);
-        background: rgba(15, 23, 42, 0.9);
+    /* Hero Header Banner Decoration */
+    .hero-banner {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
     }
 
+    /* Enhanced Matchup Card with Glowing Edge */
+    .matchup-card {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(51, 65, 85, 0.6);
+        border-radius: 16px;
+        padding: 22px;
+        margin-bottom: 22px;
+        transition: all 0.25s ease-in-out;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .matchup-card:hover {
+        border-color: rgba(56, 189, 248, 0.6);
+        box-shadow: 0 6px 28px rgba(56, 189, 248, 0.15);
+        background: rgba(15, 23, 42, 0.85);
+        transform: translateY(-2px);
+    }
+
+    /* High-Confidence Badge */
     .badge-pick {
         background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
         color: #FFFFFF;
@@ -52,66 +67,74 @@ st.markdown(
         border-radius: 30px;
         font-size: 0.82rem;
         letter-spacing: 0.05em;
-        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .badge-live {
-        background: rgba(239, 68, 68, 0.2);
-        border: 1px solid #EF4444;
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.5);
         color: #FCA5A5;
         font-weight: 800;
-        padding: 4px 12px;
+        padding: 5px 14px;
         border-radius: 20px;
         font-size: 0.78rem;
         font-family: 'JetBrains Mono', monospace;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
     }
 
     .badge-final {
-        background: rgba(51, 65, 85, 0.5);
-        border: 1px solid #475569;
+        background: rgba(51, 65, 85, 0.4);
+        border: 1px solid rgba(100, 116, 139, 0.4);
         color: #94A3B8;
         font-weight: 700;
-        padding: 4px 12px;
+        padding: 5px 14px;
         border-radius: 20px;
         font-size: 0.78rem;
     }
 
     .badge-upcoming {
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid #334155;
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(51, 65, 85, 0.4);
         color: #64748B;
         font-weight: 600;
-        padding: 4px 12px;
+        padding: 5px 14px;
         border-radius: 20px;
         font-size: 0.78rem;
     }
 
+    /* Glassmorphism Stat Pills */
     .stat-pill-container {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        margin: 8px 0;
+        margin: 10px 0;
     }
     .stat-pill {
-        background: #1E293B;
-        border: 1px solid #334155;
-        padding: 4px 8px;
-        border-radius: 6px;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(51, 65, 85, 0.8);
+        padding: 5px 10px;
+        border-radius: 8px;
         font-size: 0.75rem;
         color: #94A3B8;
         font-family: 'JetBrains Mono', monospace !important;
+        backdrop-filter: blur(4px);
     }
     .stat-pill b { color: #F8FAFC; }
 
+    /* Polished Narrative Box */
     .narrative-box {
-        background: rgba(10, 15, 29, 0.85);
-        border: 1px solid #1E293B;
+        background: rgba(10, 15, 29, 0.9);
+        border: 1px solid rgba(30, 41, 59, 0.8);
         border-left: 3px solid #38BDF8;
         padding: 16px;
         border-radius: 10px;
-        font-size: 0.90rem;
+        font-size: 0.88rem;
         line-height: 1.65;
         color: #94A3B8;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     .highlight-txt { color: #F8FAFC; font-weight: 700; }
@@ -293,12 +316,18 @@ def load_full_slate():
 # ------------------------------------------------------------------
 # 5. DASHBOARD PRESENTATION
 # ------------------------------------------------------------------
-col_title, col_btn = st.columns([4, 1])
-with col_title:
-    st.title("⚾ MLB Quantitative Matchup & Winner Engine")
-    st.caption("Complete Slate Predictions • xwOBA, Pitcher Comparisons & Live Trackers")
+st.markdown(
+    """
+    <div class="hero-banner">
+        <h1 style="margin:0; font-size: 1.8rem; font-weight: 800; color: #F8FAFC;">⚾ MLB Quantitative Matchup & Winner Engine</h1>
+        <p style="margin:4px 0 0 0; color: #94A3B8; font-size: 0.95rem;">Complete Slate Predictions • xwOBA, Pitcher Comparisons & Live In-Game Trackers</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+col_spacer, col_btn = st.columns([4, 1])
 with col_btn:
-    st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 Refresh Data", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
