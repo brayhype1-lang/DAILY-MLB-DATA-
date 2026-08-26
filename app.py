@@ -197,7 +197,7 @@ st.markdown(
 )
 
 # ------------------------------------------------------------------
-# 2. SIDEBAR CONTROLS
+# 2. SIDEBAR CONTROLS (NO AUTO-REFRESH)
 # ------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### ⚙️ Engine Settings")
@@ -290,7 +290,7 @@ def fetch_live_game_state(game_pk: int) -> dict:
             return {
                 "status": "LIVE",
                 "sort_priority": sort_val,
-                "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning_ordinal}</span>',
+                "badge_html": '<span class="badge-live">🔴 LIVE</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
                 "away_hits": away_hits, "home_hits": home_hits,
                 "away_errors": away_errors, "home_errors": home_errors,
@@ -376,16 +376,16 @@ def build_editorial_breakdown(away_team, home_team, away_stats, home_stats, park
     if live_state and live_state["status"] == "LIVE":
         score_str = f"{away_team} {live_state['away_runs']} - {home_team} {live_state['home_runs']}"
         narrative = (
-            f"🔴 <span style='color: #38BDF8; font-weight: 700;'>LIVE GAME STREAM ACTIVE ({live_state['inning_str']} | Score: {score_str})</span>: "
-            f"Model is actively pricing live momentum. Starters <span style='color: #fff;'>{away_stats['pitcher']}</span> "
-            f"and <span style='color: #fff;'>{home_stats['pitcher']}</span> have shaped the script. "
-            f"Quantitative edge leans toward <span style='color: #fff;'>{target}</span> at <span style='color: #38BDF8; font-weight: 700;'>{win_p:.1f}%</span> probability."
+            f"LIVE GAME STREAM ACTIVE ({live_state['inning_str']} | Score: {score_str}): "
+            f"Model is actively pricing live momentum. Starters {away_stats['pitcher']} "
+            f"and {home_stats['pitcher']} have shaped the script. "
+            f"Quantitative edge leans toward {target} at {win_p:.1f}% probability."
         )
     else:
         narrative = (
-            f"Model projects <span style='color: #fff;'>{target}</span> to win at <span style='color: #38BDF8; font-weight: 700;'>{win_p:.1f}%</span>. "
-            f"{edge_team_name}'s starter <span style='color: #fff;'>{edge_pitcher['pitcher']}</span> holds a suppression advantage "
-            f"(ERA: {edge_pitcher['era']:.2f}, xwOBA: {edge_pitcher['xwoba']:.3f}) under <span style='color: #fff;'>{park['name']}</span> park conditions."
+            f"Model projects {target} to win at {win_p:.1f}%. "
+            f"{edge_team_name}'s starter {edge_pitcher['pitcher']} holds a suppression advantage "
+            f"(ERA: {edge_pitcher['era']:.2f}, xwOBA: {edge_pitcher['xwoba']:.3f}) under {park['name']} park conditions."
         )
 
     return {
@@ -575,7 +575,7 @@ else:
                 plays = lv.get("recent_plays", [])
                 if plays:
                     for p in plays:
-                        st.markdown(f"<span style='color: #38BDF8; font-family: JetBrains Mono; font-weight: 700;'>[{p['inning']}]</span> {p['description']}", unsafe_allow_html=True)
+                        st.markdown(f"**[{p['inning']}]** {p['description']}")
                 else:
                     st.info("Play-by-play feed updates automatically when games are live.")
                 st.markdown('</div>', unsafe_allow_html=True)
