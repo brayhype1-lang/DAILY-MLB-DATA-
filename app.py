@@ -77,7 +77,7 @@ st.markdown(
 
     /* Hero Banner HUD */
     .hero-banner {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(3, 45, 66, 0.8) 100%);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.88) 0%, rgba(3, 45, 66, 0.85) 100%);
         border: 1px solid rgba(56, 189, 248, 0.4);
         border-radius: 18px;
         padding: 24px 28px;
@@ -86,48 +86,97 @@ st.markdown(
         backdrop-filter: blur(14px);
     }
 
-    /* Score Grid Container (No Scrolling Required) */
+    /* Score Grid Container */
     .score-grid-wrap {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 12px;
+        gap: 12px;
+        margin-top: 14px;
     }
 
-    /* Score Pill Component */
-    .score-pill {
-        background: rgba(11, 22, 42, 0.85);
-        border: 1px solid rgba(56, 189, 248, 0.25);
-        border-radius: 12px;
-        padding: 10px 14px;
-        width: calc(20% - 9px);
-        min-width: 160px;
+    /* Score Card Component (App Style) */
+    .score-card {
+        background: linear-gradient(145deg, rgba(11, 22, 42, 0.92), rgba(6, 15, 30, 0.95));
+        border: 1px solid rgba(56, 189, 248, 0.28);
+        border-radius: 14px;
+        padding: 12px 14px;
+        width: calc(20% - 10px);
+        min-width: 210px;
         flex-grow: 1;
-        box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.05);
+        box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.06), 0 4px 15px rgba(0, 0, 0, 0.4);
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
+        transition: all 0.2s ease-in-out;
     }
-    .score-pill-header {
+    .score-card:hover {
+        border-color: rgba(56, 189, 248, 0.7);
+        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .score-card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         font-size: 0.7rem;
         font-family: 'JetBrains Mono', monospace;
         font-weight: 700;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding-bottom: 6px;
     }
-    .score-pill-body {
+
+    .score-card-body {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        font-size: 0.82rem;
+        gap: 6px;
+        font-size: 0.85rem;
         font-weight: 600;
         color: #F8FAFC;
     }
+
     .team-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
+    }
+
+    .team-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .base-outs-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.7rem;
+        font-family: 'JetBrains Mono', monospace;
+        color: #94A3B8;
+        background: rgba(15, 23, 42, 0.7);
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(56, 189, 248, 0.15);
+        margin-top: 2px;
+    }
+
+    /* Mini Base Diamond */
+    .bases-diamond {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+    .base {
+        width: 6px;
+        height: 6px;
+        transform: rotate(45deg);
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 1px;
+    }
+    .base.active {
+        background: #38BDF8;
+        box-shadow: 0 0 6px #38BDF8;
     }
 
     .matchup-card {
@@ -277,7 +326,7 @@ def get_park_factor(home_team: str):
     return park
 
 # ------------------------------------------------------------------
-# 3. AUTOMATED LIVE SCORE ENGINE & SMART SORTING WEIGHTS
+# 3. AUTOMATED LIVE SCORE ENGINE (WITH OUTS & BASERUNNERS)
 # ------------------------------------------------------------------
 @st.cache_data(ttl=15)
 def fetch_live_game_state(game_pk: int) -> dict:
@@ -289,7 +338,8 @@ def fetch_live_game_state(game_pk: int) -> dict:
         abstract_state = status.get("abstractGameState", "Preview")
         detailed_state = status.get("detailedState", "Scheduled")
 
-        linescore = res.get("liveData", {}).get("linescore", {})
+        live_data = res.get("liveData", {})
+        linescore = live_data.get("linescore", {})
         teams_linescore = linescore.get("teams", {})
         away_runs = teams_linescore.get("away", {}).get("runs", 0)
         home_runs = teams_linescore.get("home", {}).get("runs", 0)
@@ -298,34 +348,43 @@ def fetch_live_game_state(game_pk: int) -> dict:
             inning = linescore.get("currentInning", 1)
             half = linescore.get("inningState", "Top")
             inning_ordinal = linescore.get("currentInningOrdinal", f"{inning}th")
+            outs = linescore.get("outs", 0)
             
-            # Weight metric for sorting: later innings come closer up among live games
-            # Top of inning = inning * 2 - 1, Bottom of inning = inning * 2
+            # Baserunners
+            offense = linescore.get("offense", {})
+            has_1b = 1 if offense.get("first") else 0
+            has_2b = 1 if offense.get("second") else 0
+            has_3b = 1 if offense.get("third") else 0
+
             half_weight = 1 if half.lower().startswith("top") else 2
             sort_val = (inning * 10) + half_weight
 
             return {
                 "status": "LIVE",
-                "sort_priority": sort_val, # Lower numbers = earlier live/started, higher = deeper into game (closer up)
+                "sort_priority": sort_val,
                 "badge_html": f'<span class="badge-live">🔴 LIVE • {half} {inning_ordinal}</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
-                "inning_str": f"{half} {inning_ordinal}"
+                "inning_str": f"{half} {inning_ordinal}",
+                "outs": outs,
+                "has_1b": has_1b, "has_2b": has_2b, "has_3b": has_3b
             }
         elif abstract_state == "Final" or "Final" in detailed_state:
             return {
                 "status": "FINAL",
-                "sort_priority": 9999, # Pushed to the very back
+                "sort_priority": 9999,
                 "badge_html": '<span class="badge-final">🏁 FINAL</span>',
                 "away_runs": away_runs, "home_runs": home_runs,
-                "inning_str": "Final"
+                "inning_str": "Final",
+                "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0
             }
         else:
             return {
                 "status": "PREVIEW",
-                "sort_priority": -100, # Upcoming games sit behind active live games
+                "sort_priority": -100,
                 "badge_html": f'<span class="badge-upcoming">⏰ {detailed_state}</span>',
                 "away_runs": 0, "home_runs": 0,
-                "inning_str": "Upcoming"
+                "inning_str": "Upcoming",
+                "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0
             }
     except Exception:
         return {
@@ -333,7 +392,8 @@ def fetch_live_game_state(game_pk: int) -> dict:
             "sort_priority": -100,
             "badge_html": '<span class="badge-upcoming">⏰ Upcoming</span>',
             "away_runs": 0, "home_runs": 0,
-            "inning_str": "Upcoming"
+            "inning_str": "Upcoming",
+            "outs": 0, "has_1b": 0, "has_2b": 0, "has_3b": 0
         }
 
 def adjust_prob_for_live_state(base_home_prob: float, live_state: dict) -> tuple[float, float]:
@@ -437,10 +497,12 @@ def load_full_slate():
                 "game_id": game_pk,
                 "away_team": away.get("team", {}).get("name"),
                 "away_short": away_short,
+                "away_id": away_id,
                 "away_logo": f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{away_id}.svg" if away_id else "",
                 "away_stats": away_stats,
                 "home_team": home.get("team", {}).get("name"),
                 "home_short": home_short,
+                "home_id": home_id,
                 "home_logo": f"https://www.mlbstatic.com/team-logos/team-cap-on-dark/{home_id}.svg" if home_id else "",
                 "home_stats": home_stats,
             })
@@ -449,7 +511,7 @@ def load_full_slate():
         return []
 
 # ------------------------------------------------------------------
-# 5. DASHBOARD PRESENTATION & SMART SORTED SCORE GRID
+# 5. DASHBOARD PRESENTATION & APP-STYLE SCORE CARDS
 # ------------------------------------------------------------------
 slate = load_full_slate()
 
@@ -465,53 +527,78 @@ else:
         )
         evaluated_slate.append({**g, "park": park, "analysis": analysis, "live": live_state})
 
-    # Sort games so that:
-    # 1. Live games appear first. For live games, sort descending by sort_priority (later innings/closer to end = closer up top).
-    # 2. Upcoming games next.
-    # 3. Final games at the very bottom.
-    # We achieve this by sorting by status rank and sort_priority.
     def game_sort_key(item):
         st_val = item["live"]["status"]
         priority = item["live"]["sort_priority"]
         if st_val == "LIVE":
-            # Return negative priority so higher innings sort FIRST (closer up)
             return (0, -priority)
         elif st_val == "PREVIEW":
             return (1, 0)
-        else: # FINAL
+        else:
             return (2, 0)
 
     evaluated_slate.sort(key=game_sort_key)
 
-    # Build Score Grid HTML (All games visible in a clean flex wrap grid)
-    ticker_pills_html = ""
+    # Build Score Cards HTML with Logos, Outs, and Baserunners
+    score_cards_html = ""
     for g in evaluated_slate:
         lv = g["live"]
-        ticker_pills_html += f"""
-        <div class="score-pill">
-            <div class="score-pill-header">
+        
+        # Baserunner CSS indicators
+        b1_cls = "base active" if lv.get("has_1b") else "base"
+        b2_cls = "base active" if lv.get("has_2b") else "base"
+        b3_cls = "base active" if lv.get("has_3b") else "base"
+
+        bottom_info_html = ""
+        if lv["status"] == "LIVE":
+            bottom_info_html = f"""
+            <div class="base-outs-row">
+                <div class="bases-dividend">
+                    <span style="color: #64748B; font-size: 0.65rem; margin-right: 4px;">BASES</span>
+                    <span class="bases-diamond">
+                        <span class="{b2_cls}" title="2nd Base"></span>
+                        <span class="{b3_cls}" title="3rd Base"></span>
+                        <span class="{b1_cls}" title="1st Base"></span>
+                    </span>
+                </div>
+                <div>
+                    <span style="color: #64748B; font-size: 0.65rem;">OUTS:</span> <b style="color: #F8FAFC;">{lv['outs']}</b>
+                </div>
+            </div>
+            """
+
+        score_cards_html += f"""
+        <div class="score-card">
+            <div class="score-card-header">
                 <span>{lv['badge_html']}</span>
             </div>
-            <div class="score-pill-body">
+            <div class="score-card-body">
                 <div class="team-row">
-                    <span>{g['away_short']}</span>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">{lv['away_runs']}</span>
+                    <div class="team-info">
+                        <img src="{g['away_logo']}" width="20" height="20" style="object-fit: contain;" />
+                        <span>{g['away_short']}</span>
+                    </div>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.95rem;">{lv['away_runs']}</span>
                 </div>
                 <div class="team-row">
-                    <span>{g['home_short']}</span>
-                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800;">{lv['home_runs']}</span>
+                    <div class="team-info">
+                        <img src="{g['home_logo']}" width="20" height="20" style="object-fit: contain;" />
+                        <span>{g['home_short']}</span>
+                    </div>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 0.95rem;">{lv['home_runs']}</span>
                 </div>
             </div>
+            {bottom_info_html}
         </div>
         """
 
     st.markdown(
         f"""
         <div class="hero-banner">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <div>
                     <h1 style="margin:0; font-size: 1.7rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
-                    <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.88rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE SCORE GRID • LATER INNINGS SORTED PROMINENTLY • FINALS AT BACK</p>
+                    <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.88rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • OUTS & BASERUNNER TRACKING • SMART SORTED</p>
                 </div>
                 <div style="text-align: right;">
                     <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 6px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
@@ -520,7 +607,7 @@ else:
                 </div>
             </div>
             <div class="score-grid-wrap">
-                {ticker_pills_html}
+                {score_cards_html}
             </div>
         </div>
         """,
