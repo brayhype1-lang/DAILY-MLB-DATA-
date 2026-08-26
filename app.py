@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
-import streamlit_shadcn_ui as ui
 from datetime import datetime
 
 # ------------------------------------------------------------------
@@ -367,6 +366,17 @@ else:
     if "selected_game_id" not in st.session_state:
         st.session_state["selected_game_id"] = None
 
+    # Check query params for card clicks
+    query_params = st.query_params
+    if "game" in query_params:
+        try:
+            clicked_id = int(query_params["game"])
+            if st.session_state["selected_game_id"] != clicked_id:
+                st.session_state["selected_game_id"] = clicked_id
+                st.rerun()
+        except ValueError:
+            pass
+
     # --- DEEP DIVE INSPECTOR ---
     if st.session_state["selected_game_id"] is not None:
         selected_g = next((x for x in evaluated_slate if x["game_id"] == st.session_state["selected_game_id"]), None)
@@ -376,6 +386,7 @@ else:
             
             if st.button("⬅️ Back to Scoreboard Grid", key="back_to_grid_btn"):
                 st.session_state["selected_game_id"] = None
+                st.query_params.clear()
                 st.rerun()
 
             st.markdown(f"## ⚾ {selected_g['away_team']} @ {selected_g['home_team']}")
@@ -386,7 +397,7 @@ else:
                 with st.container(border=True):
                     st.markdown("### 🏟️ Box Score Summary")
                     sc1, sc2, sc3 = st.columns(3)
-                    sc1.metric("Runs", f"{lv['away_runs']} - {lv['home_runs']}")
+                    sc1.metric("Runs", f"{lv['runs']['away'] if isinstance(lv.get('runs'), dict) else lv['away_runs']} - {lv['home_runs']}")
                     sc2.metric("Hits", f"{lv.get('away_hits', 0)} - {lv.get('home_hits', 0)}")
                     sc3.metric("Errors", f"{lv.get('away_errors', 0)} - {lv.get('home_errors', 0)}")
             with col_box2:
@@ -410,7 +421,7 @@ else:
     # --- MAIN SCOREBOARD GRID ---
     with st.container(border=True):
         st.markdown("### ⚾ MLB QUANTITATIVE TERMINAL")
-        st.caption("LIVE SCOREBOARD • REAL-TIME AUTOMATIC POLLING")
+        st.caption("LIVE SCOREBOARD • CLICK ANY CARD FOR DEEP DIVE")
 
     cols_per_row = 4
     for i in range(0, len(evaluated_slate), cols_per_row):
@@ -420,23 +431,70 @@ else:
         for idx, g in enumerate(row_games):
             lv = g["live"]
             is_live = (lv["status"] == "LIVE")
+            g_id = g["game_id"]
             
             with cols[idx]:
-                # Construct clean card content strings for shadcn component
-                card_title = f"{g['away_short']} @ {g['home_short']}"
-                card_content = f"Score: {lv['away_runs']} - {lv['home_runs']} | {lv['inning_str']}"
-                
-                # Using shadcn clickable card widget which registers clicks on the whole box background
-                clicked = ui.card(
-                    title=card_title,
-                    content=card_content,
-                    description=lv['status'],
-                    key=f"card_{g['game_id']}"
-                )
-                
-                if clicked:
-                    st.session_state["selected_game_id"] = g["game_id"]
-                    st.rerun()
+                with st.container(border=True):
+                    # Invisible absolute link overlay covering the entire card box bounds
+                    st.markdown(
+                        f"""
+                        <a href="?game={g_id}" target="_self" style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            z-index: 10;
+                            opacity: 0;
+                        ">Click Card</a>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                    # Status Badge at the top
+                    st.markdown(lv['badge_html'], unsafe_allow_html=True)
+                    
+                    # Away Team Row
+                    sc_col1, sc_col2, sc_col3 = st.columns([1, 4, 1])
+                    with sc_col1:
+                        if g["away_logo"]:
+                            st.image(g["away_logo"], width=24)
+                    with sc_col2:
+                        st.markdown(f"**{g['away_short']}**")
+                    with sc_col3:
+                        st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
+
+                    # Home Team Row
+                    sc_col4, sc_col5, sc_col6 = st.columns([1, 4, 1])
+                    with sc_col4:
+                        if g["home_logo"]:
+                            st.image(g["home_logo"], width=24)
+                    with sc_col5:
+                        st.markdown(f"**{g['home_short']}**")
+                    with sc_col6:
+                        st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['home_runs']}</span>", unsafe_allow_html=True)
+
+                    # Base runners & outs for live games
+                    if is_live:
+                        b2 = "base-active" if lv.get("has_2b") else ""
+                        b3 = "base-active" if lv.get("has_3b") else ""
+                        b1 = "base-active" if lv.get("has_1b") else ""
+                        
+                        bases_html = f"""
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 4px; padding: 2px 0;">
+                            <div style="position: relative; width: 26px; height: 26px;">
+                                <div style="position: absolute; top: 0px; left: 9px;" class="base-diamond {b2}"></div>
+                                <div style="position: absolute; top: 9px; left: 0px;" class="base-diamond {b3}"></div>
+                                <div style="position: absolute; top: 9px; left: 18px;" class="base-diamond {b1}"></div>
+                            </div>
+                            <span style="color: #94A3B8; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.75rem;">OUTS: {lv.get('outs', 0)}</span>
+                        </div>
+                        """
+                        st.markdown(bases_html, unsafe_allow_html=True)
+                    else:
+                        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+
+                    st.markdown("<div style='text-align: right; color: #38BDF8; font-size: 0.65rem; font-weight: 700;'>Inspect ↗</div>", unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 📊 Full Slate Model Predictions & Matchups")
