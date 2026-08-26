@@ -529,10 +529,18 @@ else:
 
             c1, c2, c3 = st.columns([1.1, 1.1, 1.4])
 
-            # Away Column (Pill Metrics & Dual-Tone Bar)
+            # Away Column (Pill Metrics, Pitcher Logo & Dual-Tone Bar)
             with c1:
                 st.markdown(f"**{g['away_team']}**")
-                st.caption(f"👤 Starter: {g['away_stats']['pitcher']}")
+                st.markdown(
+                    f"""
+                    <div style="display: flex; align-items: center; gap: 6px; margin: 4px 0 2px 0;">
+                        <img src="{g['away_logo']}" width="16" height="16" />
+                        <span style="color: #94A3B8; font-size: 0.85rem;">Starter: <b>{g['away_stats']['pitcher']}</b></span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
                 
                 st.markdown(
                     f"""
@@ -564,10 +572,18 @@ else:
                     unsafe_allow_html=True
                 )
 
-            # Home Column (Pill Metrics & Dual-Tone Bar)
+            # Home Column (Pill Metrics, Pitcher Logo & Dual-Tone Bar)
             with c2:
                 st.markdown(f"**{g['home_team']}**")
-                st.caption(f"👤 Starter: {g['home_stats']['pitcher']}")
+                st.markdown(
+                    f"""
+                    <div style="display: flex; align-items: center; gap: 6px; margin: 4px 0 2px 0;">
+                        <img src="{g['home_logo']}" width="16" height="16" />
+                        <span style="color: #94A3B8; font-size: 0.85rem;">Starter: <b>{g['home_stats']['pitcher']}</b></span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
                 
                 st.markdown(
                     f"""
