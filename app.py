@@ -35,23 +35,21 @@ st.markdown(
         color: #F8FAFC;
     }
 
-    /* Make the card-trigger button span cleanly across the top */
-    .stButton button {
+    /* Style the card selector buttons to fill the space cleanly */
+    [data-testid="stVerticalBlock"] [data-testid="stButton"] button {
         width: 100%;
-        background: rgba(56, 189, 248, 0.1) !important;
-        border: 1px solid rgba(56, 189, 248, 0.3) !important;
-        border-radius: 8px !important;
+        background: rgba(56, 189, 248, 0.08) !important;
+        border: 1px solid rgba(56, 189, 248, 0.25) !important;
         color: #38BDF8 !important;
         font-weight: 700 !important;
         font-size: 0.85rem !important;
-        padding: 4px 8px !important;
+        border-radius: 6px !important;
         transition: all 0.2s ease-in-out !important;
     }
-    .stButton button:hover {
-        background: rgba(56, 189, 248, 0.25) !important;
+    [data-testid="stVerticalBlock"] [data-testid="stButton"] button:hover {
+        background: rgba(56, 189, 248, 0.2) !important;
         border-color: #38BDF8 !important;
         color: #F8FAFC !important;
-        transform: translateY(-1px) !important;
     }
 
     /* Badges */
@@ -441,16 +439,14 @@ else:
             
             with cols[idx]:
                 with st.container(border=True):
-                    # Top Badge & Action Button combined cleanly as the full matchup trigger
-                    header_col1, header_col2 = st.columns([1, 1])
-                    with header_col1:
-                        st.markdown(lv['badge_html'], unsafe_allow_html=True)
-                    with header_col2:
-                        if st.button("📊 Deep Dive", key=f"dive_{g['game_id']}"):
-                            st.session_state["selected_game_id"] = g["game_id"]
-                            st.rerun()
+                    # Make the primary action button act as the full card trigger spanning the top
+                    if st.button(f"🔍 Inspect Matchup", key=f"card_btn_{g['game_id']}", use_container_width=True):
+                        st.session_state["selected_game_id"] = g["game_id"]
+                        st.rerun()
+
+                    st.markdown(f"<div style='margin-top: 6px;'>{lv['badge_html']}</div>", unsafe_allow_html=True)
                     
-                    # Team rows (clean text display without separate buttons)
+                    # Away Team Display Row
                     sc_col1, sc_col2, sc_col3 = st.columns([1, 4, 1])
                     with sc_col1:
                         if g["away_logo"]:
@@ -460,6 +456,7 @@ else:
                     with sc_col3:
                         st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
 
+                    # Home Team Display Row
                     sc_col4, sc_col5, sc_col6 = st.columns([1, 4, 1])
                     with sc_col4:
                         if g["home_logo"]:
