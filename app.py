@@ -7,7 +7,7 @@ import requests
 import streamlit as st
 
 # ------------------------------------------------------------------
-# 1. PAGE CONFIG & ENHANCED DECORATIVE STYLING
+# 1. PAGE CONFIG & ANIMATED UNDERWATER STYLING
 # ------------------------------------------------------------------
 st.set_page_config(
     page_title="MLB Deep Quantitative Intelligence Engine",
@@ -25,36 +25,46 @@ st.markdown(
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
+    /* Animated Deep-Sea / Underwater Background */
     .stApp {
-        background: radial-gradient(circle at top center, #0B0F19 0%, #030712 100%);
+        background: linear-gradient(135deg, #020617 0%, #061a2e 50%, #032d42 100%);
+        background-size: 400% 400%;
+        animation: underwaterDrift 18s ease infinite;
         color: #E2E8F0;
+    }
+
+    @keyframes underwaterDrift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
 
     /* Hero Header Banner Decoration */
     .hero-banner {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.2);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(3, 45, 66, 0.65) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.3);
         border-radius: 16px;
         padding: 24px;
         margin-bottom: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(12px);
     }
 
     /* Enhanced Matchup Card with Glowing Edge */
     .matchup-card {
-        background: rgba(15, 23, 42, 0.65);
-        border: 1px solid rgba(51, 65, 85, 0.6);
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(56, 189, 248, 0.2);
         border-radius: 16px;
         padding: 22px;
         margin-bottom: 22px;
         transition: all 0.25s ease-in-out;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
     }
     .matchup-card:hover {
-        border-color: rgba(56, 189, 248, 0.6);
-        box-shadow: 0 6px 28px rgba(56, 189, 248, 0.15);
-        background: rgba(15, 23, 42, 0.85);
+        border-color: rgba(56, 189, 248, 0.7);
+        box-shadow: 0 6px 28px rgba(56, 189, 248, 0.2);
+        background: rgba(15, 23, 42, 0.88);
         transform: translateY(-2px);
     }
 
@@ -67,27 +77,27 @@ st.markdown(
         border-radius: 30px;
         font-size: 0.82rem;
         letter-spacing: 0.05em;
-        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);
         display: inline-flex;
         align-items: center;
         gap: 6px;
     }
 
     .badge-live {
-        background: rgba(239, 68, 68, 0.15);
-        border: 1px solid rgba(239, 68, 68, 0.5);
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.6);
         color: #FCA5A5;
         font-weight: 800;
         padding: 5px 14px;
         border-radius: 20px;
         font-size: 0.78rem;
         font-family: 'JetBrains Mono', monospace;
-        box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
     }
 
     .badge-final {
-        background: rgba(51, 65, 85, 0.4);
-        border: 1px solid rgba(100, 116, 139, 0.4);
+        background: rgba(51, 65, 85, 0.5);
+        border: 1px solid rgba(100, 116, 139, 0.5);
         color: #94A3B8;
         font-weight: 700;
         padding: 5px 14px;
@@ -96,8 +106,8 @@ st.markdown(
     }
 
     .badge-upcoming {
-        background: rgba(30, 41, 59, 0.4);
-        border: 1px solid rgba(51, 65, 85, 0.4);
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(51, 65, 85, 0.5);
         color: #64748B;
         font-weight: 600;
         padding: 5px 14px;
@@ -113,8 +123,8 @@ st.markdown(
         margin: 10px 0;
     }
     .stat-pill {
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(51, 65, 85, 0.8);
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(56, 189, 248, 0.25);
         padding: 5px 10px;
         border-radius: 8px;
         font-size: 0.75rem;
@@ -126,15 +136,15 @@ st.markdown(
 
     /* Polished Narrative Box */
     .narrative-box {
-        background: rgba(10, 15, 29, 0.9);
-        border: 1px solid rgba(30, 41, 59, 0.8);
+        background: rgba(3, 15, 29, 0.85);
+        border: 1px solid rgba(56, 189, 248, 0.25);
         border-left: 3px solid #38BDF8;
         padding: 16px;
         border-radius: 10px;
         font-size: 0.88rem;
         line-height: 1.65;
         color: #94A3B8;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     .highlight-txt { color: #F8FAFC; font-weight: 700; }
@@ -427,7 +437,7 @@ else:
                             <span>Model Win Probability</span>
                             <span style="color: #38BDF8; font-weight: 700;">{away_pct}%</span>
                         </div>
-                        <div style="background: #1E293B; border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
+                        <div style="background: rgba(15, 23, 42, 0.6); border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
                             <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {away_pct}%; height: 100%; border-radius: 6px;"></div>
                         </div>
                     </div>
@@ -456,7 +466,7 @@ else:
                             <span>Model Prediction Breakdown</span>
                             <span style="color: #38BDF8; font-weight: 700;">{home_pct}%</span>
                         </div>
-                        <div style="background: #1E293B; border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
+                        <div style="background: rgba(15, 23, 42, 0.6); border-radius: 6px; overflow: hidden; height: 8px; width: 100%;">
                             <div style="background: linear-gradient(90deg, #38BDF8, #818CF8); width: {home_pct}%; height: 100%; border-radius: 6px;"></div>
                         </div>
                     </div>
