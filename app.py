@@ -366,17 +366,6 @@ else:
     if "selected_game_id" not in st.session_state:
         st.session_state["selected_game_id"] = None
 
-    # Check query params for card clicks
-    query_params = st.query_params
-    if "game" in query_params:
-        try:
-            clicked_id = int(query_params["game"])
-            if st.session_state["selected_game_id"] != clicked_id:
-                st.session_state["selected_game_id"] = clicked_id
-                st.rerun()
-        except ValueError:
-            pass
-
     # --- DEEP DIVE INSPECTOR ---
     if st.session_state["selected_game_id"] is not None:
         selected_g = next((x for x in evaluated_slate if x["game_id"] == st.session_state["selected_game_id"]), None)
@@ -386,7 +375,6 @@ else:
             
             if st.button("⬅️ Back to Scoreboard Grid", key="back_to_grid_btn"):
                 st.session_state["selected_game_id"] = None
-                st.query_params.clear()
                 st.rerun()
 
             st.markdown(f"## ⚾ {selected_g['away_team']} @ {selected_g['home_team']}")
@@ -421,7 +409,7 @@ else:
     # --- MAIN SCOREBOARD GRID ---
     with st.container(border=True):
         st.markdown("### ⚾ MLB QUANTITATIVE TERMINAL")
-        st.caption("LIVE SCOREBOARD • CLICK ANY CARD FOR DEEP DIVE")
+        st.caption("LIVE SCOREBOARD • CLICK A CARD'S INSPECT BUTTON TO LAUNCH DEEP DIVE")
 
     cols_per_row = 4
     for i in range(0, len(evaluated_slate), cols_per_row):
@@ -435,22 +423,6 @@ else:
             
             with cols[idx]:
                 with st.container(border=True):
-                    # Invisible absolute link overlay covering the entire card box bounds
-                    st.markdown(
-                        f"""
-                        <a href="?game={g_id}" target="_self" style="
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            width: 100%;
-                            height: 100%;
-                            z-index: 10;
-                            opacity: 0;
-                        ">Click Card</a>
-                        """,
-                        unsafe_allow_html=True
-                    )
-
                     # Status Badge at the top
                     st.markdown(lv['badge_html'], unsafe_allow_html=True)
                     
@@ -494,7 +466,10 @@ else:
                     else:
                         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-                    st.markdown("<div style='text-align: right; color: #38BDF8; font-size: 0.65rem; font-weight: 700;'>Inspect ↗</div>", unsafe_allow_html=True)
+                    # Fully functional Streamlit button inside each card
+                    if st.button("🔍 Inspect Match", key=f"btn_{g_id}", use_container_width=True):
+                        st.session_state["selected_game_id"] = g_id
+                        st.rerun()
 
     st.markdown("---")
     st.markdown("### 📊 Full Slate Model Predictions & Matchups")
