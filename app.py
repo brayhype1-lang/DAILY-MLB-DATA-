@@ -24,6 +24,40 @@ SOURCE_LINKS = {
     "The Odds API": "https://the-odds-api.com/sports/mlb-odds.html",
 }
 
+# Primary and secondary accents used only for visual matchup identity.
+TEAM_COLORS = {
+    108: ("#BA0021", "#003263"),  # Angels
+    109: ("#A71930", "#E3D4AD"),  # Diamondbacks
+    110: ("#DF4601", "#000000"),  # Orioles
+    111: ("#BD3039", "#0C2340"),  # Red Sox
+    112: ("#0E3386", "#CC3433"),  # Cubs
+    113: ("#C6011F", "#000000"),  # Reds
+    114: ("#00385D", "#E50022"),  # Guardians
+    115: ("#333366", "#C4CED4"),  # Rockies
+    116: ("#0C2340", "#FA4616"),  # Tigers
+    117: ("#002D62", "#EB6E1F"),  # Astros
+    118: ("#004687", "#BD9B60"),  # Royals
+    119: ("#005A9C", "#EF3E42"),  # Dodgers
+    120: ("#AB0003", "#14225A"),  # Nationals
+    121: ("#002D72", "#FF5910"),  # Mets
+    133: ("#003831", "#EFB21E"),  # Athletics
+    134: ("#27251F", "#FDB827"),  # Pirates
+    135: ("#2F241D", "#FFC425"),  # Padres
+    136: ("#0C2C56", "#005C5C"),  # Mariners
+    137: ("#FD5A1E", "#27251F"),  # Giants
+    138: ("#C41E3A", "#0C2340"),  # Cardinals
+    139: ("#092C5C", "#8FBCE6"),  # Rays
+    140: ("#003278", "#C0111F"),  # Rangers
+    141: ("#134A8E", "#E8291C"),  # Blue Jays
+    142: ("#002B5C", "#D31145"),  # Twins
+    143: ("#E81828", "#002D72"),  # Phillies
+    144: ("#CE1141", "#13274F"),  # Braves
+    145: ("#27251F", "#C4CED4"),  # White Sox
+    146: ("#00A3E0", "#EF3340"),  # Marlins
+    147: ("#0C2340", "#C4CED4"),  # Yankees
+    158: ("#12284B", "#FFC52F"),  # Brewers
+}
+
 WEATHER_CODES = {
     0: "Clear",
     1: "Mostly clear",
@@ -47,7 +81,6 @@ WEATHER_CODES = {
     96: "Thunderstorms",
     99: "Severe thunderstorms",
 }
-
 import csv
 import io
 import json
@@ -1610,6 +1643,7 @@ html, body, [class*="css"], .stApp {
 }
 
 .stApp {
+    position: relative;
     color: var(--text);
     background:
         radial-gradient(circle at 15% 0%, rgba(14, 165, 233, .22), transparent 34%),
@@ -1623,8 +1657,9 @@ html, body, [class*="css"], .stApp {
 h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-spacing: -.025em; }
 
 .quant-bubbles {
-    position: fixed; inset: 0; overflow: hidden; z-index: 0;
-    pointer-events: none;
+    position: absolute; top: 0; left: 0; right: 0; height: 980px; overflow: hidden; z-index: 0;
+    pointer-events: none; mask-image: linear-gradient(to bottom, #000 0 72%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0 72%, transparent 100%);
 }
 .quant-bubble {
     position: absolute; bottom: -130px; display: block; border-radius: 999px;
@@ -1636,8 +1671,35 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     animation-timing-function: linear, ease-in-out;
     animation-iteration-count: infinite;
 }
-@keyframes quantFloat { from { transform: translateY(0); } to { transform: translateY(-125vh); } }
+@keyframes quantFloat { from { transform: translateY(0); } to { transform: translateY(-1050px); } }
 @keyframes quantWobble { 0%,100% { margin-left: 0; } 50% { margin-left: 34px; } }
+
+[data-testid="stVerticalBlockBorderWrapper"]:has(.top-nav-brand) {
+    position: sticky; top: .55rem; z-index: 60;
+    padding: .62rem .78rem !important; margin-bottom: .8rem;
+    border: 1px solid rgba(103,232,249,.26) !important;
+    background: rgba(2,12,26,.91) !important;
+    box-shadow: 0 14px 38px rgba(0,0,0,.34);
+    backdrop-filter: blur(20px);
+}
+.top-nav-brand { display: flex; align-items: center; gap: .7rem; min-height: 44px; }
+.top-nav-mark {
+    display: grid; place-items: center; width: 39px; height: 39px; border-radius: 12px;
+    background: linear-gradient(145deg, #67e8f9, #0e7490); color: #03111f;
+    box-shadow: 0 0 22px rgba(34,211,238,.22); font-size: 1.15rem;
+}
+.top-nav-title { font: 700 1rem 'Sora', sans-serif; letter-spacing: -.035em; color: #f8fafc; }
+.top-nav-sub { color: #8198ae; font-size: .69rem; margin-top: .08rem; }
+.top-nav-sync { display: flex; align-items: center; gap: .55rem; justify-content: flex-end; }
+.top-nav-sync strong { display: block; color: #a7f3d0; font: 700 .65rem 'IBM Plex Mono', monospace; letter-spacing: .04em; }
+.top-nav-sync small { display: block; color: #7890a6; font: 500 .59rem 'IBM Plex Mono', monospace; margin-top: .12rem; }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 5px rgba(52,211,153,.10), 0 0 12px rgba(52,211,153,.58); }
+[data-testid="stVerticalBlockBorderWrapper"]:has(.top-nav-brand) [data-testid="stDateInput"] input {
+    text-align: center; color: #ecfeff !important; font-weight: 700;
+}
+[data-testid="stVerticalBlockBorderWrapper"]:has(.top-nav-brand) .stButton > button {
+    min-height: 38px !important; padding: .25rem .5rem !important; font-size: 1.1rem !important;
+}
 
 .hero-card {
     position: relative; overflow: hidden; margin: .35rem 0 1.3rem;
@@ -1652,6 +1714,7 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     background: linear-gradient(90deg, transparent, rgba(103,232,249,.08), transparent);
     pointer-events: none;
 }
+.hero-eyebrow { color: #67e8f9; font: 700 .68rem 'IBM Plex Mono', monospace; letter-spacing: .11em; margin-bottom: .35rem; }
 .hero-title { font: 800 clamp(1.35rem, 3vw, 2.25rem) 'Sora', sans-serif; letter-spacing: -.035em; }
 .hero-sub { margin-top: .35rem; color: #bae6fd; font-size: .96rem; }
 .hero-meta { margin-top: .7rem; color: var(--muted); font: 600 .76rem 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .06em; }
@@ -1659,9 +1722,18 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
 .section-title { margin: 1.2rem 0 .75rem; font: 700 1.4rem 'Sora', sans-serif; letter-spacing: -.025em; }
 .section-sub { color: var(--muted); margin-bottom: 1rem; }
 
+.game-center-sticky {
+    border: 1px solid rgba(103,232,249,.22); border-radius: 17px;
+    padding: .78rem .85rem .15rem; margin: 1rem 0 1.1rem;
+    background: rgba(2,12,26,.91); box-shadow: 0 16px 42px rgba(0,0,0,.30);
+    backdrop-filter: blur(20px);
+}
+[data-testid="stMarkdownContainer"]:has(.game-center-sticky) {
+    position: sticky; top: 5.8rem; z-index: 40;
+}
 .game-center-head {
     display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;
-    margin: 1.35rem 0 .35rem;
+    margin: 0 0 .38rem;
 }
 .game-center-title {
     font: 700 1.42rem 'Sora', sans-serif; letter-spacing: -.035em; color: #f8fafc;
@@ -1675,6 +1747,14 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fb7185;
     box-shadow: 0 0 0 5px rgba(251,113,133,.12), 0 0 14px rgba(251,113,133,.7);
 }
+.game-center-counts { display: flex; flex-wrap: wrap; gap: .36rem; margin: .4rem 0 .6rem; }
+.game-count {
+    padding: .24rem .46rem; border-radius: 999px; color: #8097ad;
+    background: rgba(30,41,59,.52); border: 1px solid rgba(148,163,184,.15);
+    font: 700 .58rem 'IBM Plex Mono', monospace; letter-spacing: .045em;
+}
+.game-count.active { color: #cffafe; border-color: rgba(34,211,238,.30); background: rgba(8,145,178,.18); }
+.game-count.live { color: #fecdd3; border-color: rgba(251,113,133,.30); background: rgba(190,18,60,.18); }
 .scoreboard-rail {
     display: flex; gap: .8rem; overflow-x: auto; scroll-snap-type: x proximity;
     padding: .25rem .1rem .8rem; scrollbar-width: thin; scrollbar-color: #155e75 rgba(3,15,31,.55);
@@ -1683,12 +1763,17 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
 .scoreboard-rail::-webkit-scrollbar-track { background: rgba(3,15,31,.55); border-radius: 99px; }
 .scoreboard-rail::-webkit-scrollbar-thumb { background: #155e75; border-radius: 99px; }
 .score-card {
+    position: relative; overflow: hidden;
     flex: 0 0 258px; scroll-snap-align: start; display: block; min-height: 188px;
     padding: .88rem; border-radius: 15px; text-decoration: none !important; color: #f8fafc !important;
     border: 1px solid rgba(103,232,249,.24);
     background: linear-gradient(150deg, rgba(4,18,36,.96), rgba(8,46,73,.88));
     box-shadow: 0 10px 26px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.06);
     transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.score-card:before {
+    content: ''; position: absolute; inset: 0 0 auto; height: 3px;
+    background: linear-gradient(90deg, var(--away-secondary), var(--away-primary) 42%, var(--home-primary) 58%, var(--home-secondary));
 }
 .score-card:hover {
     transform: translateY(-2px); border-color: rgba(103,232,249,.62);
@@ -1719,21 +1804,84 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     display: flex; align-items: center; justify-content: space-between; gap: .5rem;
     margin-top: .68rem; padding-top: .58rem; border-top: 1px solid rgba(103,232,249,.13);
 }
+.score-card-actions { display: flex; flex-direction: column; align-items: flex-end; gap: .28rem; }
 .score-model-label { color: #7f96ac; font-size: .61rem; text-transform: uppercase; letter-spacing: .06em; }
 .score-model-pick { color: #99f6e4; font-weight: 700; font-size: .75rem; margin-top: .08rem; }
 .score-open { color: #67e8f9; font: 700 .66rem 'IBM Plex Mono', monospace; white-space: nowrap; }
+.quality-badge {
+    display: inline-flex; width: fit-content; padding: .24rem .4rem; border-radius: 999px;
+    font: 700 .56rem 'IBM Plex Mono', monospace; letter-spacing: .035em; white-space: nowrap;
+}
+.quality-high { color: #a7f3d0; border: 1px solid rgba(52,211,153,.36); background: rgba(6,95,70,.30); }
+.quality-moderate { color: #fde68a; border: 1px solid rgba(251,191,36,.34); background: rgba(146,64,14,.26); }
+.quality-limited { color: #cbd5e1; border: 1px solid rgba(148,163,184,.28); background: rgba(51,65,85,.42); }
 .empty-scoreboard {
     padding: 1.35rem; border: 1px dashed rgba(103,232,249,.25); border-radius: 14px;
     color: #9fb3c8; background: rgba(3,15,31,.55); text-align: center;
 }
 
+.insights-head .section-title { margin-bottom: .22rem; }
+.insights-head .section-sub { margin-bottom: .7rem; }
+.insights-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: .72rem; margin-bottom: 1.15rem; }
+.insight-card {
+    position: relative; overflow: hidden; min-width: 0; display: flex; flex-direction: column;
+    padding: .92rem; min-height: 142px; border-radius: 14px; text-decoration: none !important;
+    color: #f8fafc !important; border: 1px solid rgba(103,232,249,.20);
+    background: linear-gradient(150deg, rgba(3,15,31,.92), rgba(8,42,66,.72));
+    box-shadow: 0 10px 26px rgba(0,0,0,.22); transition: transform .16s ease, border-color .16s ease;
+}
+.insight-card:before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--away-secondary), var(--home-secondary));
+}
+.insight-card:hover { transform: translateY(-2px); border-color: rgba(103,232,249,.46); }
+.insight-top { display: flex; align-items: center; gap: .4rem; color: #8fa7bd; font: 700 .63rem 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .045em; }
+.insight-value { margin-top: .55rem; color: #fff; font: 700 clamp(.92rem, 1.5vw, 1.08rem) 'Sora', sans-serif; letter-spacing: -.03em; line-height: 1.32; }
+.insight-detail { margin-top: .32rem; color: #9fb3c8; font-size: .72rem; line-height: 1.42; }
+.insight-link { margin-top: auto; padding-top: .55rem; color: #67e8f9; font: 700 .58rem 'IBM Plex Mono', monospace; letter-spacing: .035em; }
+
+.compact-game {
+    position: relative; overflow: hidden; display: grid;
+    grid-template-columns: minmax(0,1.75fr) minmax(180px,.62fr) minmax(190px,.72fr);
+    gap: 1rem; align-items: center; margin: .85rem 0 .38rem; padding: 1rem 1.05rem;
+    border-radius: 16px; border: 1px solid rgba(103,232,249,.22);
+    background: linear-gradient(145deg, rgba(3,15,31,.94), rgba(7,39,62,.78));
+    box-shadow: 0 12px 30px rgba(0,0,0,.25); scroll-margin-top: 18rem;
+}
+.compact-game:before {
+    content: ''; position: absolute; inset: 0 0 auto; height: 3px;
+    background: linear-gradient(90deg, var(--away-secondary), var(--away-primary) 42%, var(--home-primary) 58%, var(--home-secondary));
+}
+.compact-main { min-width: 0; }
+.compact-status-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .48rem; }
+.compact-time { color: #8ea5ba; font: 600 .64rem 'IBM Plex Mono', monospace; }
+.compact-teams { display: flex; flex-wrap: wrap; align-items: center; gap: .52rem; }
+.compact-team { display: inline-flex; align-items: center; gap: .38rem; color: #f8fafc; font: 700 .97rem 'Sora', sans-serif; letter-spacing: -.025em; }
+.compact-team img { width: 25px; height: 25px; object-fit: contain; }
+.compact-at { color: #688197; font: 700 .59rem 'IBM Plex Mono', monospace; letter-spacing: .08em; }
+.compact-starters { margin-top: .38rem; color: #8fa7bd; font-size: .69rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.compact-prob-labels { display: flex; justify-content: space-between; margin-top: .58rem; color: #b8c8d8; font: 600 .62rem 'IBM Plex Mono', monospace; }
+.compact-prob-track { display: flex; height: 7px; margin-top: .24rem; overflow: hidden; border-radius: 999px; background: #07111f; }
+.compact-away { height: 100%; background: linear-gradient(90deg, var(--away-primary), var(--away-secondary)); }
+.compact-home { height: 100%; background: linear-gradient(90deg, var(--home-secondary), var(--home-primary)); }
+.compact-pick, .compact-score { min-width: 0; padding-left: 1rem; border-left: 1px solid rgba(148,163,184,.14); }
+.compact-kicker { color: #71899f; font: 700 .58rem 'IBM Plex Mono', monospace; letter-spacing: .07em; text-transform: uppercase; }
+.compact-pick-name { margin-top: .28rem; color: #99f6e4; font: 700 .93rem 'Sora', sans-serif; letter-spacing: -.025em; }
+.compact-pick-prob { margin-top: .2rem; color: #b8c8d8; font: 600 .66rem 'IBM Plex Mono', monospace; }
+.compact-score-value { margin: .3rem 0 .5rem; color: #f8fafc; font: 700 .8rem 'Sora', sans-serif; line-height: 1.35; }
+
 .game-shell {
+    position: relative; overflow: hidden;
     margin: 1rem 0 1.35rem; padding: 1.25rem; border-radius: 18px;
     border: 1px solid rgba(34,211,238,.48);
     background: linear-gradient(135deg, rgba(6,24,46,.88), rgba(9,52,83,.65));
     box-shadow: 0 17px 45px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.09);
     backdrop-filter: blur(14px);
     scroll-margin-top: 4.5rem;
+}
+.game-shell:before {
+    content: ''; position: absolute; inset: 0 0 auto; height: 3px;
+    background: linear-gradient(90deg, var(--away-secondary), var(--away-primary) 42%, var(--home-primary) 58%, var(--home-secondary));
 }
 .game-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .matchup { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; font: 700 1.18rem 'Sora', sans-serif; letter-spacing: -.025em; }
@@ -1755,7 +1903,9 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
 .prob-label { display: flex; justify-content: space-between; margin-bottom: .28rem; font-size: .78rem; color: #cbd5e1; }
 .prob-label strong { color: white; font-family: 'IBM Plex Mono', monospace; }
 .prob-track { height: 9px; border-radius: 99px; overflow: hidden; background: rgba(15,23,42,.9); border: 1px solid rgba(103,232,249,.25); }
-.prob-fill { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #0e7490, #67e8f9); box-shadow: 0 0 14px rgba(103,232,249,.6); }
+.prob-fill { display: block; height: 100%; border-radius: inherit; box-shadow: 0 0 14px rgba(103,232,249,.35); }
+.away-fill { background: linear-gradient(90deg, var(--away-primary), var(--away-secondary)); }
+.home-fill { background: linear-gradient(90deg, var(--home-primary), var(--home-secondary)); }
 
 .analysis-grid { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,.9fr) minmax(320px,1.3fr); gap: .85rem; }
 .pitcher-card, .rationale-card {
@@ -1781,11 +1931,20 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     background: linear-gradient(135deg, rgba(8,145,178,.35), rgba(15,23,42,.92)) !important;
 }
 .stButton > button:hover { border-color: #67e8f9 !important; box-shadow: 0 0 22px rgba(34,211,238,.35) !important; }
+[data-testid="stRadio"] [role="radiogroup"] { gap: .35rem; flex-wrap: wrap; }
+[data-testid="stRadio"] label {
+    padding: .3rem .6rem !important; border-radius: 999px;
+    border: 1px solid rgba(103,232,249,.16); background: rgba(3,15,31,.62);
+}
+[data-testid="stRadio"] label:has(input:checked) {
+    border-color: rgba(103,232,249,.46); background: rgba(8,145,178,.23);
+}
 [data-testid="stExpander"] {
     border: 1px solid rgba(34,211,238,.28) !important;
     border-radius: 14px !important;
     background: rgba(2,12,26,.76) !important;
     box-shadow: 0 12px 32px rgba(0,0,0,.22);
+    margin-bottom: .55rem;
 }
 [data-testid="stExpander"] details > summary {
     font-weight: 700 !important;
@@ -1842,14 +2001,30 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
 .disclaimer { color: #cbd5e1; padding: .8rem 1rem; border-left: 3px solid #fbbf24; background: rgba(120,53,15,.15); border-radius: 8px; font-size: .83rem; }
 .data-note { color: #94a3b8; font-size: .78rem; }
 
+@media (max-width: 1100px) {
+    .insights-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .compact-game { grid-template-columns: minmax(0,1.45fr) minmax(160px,.6fr); }
+    .compact-score { grid-column: 1 / -1; padding: .72rem 0 0; border-left: 0; border-top: 1px solid rgba(148,163,184,.14); }
+}
+
 @media (max-width: 900px) {
     .analysis-grid { grid-template-columns: 1fr; }
     .prob-grid { grid-template-columns: 1fr; }
     .game-top { align-items: stretch; flex-direction: column; }
     .status-pill { align-self: flex-start; }
     .game-center-head { align-items: flex-start; flex-direction: column; gap: .4rem; }
+    [data-testid="stMarkdownContainer"]:has(.game-center-sticky) { position: relative; top: auto; z-index: 5; }
+    [data-testid="stVerticalBlockBorderWrapper"]:has(.top-nav-brand) { position: relative; top: auto; }
     .score-card { flex-basis: 226px; }
+    .compact-game { grid-template-columns: 1fr; scroll-margin-top: 1rem; }
+    .compact-pick, .compact-score { padding: .72rem 0 0; border-left: 0; border-top: 1px solid rgba(148,163,184,.14); }
     .main .block-container { padding-left: .8rem; padding-right: .8rem; }
+}
+
+@media (max-width: 620px) {
+    .insights-grid { grid-template-columns: 1fr; }
+    .top-nav-sub, .top-nav-sync small { display: none; }
+    .hero-card { padding: 1.1rem; }
 }
 </style>
 """
@@ -1903,6 +2078,15 @@ def scheduled_update_at(day: date) -> datetime:
 def next_scheduled_update(now_et: datetime) -> datetime:
     scheduled = scheduled_update_at(now_et.date())
     return scheduled if now_et < scheduled else scheduled + timedelta(days=1)
+
+
+def shift_slate_date(days: int) -> None:
+    today = datetime.now(ET).date()
+    current = st.session_state.get("slate_date", today)
+    if isinstance(current, datetime):
+        current = current.date()
+    target = max(today, min(current + timedelta(days=days), today + timedelta(days=7)))
+    st.session_state["slate_date"] = target
 
 
 @st.cache_data(ttl=45, show_spinner=False)
@@ -1977,6 +2161,28 @@ def fmt_odds(value: int | float | None) -> str:
 
 def safe_text(value: Any) -> str:
     return html.escape(str(value if value is not None else ""), quote=True)
+
+
+def team_accents(team_id: int | None) -> tuple[str, str]:
+    return TEAM_COLORS.get(int(team_id or 0), ("#22D3EE", "#5EEAD4"))
+
+
+def matchup_style(game: dict[str, Any]) -> str:
+    away_primary, away_secondary = team_accents(game["away"].get("id"))
+    home_primary, home_secondary = team_accents(game["home"].get("id"))
+    return (
+        f"--away-primary:{away_primary};--away-secondary:{away_secondary};"
+        f"--home-primary:{home_primary};--home-secondary:{home_secondary};"
+    )
+
+
+def confidence_class(label: str) -> str:
+    normalized = (label or "").lower()
+    if normalized.startswith("high"):
+        return "quality-high"
+    if normalized.startswith("moderate"):
+        return "quality-moderate"
+    return "quality-limited"
 
 
 def metric_pill(label: str, value: str, missing: bool = False) -> str:
@@ -2300,7 +2506,7 @@ def render_game(
     """
 
     markup = f"""
-    <div class="game-shell" id="game-{int(game['game_pk'])}">
+    <div class="game-shell" style="{matchup_style(game)}">
         <div class="game-top">
             <div>
                 <div class="matchup">
@@ -2322,11 +2528,11 @@ def render_game(
         <div class="prob-grid">
             <div>
                 <div class="prob-label"><span>{safe_text(away['short_name'])}</span><strong>{away_pct:.1f}%</strong></div>
-                <div class="prob-track"><span class="prob-fill" style="width:{away_pct:.1f}%"></span></div>
+                <div class="prob-track"><span class="prob-fill away-fill" style="width:{away_pct:.1f}%"></span></div>
             </div>
             <div>
                 <div class="prob-label"><span>{safe_text(home['short_name'])}</span><strong>{home_pct:.1f}%</strong></div>
-                <div class="prob-track"><span class="prob-fill" style="width:{home_pct:.1f}%"></span></div>
+                <div class="prob-track"><span class="prob-fill home-fill" style="width:{home_pct:.1f}%"></span></div>
             </div>
         </div>
 
@@ -2383,7 +2589,7 @@ def scoreboard_card(prediction: dict[str, Any]) -> str:
     matchup_probability = prediction["target_probability"] * 100.0
 
     return f"""
-    <a class="score-card {card_class}" href="#game-{int(game['game_pk'])}">
+    <a class="score-card {card_class}" style="{matchup_style(game)}" href="#game-{int(game['game_pk'])}">
         <div class="score-card-top">
             <span class="score-card-status {badge_class}">{safe_text(badge_text)}</span>
             <span class="score-card-time">{safe_text(side_note)}</span>
@@ -2409,7 +2615,10 @@ def scoreboard_card(prediction: dict[str, Any]) -> str:
                 <div class="score-model-label">{safe_text(footer_label)}</div>
                 <div class="score-model-pick">{safe_text(matchup_target)} · {matchup_probability:.1f}%</div>
             </div>
-            <span class="score-open">DETAILS ↓</span>
+            <div class="score-card-actions">
+                <span class="quality-badge {confidence_class(prediction['quality_label'])}" title="Data completeness, not win probability">{safe_text(prediction['quality_label'])} DATA</span>
+                <span class="score-open">DETAILS ↓</span>
+            </div>
         </div>
     </a>
     """
@@ -2427,47 +2636,161 @@ def render_game_center(predictions: list[dict[str, Any]]) -> None:
     live_games = [p for p in predictions if p["game"]["live"]["status"] == "LIVE"]
     upcoming_games = [p for p in predictions if p["game"]["live"]["status"] == "PREVIEW"]
     final_games = [p for p in predictions if p["game"]["live"]["status"] == "FINAL"]
-
-    st.markdown(
-        f"""
+    rail = scoreboard_rail(predictions, "No games are available for this slate.")
+    markup = f"""
+    <div class="game-center-sticky">
         <div class="game-center-head">
             <div>
                 <div class="game-center-title">Today's Game Center</div>
-                <div class="game-center-sub">Scores, start times and model leans in one place · select a card for the full breakdown</div>
+                <div class="game-center-sub">Swipe or scroll through the slate · select a card to jump to its matchup</div>
             </div>
             <span class="live-indicator">{len(live_games)} LIVE NOW</span>
         </div>
-        """,
-        unsafe_allow_html=True,
+        <div class="game-center-counts">
+            <span class="game-count active">ALL {len(predictions)}</span>
+            <span class="game-count live">LIVE {len(live_games)}</span>
+            <span class="game-count">UPCOMING {len(upcoming_games)}</span>
+            <span class="game-count">FINAL {len(final_games)}</span>
+        </div>
+        {rail}
+    </div>
+    """
+    st.markdown("".join(line.strip() for line in markup.splitlines()), unsafe_allow_html=True)
+
+
+def slate_insight_card(
+    prediction: dict[str, Any], icon: str, label: str, value: str, detail: str
+) -> str:
+    game = prediction["game"]
+    return f"""
+    <a class="insight-card" style="{matchup_style(game)}" href="#game-{int(game['game_pk'])}">
+        <div class="insight-top"><span>{safe_text(icon)}</span><span>{safe_text(label)}</span></div>
+        <div class="insight-value">{safe_text(value)}</div>
+        <div class="insight-detail">{safe_text(detail)}</div>
+        <div class="insight-link">OPEN MATCHUP →</div>
+    </a>
+    """
+
+
+def render_slate_insights(predictions: list[dict[str, Any]]) -> None:
+    candidates = [p for p in predictions if p["game"]["live"]["status"] != "FINAL"] or predictions
+    strongest = max(candidates, key=lambda p: p["target_probability"])
+    closest = min(candidates, key=lambda p: abs(p["target_probability"] - 0.5))
+    highest_total = max(
+        candidates,
+        key=lambda p: p["projected_away_runs"] + p["projected_home_runs"],
     )
-    all_tab, live_tab, upcoming_tab, final_tab = st.tabs(
+    best_quality = max(candidates, key=lambda p: p["quality_score"])
+
+    strongest_game = strongest["game"]
+    closest_game = closest["game"]
+    total_game = highest_total["game"]
+    quality_game = best_quality["game"]
+    cards = "".join(
         [
-            f"All · {len(predictions)}",
-            f"Live · {len(live_games)}",
-            f"Upcoming · {len(upcoming_games)}",
-            f"Final · {len(final_games)}",
+            slate_insight_card(
+                strongest,
+                "🔥",
+                "Strongest lean",
+                f"{strongest['target_name']} {strongest['target_probability']*100:.1f}%",
+                f"{strongest_game['away']['short_name']} at {strongest_game['home']['short_name']} · fair {fmt_odds(strongest['fair_away_odds'] if strongest['target_side']=='away' else strongest['fair_home_odds'])}",
+            ),
+            slate_insight_card(
+                closest,
+                "⚖️",
+                "Closest matchup",
+                f"{closest_game['away']['short_name']} {closest['away_probability']*100:.1f}% · {closest_game['home']['short_name']} {closest['home_probability']*100:.1f}%",
+                f"Only {abs(closest['home_probability']-closest['away_probability'])*100:.1f} points separate the teams",
+            ),
+            slate_insight_card(
+                highest_total,
+                "📈",
+                "Highest projected total",
+                f"{highest_total['projected_away_runs'] + highest_total['projected_home_runs']:.1f} runs",
+                f"{total_game['away']['short_name']} {highest_total['projected_away_runs']:.1f} · {total_game['home']['short_name']} {highest_total['projected_home_runs']:.1f}",
+            ),
+            slate_insight_card(
+                best_quality,
+                "✅",
+                "Best data quality",
+                f"{best_quality['quality_score']}/100 · {best_quality['quality_label']}",
+                f"{quality_game['away']['short_name']} at {quality_game['home']['short_name']} · completeness, not win certainty",
+            ),
         ]
     )
-    with all_tab:
-        st.markdown(
-            scoreboard_rail(predictions, "No games are available for this slate."),
-            unsafe_allow_html=True,
-        )
-    with live_tab:
-        st.markdown(
-            scoreboard_rail(live_games, "No games are live right now."),
-            unsafe_allow_html=True,
-        )
-    with upcoming_tab:
-        st.markdown(
-            scoreboard_rail(upcoming_games, "No upcoming games remain on this slate."),
-            unsafe_allow_html=True,
-        )
-    with final_tab:
-        st.markdown(
-            scoreboard_rail(final_games, "No games have reached final status yet."),
-            unsafe_allow_html=True,
-        )
+    markup = f"""
+    <div class="insights-head">
+        <div class="section-title">Daily Slate Insights</div>
+        <div class="section-sub">Fastest way to understand what stands out before opening each matchup</div>
+    </div>
+    <div class="insights-grid">{cards}</div>
+    """
+    st.markdown("".join(line.strip() for line in markup.splitlines()), unsafe_allow_html=True)
+
+
+def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any]) -> str:
+    game = prediction["game"]
+    away, home = game["away"], game["home"]
+    live = game["live"]
+    status = live["status"]
+    game_dt = game.get("game_datetime_utc")
+    start_text = game_dt.astimezone(ET).strftime("%-I:%M %p ET") if game_dt else "Time TBD"
+
+    if status == "LIVE":
+        status_class = "live"
+        status_text = live.get("status_label") or "Live"
+        score_label = "Current score"
+        score_value = f"{away['short_name']} {int(live.get('away_runs') or 0)} · {home['short_name']} {int(live.get('home_runs') or 0)}"
+    elif status == "FINAL":
+        status_class = "final"
+        status_text = "Final"
+        score_label = "Final score"
+        score_value = f"{away['short_name']} {int(live.get('away_runs') or 0)} · {home['short_name']} {int(live.get('home_runs') or 0)}"
+    else:
+        status_class = "preview"
+        status_text = "Upcoming"
+        score_label = "Projected runs"
+        score_value = f"{away['short_name']} {prediction['projected_away_runs']:.1f} · {home['short_name']} {prediction['projected_home_runs']:.1f}"
+
+    away_pct = prediction["away_probability"] * 100.0
+    home_pct = prediction["home_probability"] * 100.0
+    fair_odds = (
+        prediction["fair_away_odds"]
+        if prediction["target_side"] == "away"
+        else prediction["fair_home_odds"]
+    )
+    context = weather_text(weather, game["venue"])
+    return "".join(
+        line.strip()
+        for line in f"""
+        <div class="compact-game" id="game-{int(game['game_pk'])}" style="{matchup_style(game)}">
+            <div class="compact-main">
+                <div class="compact-status-row">
+                    <span class="score-card-status {status_class}">{safe_text(status_text)}</span>
+                    <span class="compact-time">{safe_text(start_text)}</span>
+                </div>
+                <div class="compact-teams">
+                    <span class="compact-team"><img src="{safe_text(away['logo'])}" alt="">{safe_text(away['name'])}</span>
+                    <span class="compact-at">AT</span>
+                    <span class="compact-team"><img src="{safe_text(home['logo'])}" alt="">{safe_text(home['name'])}</span>
+                </div>
+                <div class="compact-starters">{safe_text(away.get('pitcher_name') or 'Starter TBD')} vs {safe_text(home.get('pitcher_name') or 'Starter TBD')} · {safe_text(context)}</div>
+                <div class="compact-prob-labels"><span>{safe_text(away['short_name'])} {away_pct:.1f}%</span><span>{safe_text(home['short_name'])} {home_pct:.1f}%</span></div>
+                <div class="compact-prob-track"><span class="compact-away" style="width:{away_pct:.1f}%"></span><span class="compact-home" style="width:{home_pct:.1f}%"></span></div>
+            </div>
+            <div class="compact-pick">
+                <div class="compact-kicker">MODEL LEAN</div>
+                <div class="compact-pick-name">{safe_text(prediction['target_name'])}</div>
+                <div class="compact-pick-prob">{prediction['target_probability']*100:.1f}% · Fair ML {fmt_odds(fair_odds)}</div>
+            </div>
+            <div class="compact-score">
+                <div class="compact-kicker">{safe_text(score_label)}</div>
+                <div class="compact-score-value">{safe_text(score_value)}</div>
+                <span class="quality-badge {confidence_class(prediction['quality_label'])}" title="Data completeness, not win probability">{prediction['quality_score']}/100 {safe_text(prediction['quality_label'])}</span>
+            </div>
+        </div>
+        """.splitlines()
+    )
 
 
 def render_advanced(
@@ -2480,9 +2803,10 @@ def render_advanced(
         prediction["fair_away_odds"] if target_side == "away" else prediction["fair_home_odds"]
     )
     with st.expander(
-        f"Open clean model breakdown · {game['away']['short_name']} at {game['home']['short_name']}",
-        expanded=False,
+        f"View full analysis · {game['away']['short_name']} at {game['home']['short_name']}",
+        expanded=game["live"]["status"] == "LIVE",
     ):
+        st.markdown(render_game(prediction, weather, lineup), unsafe_allow_html=True)
         st.markdown("### Matchup at a glance")
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Model lean", f"{prediction['target_probability']*100:.1f}%")
@@ -2657,15 +2981,66 @@ if st.session_state.get("calendar_day") != today_et.isoformat():
 next_update = next_scheduled_update(now_et)
 odds_api_key = secret_value("ODDS_API_KEY")
 
+with st.container(border=True):
+    nav_brand, nav_date, nav_sync = st.columns([1.55, 1.35, 1.0], vertical_alignment="center")
+    with nav_brand:
+        st.markdown(
+            """
+            <div class="top-nav-brand">
+                <div class="top-nav-mark">⚾</div>
+                <div><div class="top-nav-title">MLB Quant Terminal</div><div class="top-nav-sub">Daily matchup intelligence</div></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with nav_date:
+        previous_day, date_picker, next_day = st.columns([0.42, 2.4, 0.42], vertical_alignment="center")
+        current_slate_date = st.session_state.get("slate_date", today_et)
+        with previous_day:
+            st.button(
+                "‹",
+                key="previous_slate_day",
+                use_container_width=True,
+                disabled=current_slate_date <= today_et,
+                on_click=shift_slate_date,
+                args=(-1,),
+                help="Previous slate",
+            )
+        with date_picker:
+            selected_date = st.date_input(
+                "Slate date",
+                min_value=today_et,
+                max_value=today_et + timedelta(days=7),
+                key="slate_date",
+                label_visibility="collapsed",
+                help="Choose today's slate or an upcoming MLB date.",
+            )
+        with next_day:
+            st.button(
+                "›",
+                key="next_slate_day",
+                use_container_width=True,
+                disabled=current_slate_date >= today_et + timedelta(days=7),
+                on_click=shift_slate_date,
+                args=(1,),
+                help="Next slate",
+            )
+    with nav_sync:
+        sync_copy, sync_button = st.columns([1.45, 0.72], vertical_alignment="center")
+        with sync_copy:
+            st.markdown(
+                f"""
+                <div class="top-nav-sync"><span class="sync-dot"></span><div><strong>LIVE DATA SYNC</strong><small>{safe_text(now_et.strftime('%-I:%M:%S %p ET'))}</small></div></div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with sync_button:
+            if st.button("↻", key="top_refresh", use_container_width=True, help="Refresh all data"):
+                st.cache_data.clear()
+                st.rerun()
+
 with st.sidebar:
-    st.markdown("### ⚙️ Terminal Controls")
-    selected_date = st.date_input(
-        "Slate date",
-        min_value=today_et,
-        max_value=today_et + timedelta(days=7),
-        key="slate_date",
-        help="The live prediction screen is intentionally limited to current and upcoming slates.",
-    )
+    st.markdown("### ⚙️ Model Controls")
     simulations = st.select_slider(
         "Monte Carlo simulations",
         options=[10_000, 20_000, 30_000, 50_000, 75_000],
@@ -2709,8 +3084,9 @@ as_of = selected_date.isoformat()
 st.markdown(
     f"""
     <div class="hero-card">
-        <div class="hero-title">⚾ MLB Quantitative Matchup & Winner Engine</div>
-        <div class="hero-sub">Real-source slate predictions · transparent matchup components · live game-state simulations</div>
+        <div class="hero-eyebrow">DAILY MLB COMMAND CENTER</div>
+        <div class="hero-title">{safe_text(selected_date.strftime('%A, %B %-d'))} Slate</div>
+        <div class="hero-sub">Live scores · upcoming games · transparent probabilities · full matchup research</div>
         <div class="hero-meta">SLATE {safe_text(selected_date.strftime('%A · %B %-d, %Y'))} · {simulations:,} SIMULATIONS PER GAME · DAILY FORCED UPDATE {safe_text(scheduled_today.strftime('%-I:%M %p ET'))}</div>
     </div>
     """,
@@ -2793,23 +3169,78 @@ live_count = sum(p["game"]["live"]["status"] == "LIVE" for p in predictions)
 preview_count = sum(p["game"]["live"]["status"] == "PREVIEW" for p in predictions)
 final_count = sum(p["game"]["live"]["status"] == "FINAL" for p in predictions)
 render_game_center(predictions)
+render_slate_insights(predictions)
 st.markdown(
     "<div class='disclaimer'><strong>Probabilities, not promises.</strong> Every outcome can lose. "
     "The app reports uncertainty, leaves missing fields missing and does not label anything a lock or guarantee. "
     "Only risk money you can afford to lose.</div>",
     unsafe_allow_html=True,
 )
-st.markdown("<div class='section-title'>📊 Complete Slate Breakdown & Model Winner Leans</div>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Complete Matchup Research</div>", unsafe_allow_html=True)
 st.markdown(
     f"<div class='section-sub'>{len(predictions)} games · {live_count} live · {preview_count} upcoming · {final_count} final · refreshed {datetime.now(ET).strftime('%-I:%M:%S %p ET')}</div>",
     unsafe_allow_html=True,
 )
 
-for prediction in predictions:
+filter_column, sort_column, search_column = st.columns([1.35, 1.1, 1.1], vertical_alignment="bottom")
+with filter_column:
+    status_filter = st.radio(
+        "Game status",
+        ["All", "Live", "Upcoming", "Final"],
+        horizontal=True,
+        key="matchup_status_filter",
+    )
+with sort_column:
+    sort_mode = st.selectbox(
+        "Sort matchups",
+        ["Game time", "Strongest lean", "Highest data quality", "Closest matchup"],
+        key="matchup_sort_mode",
+    )
+with search_column:
+    team_search = st.text_input(
+        "Find a team",
+        placeholder="Team name…",
+        key="matchup_team_search",
+    ).strip().lower()
+
+status_map = {"Live": "LIVE", "Upcoming": "PREVIEW", "Final": "FINAL"}
+filtered_predictions = [
+    prediction
+    for prediction in predictions
+    if (
+        status_filter == "All"
+        or prediction["game"]["live"]["status"] == status_map[status_filter]
+    )
+    and (
+        not team_search
+        or team_search in prediction["game"]["away"]["name"].lower()
+        or team_search in prediction["game"]["home"]["name"].lower()
+    )
+]
+
+if sort_mode == "Strongest lean":
+    filtered_predictions.sort(key=lambda p: p["target_probability"], reverse=True)
+elif sort_mode == "Highest data quality":
+    filtered_predictions.sort(key=lambda p: p["quality_score"], reverse=True)
+elif sort_mode == "Closest matchup":
+    filtered_predictions.sort(key=lambda p: abs(p["target_probability"] - 0.5))
+else:
+    filtered_predictions.sort(
+        key=lambda p: (
+            priority[p["game"]["live"]["status"]],
+            p["game"].get("game_datetime_utc") or datetime.max.replace(tzinfo=ET),
+        )
+    )
+
+st.caption(f"Showing {len(filtered_predictions)} of {len(predictions)} matchups")
+if not filtered_predictions:
+    st.info("No matchups fit the selected filters.")
+
+for prediction in filtered_predictions:
     game_pk = prediction["game"]["game_pk"]
     weather = weather_by_game.get(game_pk, {})
     lineup = lineups_by_game.get(game_pk, {})
-    st.markdown(render_game(prediction, weather, lineup), unsafe_allow_html=True)
+    st.markdown(render_compact_game_row(prediction, weather), unsafe_allow_html=True)
     render_advanced(prediction, weather, lineup)
 
 st.markdown("---")
