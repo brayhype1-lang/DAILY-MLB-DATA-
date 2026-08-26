@@ -35,21 +35,22 @@ st.markdown(
         color: #F8FAFC;
     }
 
-    /* Streamlit Button Styling */
+    /* Streamlit Button Styling - Clean Matchup Links */
     .stButton button {
         width: 100%;
-        background: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
-        border: 1px solid rgba(56, 189, 248, 0.3) !important;
-        border-radius: 12px !important;
+        background: transparent !important;
+        border: none !important;
         color: #F8FAFC !important;
-        padding: 6px 10px !important;
-        font-weight: 600 !important;
-        transition: all 0.2s ease-in-out !important;
+        text-align: left !important;
+        padding: 0px !important;
+        font-weight: 700 !important;
+        font-size: 0.95rem !important;
+        box-shadow: none !important;
     }
     .stButton button:hover {
-        border-color: #38BDF8 !important;
-        transform: translateY(-2px) !important;
-        background: linear-gradient(145deg, rgba(56, 189, 248, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+        color: #38BDF8 !important;
+        background: transparent !important;
+        transform: none !important;
     }
 
     /* Badges */
@@ -390,7 +391,7 @@ else:
         if selected_g:
             lv = selected_g["live"]
             
-            if st.button("⬅️ Back to Scoreboard Grid"):
+            if st.button("⬅️ Back to Scoreboard Grid", key="back_to_grid_btn"):
                 st.session_state["selected_game_id"] = None
                 st.rerun()
 
@@ -441,13 +442,15 @@ else:
                 with st.container(border=True):
                     st.markdown(lv['badge_html'], unsafe_allow_html=True)
                     
-                    # Team rows with logos and scores
+                    # Clicking either team name triggers the deep dive view directly
                     sc_col1, sc_col2, sc_col3 = st.columns([1, 4, 1])
                     with sc_col1:
                         if g["away_logo"]:
                             st.image(g["away_logo"], width=24)
                     with sc_col2:
-                        st.markdown(f"**{g['away_short']}**")
+                        if st.button(f"{g['away_short']}", key=f"away_{g['game_id']}"):
+                            st.session_state["selected_game_id"] = g["game_id"]
+                            st.rerun()
                     with sc_col3:
                         st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['away_runs']}</span>", unsafe_allow_html=True)
 
@@ -456,7 +459,9 @@ else:
                         if g["home_logo"]:
                             st.image(g["home_logo"], width=24)
                     with sc_col5:
-                        st.markdown(f"**{g['home_short']}**")
+                        if st.button(f"{g['home_short']}", key=f"home_{g['game_id']}"):
+                            st.session_state["selected_game_id"] = g["game_id"]
+                            st.rerun()
                     with sc_col6:
                         st.markdown(f"<span style='font-family: JetBrains Mono; font-weight: 800;'>{lv['home_runs']}</span>", unsafe_allow_html=True)
 
@@ -482,11 +487,6 @@ else:
                         st.markdown(bases_html, unsafe_allow_html=True)
                     else:
                         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-
-                    # Entire card interaction button replacing the separate footer button
-                    if st.button("📊 Open Matchup", key=f"card_{g['game_id']}", use_container_width=True):
-                        st.session_state["selected_game_id"] = g["game_id"]
-                        st.rerun()
 
     st.markdown("---")
     st.markdown("### 📊 Full Slate Model Predictions & Matchups")
