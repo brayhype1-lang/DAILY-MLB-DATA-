@@ -200,9 +200,8 @@ st.markdown(
 # ------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### ⚙️ Engine Settings")
-    auto_refresh_on = st.checkbox("Auto-Refresh Live Feeds", value=True)
-    refresh_interval = st.slider("Refresh Interval (sec)", min_value=5, max_value=60, value=15, step=5)
-    st.caption("Automatically polls MLB API and syncs live scores.")
+    manual_refresh_btn = st.button("🔄 Refresh Data Now", use_container_width=True)
+    st.caption("Click the button above anytime to pull latest live scores without disrupting your workflow.")
 
 # ------------------------------------------------------------------
 # 3. PARK FACTORS & WEATHER ENGINE
@@ -450,7 +449,7 @@ def load_full_slate():
         return []
 
 # ------------------------------------------------------------------
-# 6. DASHBOARD RENDERING & REFRESH LOGIC
+# 6. DASHBOARD RENDERING & USER CONTROL FLOW
 # ------------------------------------------------------------------
 slate = load_full_slate()
 
@@ -492,7 +491,6 @@ else:
                 st.session_state["selected_game_id"] = None
                 st.rerun()
 
-            # Massive Clean Deep Dive HUD Header
             is_live = (lv["status"] == "LIVE")
             b1_lg = "active" if lv.get("has_1b") else ""
             b2_lg = "active" if lv.get("has_2b") else ""
@@ -581,10 +579,6 @@ else:
                     st.info("Play-by-play feed updates automatically when games are live.")
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            if auto_refresh_on:
-                time.sleep(refresh_interval)
-                st.rerun()
-
             st.stop()
 
     # --- MAIN SCOREBOARD GRID ---
@@ -597,7 +591,7 @@ else:
             </div>
             <div>
                 <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 6px 14px; border-radius: 12px; font-size: 0.78rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;">
-                    🟢 LIVE SYNC ACTIVE
+                    🟢 STABLE MODE ACTIVE
                 </span>
             </div>
         </div>
@@ -612,15 +606,13 @@ else:
         
         for idx, g in enumerate(row_games):
             lv = g["live"]
-            is_live = (lv["status"] == "LIVE")
 
             with cols[idx]:
-                # Wrap entire card in a Streamlit button so clicking anywhere enters deep dive
                 card_label = f"""
 {lv['inning_str']} - {lv['status']}
 {g['away_short']} ({lv['away_runs']}) @ {g['home_short']} ({lv['home_runs']})
 """
-                if st.button(card_label, key=dict(game_id=g["game_id"])["game_id"]):
+                if st.button(card_label, key=f"card_{g['game_id']}"):
                     st.session_state["selected_game_id"] = g["game_id"]
                     st.rerun()
 
@@ -700,7 +692,3 @@ else:
             st.markdown(f"<div style='font-size: 0.84rem; line-height: 1.5; color: #94A3B8;'>{an['narrative']}</div>", unsafe_allow_html=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
-
-    if auto_refresh_on:
-        time.sleep(refresh_interval)
-        st.rerun()
