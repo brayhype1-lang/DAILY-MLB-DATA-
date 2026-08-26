@@ -539,12 +539,31 @@ else:
 
     evaluated_slate.sort(key=game_sort_key)
 
-    # Build Score Cards HTML with Logos, Outs, and Baserunners
-    score_cards_html = ""
+    # Render Score Cards using Streamlit components instead of one giant unescaped string block
+    st.markdown(
+        """
+        <div class="hero-banner">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <h1 style="margin:0; font-size: 1.7rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
+                    <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.88rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • OUTS & BASERUNNER TRACKING • SMART SORTED</p>
+                </div>
+                <div style="text-align: right;">
+                    <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 6px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
+                        🟢 SYNC ACTIVE
+                    </span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Display score cards cleanly inside a grid container
+    score_cards_html_list = []
     for g in evaluated_slate:
         lv = g["live"]
         
-        # Baserunner CSS indicators
         b1_cls = "base active" if lv.get("has_1b") else "base"
         b2_cls = "base active" if lv.get("has_2b") else "base"
         b3_cls = "base active" if lv.get("has_3b") else "base"
@@ -553,8 +572,8 @@ else:
         if lv["status"] == "LIVE":
             bottom_info_html = f"""
             <div class="base-outs-row">
-                <div class="bases-dividend">
-                    <span style="color: #64748B; font-size: 0.65rem; margin-right: 4px;">BASES</span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="color: #64748B; font-size: 0.65rem;">BASES</span>
                     <span class="bases-diamond">
                         <span class="{b2_cls}" title="2nd Base"></span>
                         <span class="{b3_cls}" title="3rd Base"></span>
@@ -567,7 +586,7 @@ else:
             </div>
             """
 
-        score_cards_html += f"""
+        card_html = f"""
         <div class="score-card">
             <div class="score-card-header">
                 <span>{lv['badge_html']}</span>
@@ -591,30 +610,14 @@ else:
             {bottom_info_html}
         </div>
         """
+        score_cards_html_list.append(card_html)
 
     st.markdown(
-        f"""
-        <div class="hero-banner">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <div>
-                    <h1 style="margin:0; font-size: 1.7rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.02em;">⚾ MLB QUANTITATIVE INTELLIGENCE</h1>
-                    <p style="margin:4px 0 0 0; color: #38BDF8; font-size: 0.88rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">LIVE SCOREBOARD • OUTS & BASERUNNER TRACKING • SMART SORTED</p>
-                </div>
-                <div style="text-align: right;">
-                    <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38BDF8; padding: 6px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
-                        🟢 SYNC ACTIVE
-                    </span>
-                </div>
-            </div>
-            <div class="score-grid-wrap">
-                {score_cards_html}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+        f"""<div class="score-grid-wrap">{''.join(score_cards_html_list)}</div>""",
+        unsafe_allow_html=True
     )
 
-    st.markdown("### 📊 Complete Slate Breakdown & Model Winner Picks")
+    st.markdown("<br>### 📊 Complete Slate Breakdown & Model Winner Picks", unsafe_allow_html=True)
 
     for g in evaluated_slate:
         an = g["analysis"]
