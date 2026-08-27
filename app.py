@@ -2973,6 +2973,785 @@ h3 { font-size: 1.17rem !important; }
     )
 
 
+def stadium_stylesheet() -> str:
+    """Build 20 visual system: graphite stadium surfaces and signal-first hierarchy."""
+    return """
+<style>
+:root {
+    --bg-0: #070908;
+    --bg-1: #0b0f0d;
+    --surface-0: rgba(14, 19, 16, .94);
+    --surface-1: rgba(20, 27, 23, .94);
+    --surface-2: rgba(26, 34, 29, .92);
+    --line: rgba(218, 231, 223, .105);
+    --line-strong: rgba(218, 231, 223, .19);
+    --text: #f4f7f5;
+    --muted: #99a69f;
+    --muted-2: #6f7c75;
+    --good: #75e49b;
+    --good-rgb: 117, 228, 155;
+    --bad: #ff6878;
+    --bad-rgb: 255, 104, 120;
+    --warn: #f4c76a;
+    --ice: #8bd9ef;
+    --ice-rgb: 139, 217, 239;
+}
+
+html, body, .stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMainBlockContainer"],
+button, input, textarea, select {
+    font-family: "Aptos", "Segoe UI Variable Text", "Segoe UI", sans-serif !important;
+    font-optical-sizing: auto;
+}
+
+.stApp {
+    isolation: isolate;
+    color: var(--text);
+    background-color: var(--bg-0);
+    background-image:
+        radial-gradient(ellipse at 12% -8%, rgba(45, 121, 78, .20), transparent 38%),
+        radial-gradient(ellipse at 95% 8%, rgba(139, 217, 239, .075), transparent 30%),
+        radial-gradient(ellipse at 52% 115%, rgba(104, 75, 38, .11), transparent 42%),
+        linear-gradient(145deg, #060806 0%, #0c110e 47%, #080b09 100%);
+    background-attachment: fixed;
+    font-size: 16px;
+}
+
+.league-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    perspective: 900px;
+}
+
+.league-backdrop::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,.014) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.014) 1px, transparent 1px);
+    background-size: 58px 58px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.72), transparent 88%);
+}
+
+.league-backdrop::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -43vh;
+    width: 112vw;
+    height: 78vh;
+    transform: translateX(-50%) rotateX(66deg);
+    border: 1px solid rgba(var(--good-rgb), .07);
+    border-radius: 50%;
+    background: repeating-radial-gradient(
+        ellipse at center,
+        rgba(var(--good-rgb), .022) 0 1px,
+        transparent 1px 78px
+    );
+    box-shadow: inset 0 0 120px rgba(var(--good-rgb), .035);
+}
+
+.league-logo {
+    position: absolute;
+    left: var(--logo-left);
+    bottom: -110px;
+    width: var(--logo-size);
+    height: var(--logo-size);
+    object-fit: contain;
+    opacity: var(--logo-opacity);
+    filter: grayscale(.28) saturate(.72) drop-shadow(0 12px 18px rgba(0,0,0,.42));
+    animation: leagueLogoRise var(--logo-duration) linear var(--logo-delay) infinite;
+    transform: translate3d(0,0,0) rotate(var(--logo-tilt));
+    will-change: transform;
+}
+
+@keyframes leagueLogoRise {
+    0% { transform: translate3d(0, 0, 0) rotate(var(--logo-tilt)) scale(.86); }
+    28% { transform: translate3d(var(--logo-drift), -32vh, 30px) rotate(var(--logo-tilt)) scale(.93); }
+    57% { transform: translate3d(var(--logo-return), -66vh, 55px) rotate(var(--logo-tilt)) scale(1); }
+    82% { transform: translate3d(var(--logo-soft), -96vh, 28px) rotate(var(--logo-tilt)) scale(1.04); }
+    100% { transform: translate3d(var(--logo-exit), calc(-115vh - 150px), 0) rotate(var(--logo-tilt)) scale(1.08); }
+}
+
+[data-testid="stAppViewContainer"] {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+[data-testid="stHeader"] {
+    background: rgba(7, 9, 8, .78);
+    border-bottom: 1px solid rgba(255,255,255,.045);
+    backdrop-filter: blur(12px);
+}
+
+[data-testid="stMainBlockContainer"] {
+    position: relative;
+    z-index: 2;
+    max-width: 1420px;
+    padding-top: 1.05rem;
+    padding-bottom: 4.5rem;
+}
+
+h1, h2, h3, h4,
+[data-testid="stHeadingWithActionElements"] {
+    color: var(--text) !important;
+    font-family: "Segoe UI Variable Display", "Aptos Display", "Segoe UI", sans-serif !important;
+    font-weight: 690 !important;
+    letter-spacing: -.042em !important;
+}
+
+h2 { font-size: 1.55rem !important; }
+h3 { font-size: 1.18rem !important; }
+[data-testid="stCaptionContainer"] {
+    color: var(--muted) !important;
+    font-size: .83rem !important;
+    line-height: 1.45 !important;
+}
+
+hr {
+    margin: .84rem 0 1.05rem !important;
+    border-color: rgba(255,255,255,.065) !important;
+}
+
+.quant-brand {
+    display: flex;
+    align-items: center;
+    gap: .82rem;
+    min-height: 50px;
+}
+
+.quant-brand-mark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border: 1px solid rgba(var(--good-rgb), .42);
+    border-radius: 13px;
+    background:
+        linear-gradient(135deg, rgba(var(--good-rgb), .22), rgba(var(--ice-rgb), .08)),
+        #111814;
+    color: var(--good);
+    font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif;
+    font-size: 1.03rem;
+    font-weight: 760;
+    box-shadow: 0 13px 28px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.quant-brand-mark::before,
+.quant-brand-mark::after {
+    content: "";
+    position: absolute;
+    width: 62px;
+    height: 1px;
+    background: rgba(var(--good-rgb), .25);
+}
+.quant-brand-mark::before { transform: rotate(38deg); }
+.quant-brand-mark::after { transform: rotate(-38deg); }
+
+.quant-brand-mark { text-shadow: 0 0 16px rgba(var(--good-rgb), .34); }
+.quant-brand-mark > * { position: relative; z-index: 1; }
+
+.quant-brand-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .55rem;
+}
+
+.quant-brand-title {
+    color: var(--text);
+    font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif;
+    font-size: 1.2rem;
+    font-weight: 720;
+    letter-spacing: -.043em;
+    line-height: 1.1;
+}
+
+.quant-build {
+    display: inline-flex;
+    align-items: center;
+    padding: .22rem .48rem;
+    border: 1px solid rgba(var(--good-rgb), .25);
+    border-radius: 6px;
+    background: rgba(var(--good-rgb), .075);
+    color: #a7f1bd;
+    font-size: .56rem;
+    font-weight: 760;
+    letter-spacing: .09em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.quant-brand-subtitle {
+    margin-top: .22rem;
+    color: var(--muted-2);
+    font-size: .73rem;
+    line-height: 1.25;
+}
+
+.quant-sync {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .55rem;
+    min-height: 44px;
+}
+.quant-sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 4px rgba(var(--good-rgb),.08), 0 0 14px rgba(var(--good-rgb),.36);
+}
+.quant-sync-copy span {
+    display: block;
+    color: #b8edc7;
+    font-size: .68rem;
+    font-weight: 700;
+}
+.quant-sync-copy small {
+    display: block;
+    margin-top: .1rem;
+    color: var(--muted-2);
+    font-size: .65rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 1.2rem 0 .72rem;
+}
+.section-kicker {
+    margin-bottom: .24rem;
+    color: var(--good);
+    font-size: .61rem;
+    font-weight: 760;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+.section-title {
+    color: var(--text);
+    font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif;
+    font-size: 1.55rem;
+    font-weight: 690;
+    letter-spacing: -.045em;
+    line-height: 1.08;
+}
+.section-meta {
+    max-width: 56%;
+    color: var(--muted-2);
+    font-size: .76rem;
+    line-height: 1.4;
+    text-align: right;
+}
+
+[data-baseweb="tab-list"] {
+    gap: .25rem;
+    padding: .25rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(9,13,11,.78);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+[data-baseweb="tab"] {
+    min-height: 39px;
+    padding: 0 .9rem !important;
+    border-radius: 9px;
+    color: var(--muted) !important;
+    font-size: .79rem;
+    font-weight: 650 !important;
+    letter-spacing: -.01em;
+}
+[aria-selected="true"][data-baseweb="tab"] {
+    background: rgba(var(--good-rgb), .10);
+    color: #c9f5d5 !important;
+}
+
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: var(--line) !important;
+    border-radius: 16px !important;
+    background: linear-gradient(145deg, var(--surface-1), var(--surface-0)) !important;
+    box-shadow: 0 16px 38px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+/* Scoreboard */
+[class*="st-key-score_card_"] [data-testid="stVerticalBlockBorderWrapper"] {
+    position: relative;
+    overflow: hidden;
+    min-height: 232px;
+    padding: .92rem .94rem .78rem !important;
+    border: 1px solid rgba(255,255,255,.085) !important;
+    border-radius: 16px !important;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(var(--ice-rgb),.055), transparent 36%),
+        linear-gradient(148deg, rgba(22,29,25,.97), rgba(11,16,13,.97)) !important;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+[class*="st-key-score_card_"] [data-testid="stVerticalBlockBorderWrapper"]::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--away-primary), var(--home-primary));
+    opacity: .9;
+}
+[class*="st-key-score_card_"]:hover [data-testid="stVerticalBlockBorderWrapper"] {
+    transform: translateY(-3px);
+    border-color: rgba(var(--good-rgb), .22) !important;
+    box-shadow: 0 22px 46px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.score-tile { display: grid; gap: .48rem; }
+.score-tile-head,
+.score-tile-team,
+.score-tile-model { display: flex; align-items: center; }
+.score-tile-head { justify-content: space-between; gap: .5rem; margin-bottom: .05rem; }
+.score-tile-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .38rem;
+    color: var(--muted);
+    font-size: .63rem;
+    font-weight: 750;
+    letter-spacing: .075em;
+    text-transform: uppercase;
+}
+.score-tile-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #8b9690;
+}
+.score-tile-status.live { color: #ffb0b9; }
+.score-tile-status.live::before { background: var(--bad); box-shadow: 0 0 11px rgba(var(--bad-rgb),.62); animation: signalPulse 1.35s ease-in-out infinite; }
+.score-tile-status.final { color: #a9ecc0; }
+.score-tile-status.final::before { background: var(--good); }
+.score-tile-time { color: var(--muted-2); font-size: .65rem; text-align: right; }
+.score-tile-team {
+    display: grid;
+    grid-template-columns: 34px minmax(0,1fr) auto;
+    gap: .62rem;
+    min-height: 40px;
+}
+.score-tile-team + .score-tile-team { padding-top: .43rem; border-top: 1px solid rgba(255,255,255,.055); }
+.score-tile-team img { width: 33px; height: 33px; object-fit: contain; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+.score-tile-team-name {
+    overflow: hidden;
+    color: var(--text);
+    font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif;
+    font-size: .91rem;
+    font-weight: 680;
+    letter-spacing: -.028em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.score-tile-team-record { margin-top: .07rem; color: var(--muted-2); font-size: .63rem; }
+.score-tile-value { color: var(--text); font-size: 1.11rem; font-weight: 720; font-variant-numeric: tabular-nums; }
+.score-tile-model {
+    justify-content: space-between;
+    gap: .62rem;
+    margin-top: .08rem;
+    padding-top: .58rem;
+    border-top: 1px solid rgba(255,255,255,.065);
+}
+.score-model-copy { min-width: 0; }
+.score-model-copy span { display: block; color: var(--muted-2); font-size: .6rem; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.score-model-copy strong { display: block; overflow: hidden; margin-top: .12rem; color: #b8efc8; font-size: .75rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+
+.mini-gauge,
+.prediction-gauge,
+.quality-gauge {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: conic-gradient(var(--gauge-color) var(--gauge-angle), rgba(255,255,255,.07) 0);
+    box-shadow: 0 0 22px color-mix(in srgb, var(--gauge-color) 15%, transparent);
+}
+.mini-gauge { width: 45px; height: 45px; }
+.prediction-gauge { width: 104px; height: 104px; }
+.quality-gauge { width: 64px; height: 64px; }
+.mini-gauge::before,
+.prediction-gauge::before,
+.quality-gauge::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    background: #111713;
+    box-shadow: inset 0 0 15px rgba(0,0,0,.34);
+}
+.prediction-gauge::before { inset: 7px; }
+.gauge-copy { position: relative; z-index: 1; display: grid; place-items: center; line-height: 1; }
+.gauge-copy strong { color: var(--text); font-size: .85rem; font-weight: 760; font-variant-numeric: tabular-nums; }
+.prediction-gauge .gauge-copy strong { font-size: 1.45rem; letter-spacing: -.045em; }
+.quality-gauge .gauge-copy strong { font-size: 1.02rem; }
+.gauge-copy span { margin-top: .13rem; color: var(--muted-2); font-size: .48rem; font-weight: 720; letter-spacing: .08em; text-transform: uppercase; }
+
+[class*="st-key-score_card_"] [data-testid="stBaseButton-secondary"],
+[class*="st-key-score_card_"] [data-testid="stBaseButton-primary"] {
+    min-height: 35px;
+    margin-top: .5rem;
+    border: 1px solid rgba(255,255,255,.075) !important;
+    border-radius: 9px !important;
+    background: rgba(255,255,255,.035) !important;
+    color: #d9e2dd !important;
+    font-size: .71rem !important;
+    box-shadow: none !important;
+}
+[class*="st-key-score_card_"] [data-testid="stBaseButton-secondary"]:hover,
+[class*="st-key-score_card_"] [data-testid="stBaseButton-primary"]:hover {
+    border-color: rgba(var(--good-rgb),.28) !important;
+    background: rgba(var(--good-rgb),.08) !important;
+    color: #c7f4d3 !important;
+}
+
+/* Slate signals */
+[class*="st-key-insight_"] [data-testid="stVerticalBlockBorderWrapper"] {
+    min-height: 150px;
+    padding: .9rem .92rem !important;
+    border: 1px solid rgba(255,255,255,.075) !important;
+    border-radius: 15px !important;
+    background: linear-gradient(148deg, rgba(21,28,24,.96), rgba(11,16,13,.96)) !important;
+}
+.slate-signal { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: .7rem; min-height: 124px; }
+.slate-signal-copy { min-width: 0; }
+.slate-signal-label { color: var(--muted); font-size: .66rem; font-weight: 680; }
+.slate-signal-value { margin-top: .42rem; color: var(--text); font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif; font-size: 1rem; font-weight: 710; letter-spacing: -.035em; line-height: 1.2; }
+.slate-signal-detail { margin-top: .28rem; color: var(--muted-2); font-size: .67rem; line-height: 1.35; }
+.slate-signal-logos { display: flex; align-items: center; margin-top: .54rem; }
+.slate-signal-logos img { width: 24px; height: 24px; object-fit: contain; filter: drop-shadow(0 5px 7px rgba(0,0,0,.4)); }
+.slate-signal-logos img + img { margin-left: -.26rem; }
+
+/* Matchup board */
+[class*="st-key-matchup_row_"] [data-testid="stVerticalBlockBorderWrapper"] {
+    position: relative;
+    overflow: hidden;
+    padding: 0 !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    border-radius: 20px !important;
+    background:
+        radial-gradient(circle at 50% 115%, rgba(var(--good-rgb),.045), transparent 38%),
+        linear-gradient(148deg, rgba(22,29,25,.975), rgba(10,15,12,.975)) !important;
+    box-shadow: 0 19px 46px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.03) !important;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+[class*="st-key-matchup_row_"] [data-testid="stVerticalBlockBorderWrapper"]::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--away-primary), rgba(255,255,255,.16) 50%, var(--home-primary));
+}
+[class*="st-key-matchup_row_"]:hover [data-testid="stVerticalBlockBorderWrapper"] {
+    transform: translateY(-2px);
+    border-color: rgba(var(--good-rgb),.18) !important;
+    box-shadow: 0 25px 55px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.match-card { display: grid; }
+.match-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .76rem 1.05rem;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    background: rgba(255,255,255,.018);
+}
+.match-status-wrap { display: flex; align-items: center; gap: .65rem; min-width: 0; }
+.match-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .36rem;
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: .61rem;
+    font-weight: 760;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+.match-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #87938c; }
+.match-status.live { color: #ffb4bd; }
+.match-status.live::before { background: var(--bad); box-shadow: 0 0 12px rgba(var(--bad-rgb),.55); animation: signalPulse 1.35s ease-in-out infinite; }
+.match-status.final { color: #a9ebbf; }
+.match-status.final::before { background: var(--good); }
+.match-clock { color: #cbd4cf; font-size: .72rem; font-weight: 620; white-space: nowrap; }
+.match-context { overflow: hidden; color: var(--muted-2); font-size: .68rem; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.match-comparison {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) 168px minmax(0,1fr);
+    align-items: center;
+    gap: 1rem;
+    padding: 1.14rem 1.18rem 1rem;
+}
+.team-block { display: grid; grid-template-columns: 54px minmax(0,1fr); align-items: center; gap: .82rem; min-width: 0; }
+.team-block.home { grid-template-columns: minmax(0,1fr) 54px; text-align: right; }
+.team-block.home .team-logo-large { grid-column: 2; }
+.team-block.home .team-copy { grid-column: 1; grid-row: 1; }
+.team-logo-large { width: 54px; height: 54px; object-fit: contain; filter: drop-shadow(0 9px 11px rgba(0,0,0,.48)); }
+.team-name-large { overflow: hidden; color: var(--text); font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: -.038em; line-height: 1.14; text-overflow: ellipsis; white-space: nowrap; }
+.team-meta { overflow: hidden; margin-top: .2rem; color: var(--muted-2); font-size: .69rem; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.team-probability { margin-top: .4rem; color: #dbe4df; font-size: .8rem; font-weight: 720; font-variant-numeric: tabular-nums; }
+.team-block.is-pick .team-name-large,
+.team-block.is-pick .team-probability { color: #b8efc8; }
+.forecast-core { display: grid; place-items: center; text-align: center; }
+.forecast-label { margin-top: .48rem; color: var(--good); font-size: .57rem; font-weight: 780; letter-spacing: .12em; text-transform: uppercase; }
+.forecast-team { margin-top: .12rem; color: var(--text); font-size: .85rem; font-weight: 700; line-height: 1.18; }
+.forecast-line { margin-top: .12rem; color: var(--muted-2); font-size: .63rem; }
+.match-signals {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto;
+    gap: .65rem;
+    padding: .78rem 1.05rem .92rem;
+    border-top: 1px solid rgba(255,255,255,.055);
+    background: rgba(0,0,0,.09);
+}
+.signal-strip {
+    min-width: 0;
+    padding: .62rem .72rem;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: rgba(255,255,255,.02);
+}
+.signal-strip.good { border-color: rgba(var(--good-rgb),.20); background: rgba(var(--good-rgb),.045); }
+.signal-strip.bad { border-color: rgba(var(--bad-rgb),.19); background: rgba(var(--bad-rgb),.038); }
+.signal-strip-label { display: flex; align-items: center; gap: .35rem; color: var(--muted); font-size: .55rem; font-weight: 780; letter-spacing: .1em; text-transform: uppercase; }
+.signal-strip.good .signal-strip-label { color: #9ee9b5; }
+.signal-strip.bad .signal-strip-label { color: #ff9ca7; }
+.signal-strip-label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.signal-strip-copy { overflow: hidden; margin-top: .28rem; color: #cbd4cf; font-size: .68rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.quality-lockup { display: flex; align-items: center; gap: .55rem; min-width: 132px; }
+.quality-lockup-copy span { display: block; color: var(--muted-2); font-size: .56rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.quality-lockup-copy strong { display: block; margin-top: .15rem; color: #dce5e0; font-size: .71rem; font-weight: 690; white-space: nowrap; }
+
+[class*="st-key-matchup_row_"] > div > [data-testid="stVerticalBlockBorderWrapper"] > div > div {
+    gap: 0 !important;
+}
+[class*="st-key-matchup_row_"] [data-testid="stHorizontalBlock"] {
+    gap: .65rem !important;
+    padding: 0 1.02rem .88rem;
+}
+.match-action-note { color: var(--muted-2); font-size: .67rem; line-height: 1.35; }
+[class*="st-key-matchup_row_"] [data-testid="stBaseButton-secondary"],
+[class*="st-key-matchup_row_"] [data-testid="stBaseButton-primary"] {
+    min-height: 38px;
+    border: 1px solid rgba(var(--good-rgb),.18) !important;
+    border-radius: 10px !important;
+    background: rgba(var(--good-rgb),.07) !important;
+    color: #bdeecb !important;
+    font-size: .73rem !important;
+    font-weight: 680 !important;
+    box-shadow: none !important;
+}
+[class*="st-key-matchup_row_"] [data-testid="stBaseButton-secondary"]:hover,
+[class*="st-key-matchup_row_"] [data-testid="stBaseButton-primary"]:hover {
+    border-color: rgba(var(--good-rgb),.38) !important;
+    background: rgba(var(--good-rgb),.12) !important;
+}
+
+/* Attached analysis */
+[data-testid="stExpander"] {
+    margin-top: -.2rem;
+    border: 1px solid rgba(255,255,255,.085) !important;
+    border-top: 0 !important;
+    border-radius: 0 0 20px 20px !important;
+    background: linear-gradient(148deg, rgba(16,22,18,.98), rgba(8,12,10,.98)) !important;
+    box-shadow: 0 22px 50px rgba(0,0,0,.30);
+}
+.analysis-hero {
+    display: grid;
+    grid-template-columns: 70px minmax(0,1fr) 112px;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(var(--good-rgb),.16);
+    border-radius: 16px;
+    background:
+        radial-gradient(circle at 88% 16%, rgba(var(--good-rgb),.085), transparent 32%),
+        rgba(var(--good-rgb),.035);
+}
+.analysis-hero-logo { width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 10px 13px rgba(0,0,0,.46)); }
+.analysis-eyebrow { color: var(--good); font-size: .57rem; font-weight: 780; letter-spacing: .12em; text-transform: uppercase; }
+.analysis-title { margin-top: .22rem; color: var(--text); font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif; font-size: 1.28rem; font-weight: 710; letter-spacing: -.04em; }
+.analysis-summary { margin-top: .38rem; color: #bac6bf; font-size: .77rem; line-height: 1.55; }
+.analysis-hero-gauge { justify-self: end; }
+.analysis-snapshot { display: grid; grid-template-columns: repeat(4,1fr); gap: .6rem; margin: .68rem 0 .9rem; }
+.snapshot-card { padding: .72rem .78rem; border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.022); }
+.snapshot-card.good { border-color: rgba(var(--good-rgb),.18); background: rgba(var(--good-rgb),.035); }
+.snapshot-card.bad { border-color: rgba(var(--bad-rgb),.18); background: rgba(var(--bad-rgb),.03); }
+.snapshot-label { color: var(--muted-2); font-size: .56rem; font-weight: 760; letter-spacing: .085em; text-transform: uppercase; }
+.snapshot-value { margin-top: .28rem; color: var(--text); font-size: .91rem; font-weight: 710; line-height: 1.25; }
+.snapshot-detail { margin-top: .18rem; color: var(--muted-2); font-size: .63rem; line-height: 1.3; }
+.analysis-grid-two { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .68rem; margin-top: .7rem; }
+.analysis-copy-card { padding: .9rem .94rem; border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.022); }
+.analysis-copy-card.good { border-color: rgba(var(--good-rgb),.19); background: rgba(var(--good-rgb),.038); }
+.analysis-copy-card.bad { border-color: rgba(var(--bad-rgb),.19); background: rgba(var(--bad-rgb),.035); }
+.analysis-copy-card.warn { border-color: rgba(244,199,106,.18); background: rgba(244,199,106,.035); }
+.analysis-card-label { display: flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .59rem; font-weight: 780; letter-spacing: .1em; text-transform: uppercase; }
+.analysis-copy-card.good .analysis-card-label { color: #9ee9b5; }
+.analysis-copy-card.bad .analysis-card-label { color: #ff9ca7; }
+.analysis-copy-card.warn .analysis-card-label { color: #f0cf8c; }
+.analysis-card-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.analysis-card-title { margin-top: .44rem; color: var(--text); font-size: .92rem; font-weight: 690; letter-spacing: -.02em; }
+.analysis-card-copy { margin-top: .32rem; color: #b5c1ba; font-size: .75rem; line-height: 1.55; }
+.lineup-list { display: grid; gap: .24rem; margin: .55rem 0 0; padding: 0; list-style: none; color: #b5c1ba; font-size: .72rem; line-height: 1.4; }
+.pitch-compare { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .68rem; margin: .72rem 0; }
+.pitch-team-card { padding: .9rem; border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.02); }
+.pitch-team-card.better { border-color: rgba(var(--good-rgb),.20); background: rgba(var(--good-rgb),.035); }
+.pitch-team-card.worse { border-color: rgba(var(--bad-rgb),.18); background: rgba(var(--bad-rgb),.027); }
+.pitch-team-head { display: flex; align-items: center; gap: .58rem; }
+.pitch-team-head img { width: 34px; height: 34px; object-fit: contain; }
+.pitch-team-name { color: var(--text); font-size: .88rem; font-weight: 700; }
+.pitch-team-tag { margin-top: .1rem; color: var(--muted-2); font-size: .61rem; }
+.pitch-metrics { display: grid; grid-template-columns: repeat(2,1fr); gap: .42rem; margin-top: .7rem; }
+.pitch-metric { padding: .52rem .56rem; border-radius: 9px; background: rgba(0,0,0,.16); }
+.pitch-metric span { display: block; color: var(--muted-2); font-size: .56rem; }
+.pitch-metric strong { display: block; margin-top: .14rem; color: #e5ece8; font-size: .83rem; font-weight: 710; font-variant-numeric: tabular-nums; }
+.model-note {
+    margin: .95rem 0 1.18rem;
+    padding: .72rem .86rem;
+    border: 1px solid rgba(244,199,106,.14);
+    border-left: 3px solid rgba(244,199,106,.62);
+    border-radius: 10px;
+    background: rgba(244,199,106,.035);
+    color: #b9c3bd;
+    font-size: .73rem;
+    line-height: 1.5;
+}
+
+[data-testid="stMetric"] {
+    padding: .74rem .78rem;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: rgba(255,255,255,.022);
+}
+[data-testid="stMetricLabel"] { color: var(--muted) !important; font-size: .7rem !important; }
+[data-testid="stMetricValue"] { color: var(--text) !important; font-size: 1.12rem !important; font-weight: 710 !important; letter-spacing: -.035em; }
+[data-testid="stMetricDelta"] { font-size: .67rem !important; }
+
+[data-testid="stBaseButton-primary"],
+[data-testid="stBaseButton-secondary"],
+[data-testid="stPopoverButton"] button {
+    border-radius: 10px !important;
+    font-weight: 650 !important;
+    letter-spacing: -.01em;
+}
+[data-testid="stBaseButton-primary"] {
+    border-color: rgba(var(--good-rgb),.34) !important;
+    background: linear-gradient(135deg, #2d8e55, #207344) !important;
+    color: #f4fff7 !important;
+}
+[data-testid="stBaseButton-secondary"],
+[data-testid="stPopoverButton"] button {
+    border-color: rgba(255,255,255,.105) !important;
+    background: rgba(20,27,23,.88) !important;
+    color: #dce5e0 !important;
+}
+[data-testid="stBaseButton-secondary"]:hover,
+[data-testid="stPopoverButton"] button:hover {
+    border-color: rgba(var(--good-rgb),.30) !important;
+    background: rgba(var(--good-rgb),.075) !important;
+}
+
+[data-testid="stRadio"] label {
+    padding: .34rem .65rem !important;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: rgba(13,18,15,.74);
+}
+[data-baseweb="input"],
+[data-baseweb="select"] > div,
+[data-testid="stDateInput"] input {
+    border-color: var(--line) !important;
+    border-radius: 10px !important;
+    background: rgba(12,17,14,.94) !important;
+}
+[data-testid="stAlert"] {
+    border: 1px solid var(--line) !important;
+    border-radius: 11px !important;
+    background: rgba(15,21,17,.92) !important;
+}
+
+@keyframes signalPulse {
+    0%,100% { opacity: .72; transform: scale(.9); }
+    50% { opacity: 1; transform: scale(1.16); }
+}
+
+@media (max-width: 1100px) {
+    .match-comparison { grid-template-columns: minmax(0,1fr) 142px minmax(0,1fr); }
+    .prediction-gauge { width: 92px; height: 92px; }
+    .match-signals { grid-template-columns: 1fr 1fr; }
+    .quality-lockup { grid-column: 1 / -1; justify-self: end; }
+}
+
+@media (max-width: 850px) {
+    [data-testid="stMainBlockContainer"] { padding-top: .75rem; }
+    .quant-brand-subtitle, .quant-sync-copy small { display: none; }
+    .section-heading { align-items: flex-start; flex-direction: column; gap: .35rem; }
+    .section-meta { max-width: none; text-align: left; }
+    .match-comparison { grid-template-columns: 1fr; gap: .85rem; }
+    .team-block.home { grid-template-columns: 54px minmax(0,1fr); text-align: left; }
+    .team-block.home .team-logo-large { grid-column: 1; }
+    .team-block.home .team-copy { grid-column: 2; }
+    .forecast-core { grid-row: 1; }
+    .match-signals { grid-template-columns: 1fr; }
+    .quality-lockup { grid-column: auto; justify-self: start; }
+    .analysis-hero { grid-template-columns: 54px minmax(0,1fr); }
+    .analysis-hero-logo { width: 50px; height: 50px; }
+    .analysis-hero-gauge { grid-column: 1 / -1; justify-self: center; }
+    .analysis-snapshot { grid-template-columns: repeat(2,1fr); }
+}
+
+@media (max-width: 600px) {
+    .quant-brand-mark { width: 39px; height: 39px; border-radius: 11px; }
+    .quant-brand-title { font-size: 1.02rem; }
+    .quant-build { font-size: .5rem; }
+    .section-title { font-size: 1.34rem; }
+    .match-card-top { align-items: flex-start; flex-direction: column; gap: .35rem; }
+    .match-context { text-align: left; white-space: normal; }
+    .team-name-large { font-size: 1rem; }
+    .analysis-grid-two, .pitch-compare, .analysis-snapshot { grid-template-columns: 1fr; }
+}
+</style>
+"""
+
+
+def floating_logo_markup() -> str:
+    """Render all MLB club marks as a restrained, moving 3D backdrop."""
+    rng = random.Random(2020)
+    marks: list[str] = []
+    for team_id in TEAM_COLORS:
+        size = rng.uniform(34, 72)
+        left = rng.uniform(-2, 101)
+        duration = rng.uniform(42, 74)
+        delay = rng.uniform(0, duration)
+        opacity = rng.uniform(0.025, 0.070)
+        drift = rng.uniform(22, 82) * (-1 if rng.random() < 0.5 else 1)
+        tilt = rng.uniform(-13, 13)
+        marks.append(
+            "<img class='league-logo' alt='' aria-hidden='true' loading='lazy' "
+            f"src='https://www.mlbstatic.com/team-logos/{team_id}.svg' style='"
+            f"--logo-left:{left:.2f}vw;--logo-size:{size:.1f}px;"
+            f"--logo-duration:{duration:.1f}s;--logo-delay:-{delay:.1f}s;"
+            f"--logo-opacity:{opacity:.3f};--logo-drift:{drift:.1f}px;"
+            f"--logo-return:{-drift * .52:.1f}px;--logo-soft:{drift * .32:.1f}px;"
+            f"--logo-exit:{-drift * .18:.1f}px;--logo-tilt:{tilt:.1f}deg;'>"
+        )
+    return "<div class='league-backdrop' aria-hidden='true'>" + "".join(marks) + "</div>"
+
+
 def bubble_markup(count: int = 24) -> str:
     """Return deterministic decorative bubbles so reruns do not jump around."""
     rng = random.Random(937)
@@ -3399,8 +4178,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-st.markdown(native_stylesheet(), unsafe_allow_html=True)
-st.markdown(bubble_markup(30), unsafe_allow_html=True)
+st.markdown(stadium_stylesheet(), unsafe_allow_html=True)
+st.markdown(floating_logo_markup(), unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -3554,9 +4333,9 @@ def native_matchup_accents(predictions: list[dict[str, Any]]) -> str:
                 (
                     f".st-key-matchup_row_{game_pk} "
                     "[data-testid='stVerticalBlockBorderWrapper']::before"
-                    "{background:linear-gradient(180deg,"
-                    f"{target_secondary},{target_primary}) !important;"
-                    f"box-shadow:0 0 22px {target_primary}66 !important;}}"
+                    "{background:linear-gradient(90deg,"
+                    f"{away_primary},rgba(255,255,255,.16) 50%,{home_primary}) !important;"
+                    "box-shadow:none !important;}"
                 ),
                 (
                     f".st-key-verdict_{game_pk} "
@@ -3575,6 +4354,65 @@ def confidence_class(label: str) -> str:
     if normalized.startswith("moderate"):
         return "quality-moderate"
     return "quality-limited"
+
+
+def probability_tone(probability: float) -> str:
+    percentage = float(probability) * 100.0 if probability <= 1.0 else float(probability)
+    if percentage >= 58.0:
+        return "good"
+    if percentage >= 53.0:
+        return "warn"
+    return "ice"
+
+
+def quality_tone(score: int | float) -> str:
+    if float(score) >= 85.0:
+        return "good"
+    if float(score) >= 70.0:
+        return "warn"
+    return "bad"
+
+
+def tone_color(tone: str) -> str:
+    return {
+        "good": "#75e49b",
+        "bad": "#ff6878",
+        "warn": "#f4c76a",
+        "ice": "#8bd9ef",
+    }.get(tone, "#8bd9ef")
+
+
+def gauge_markup(
+    value: int | float,
+    label: str,
+    *,
+    kind: str = "prediction-gauge",
+    tone: str = "ice",
+    display: str | None = None,
+) -> str:
+    numeric = clamp(float(value), 0.0, 100.0)
+    shown = display if display is not None else f"{numeric:.1f}%"
+    return (
+        f"<div class='{safe_text(kind)}' style='--gauge-angle:{numeric * 3.6:.2f}deg;"
+        f"--gauge-color:{tone_color(tone)}' aria-label='{safe_text(label)} {safe_text(shown)}'>"
+        f"<div class='gauge-copy'><strong>{safe_text(shown)}</strong>"
+        f"<span>{safe_text(label)}</span></div></div>"
+    )
+
+
+def section_heading(kicker: str, title: str, meta: str) -> None:
+    st.markdown(
+        html_block(f"""
+        <div class="section-heading">
+            <div>
+                <div class="section-kicker">{safe_text(kicker)}</div>
+                <div class="section-title">{safe_text(title)}</div>
+            </div>
+            <div class="section-meta">{safe_text(meta)}</div>
+        </div>
+        """),
+        unsafe_allow_html=True,
+    )
 
 
 def metric_pill(label: str, value: str, missing: bool = False) -> str:
@@ -4074,6 +4912,13 @@ def render_native_score_card(prediction: dict[str, Any]) -> None:
     away_record = f"{int(away.get('wins') or 0)}-{int(away.get('losses') or 0)}"
     home_record = f"{int(home.get('wins') or 0)}-{int(home.get('losses') or 0)}"
     target = game[prediction["target_side"]]
+    score_gauge = gauge_markup(
+        prediction["target_probability"] * 100.0,
+        "%",
+        kind="mini-gauge",
+        tone=probability_tone(prediction["target_probability"]),
+        display=f"{prediction['target_probability']*100:.0f}",
+    )
     with st.container(border=True, key=f"score_card_{game['game_pk']}"):
         st.markdown(
             html_block(f"""
@@ -4099,8 +4944,11 @@ def render_native_score_card(prediction: dict[str, Any]) -> None:
                     <span class="score-tile-value">{safe_text(home_value)}</span>
                 </div>
                 <div class="score-tile-model">
-                    <span>Locked pregame pick</span>
-                    <strong>{safe_text(target['short_name'])} {prediction['target_probability']*100:.1f}%</strong>
+                    <div class="score-model-copy">
+                        <span>Locked pregame pick</span>
+                        <strong>{safe_text(target['short_name'])}</strong>
+                    </div>
+                    {score_gauge}
                 </div>
             </div>
             """),
@@ -4134,10 +4982,11 @@ def render_game_center(predictions: list[dict[str, Any]], selected_date: date) -
     final_games = [p for p in predictions if p["game"]["live"]["status"] == "FINAL"]
 
     st.markdown(native_matchup_accents(predictions), unsafe_allow_html=True)
-    st.subheader("Score Center")
-    st.caption(
-        f"{selected_date.strftime('%A, %B %-d')} · {len(predictions)} games · {len(live_games)} live · "
-        f"{len(upcoming_games)} upcoming · {len(final_games)} final"
+    section_heading(
+        "Live scoreboard",
+        "Score Center",
+        f"{selected_date.strftime('%A, %B %-d')} · {len(predictions)} games · "
+        f"{len(live_games)} live · {len(upcoming_games)} upcoming · {len(final_games)} final",
     )
 
     groups = [
@@ -4185,7 +5034,11 @@ def render_slate_insights(predictions: list[dict[str, Any]]) -> None:
     closest_game = closest["game"]
     total_game = highest_total["game"]
     quality_game = best_quality["game"]
-    st.subheader("Daily Slate Insights")
+    section_heading(
+        "Model dashboard",
+        "Today’s Signals",
+        "The slate’s strongest lean, tightest game, scoring ceiling and cleanest data profile.",
+    )
     insight_columns = st.columns(4)
     insight_data = [
         (
@@ -4193,44 +5046,68 @@ def render_slate_insights(predictions: list[dict[str, Any]]) -> None:
             "Strongest model lean",
             f"{strongest['target_name']} {strongest['target_probability']*100:.1f}%",
             f"{strongest_game['away']['short_name']} at {strongest_game['home']['short_name']}",
+            strongest["target_probability"] * 100.0,
+            f"{strongest['target_probability']*100:.0f}",
+            "%",
+            probability_tone(strongest["target_probability"]),
         ),
         (
             closest,
             "Closest matchup",
-            f"{closest_game['away']['short_name']} {closest['away_probability']*100:.1f}%",
-            f"{closest_game['home']['short_name']} {closest['home_probability']*100:.1f}%",
+            f"{closest['target_name']} {closest['target_probability']*100:.1f}%",
+            f"{closest_game['away']['short_name']} {closest['away_probability']*100:.1f}% · {closest_game['home']['short_name']} {closest['home_probability']*100:.1f}%",
+            closest["target_probability"] * 100.0,
+            f"{closest['target_probability']*100:.0f}",
+            "%",
+            "ice",
         ),
         (
             highest_total,
             "Highest projected total",
             f"{highest_total['projected_away_runs'] + highest_total['projected_home_runs']:.1f} runs",
             f"{total_game['away']['short_name']} at {total_game['home']['short_name']}",
+            clamp((highest_total["projected_away_runs"] + highest_total["projected_home_runs"]) / 12.0 * 100.0, 0.0, 100.0),
+            f"{highest_total['projected_away_runs'] + highest_total['projected_home_runs']:.1f}",
+            "runs",
+            "warn",
         ),
         (
             best_quality,
             "Best data quality",
             f"{best_quality['quality_score']}/100",
             f"{quality_game['away']['short_name']} at {quality_game['home']['short_name']}",
+            best_quality["quality_score"],
+            f"{best_quality['quality_score']}",
+            "grade",
+            quality_tone(best_quality["quality_score"]),
         ),
     ]
-    for index, (column, (prediction, label, value, detail)) in enumerate(
+    for index, (column, (prediction, label, value, detail, gauge_value, gauge_display, gauge_label, tone)) in enumerate(
         zip(insight_columns, insight_data)
     ):
         game = prediction["game"]
+        signal_gauge = gauge_markup(
+            gauge_value,
+            gauge_label,
+            kind="quality-gauge",
+            tone=tone,
+            display=gauge_display,
+        )
         with column:
             with st.container(border=True, key=f"insight_{index}"):
                 st.markdown(
                     html_block(f"""
-                    <div class="insight-card-body" style="{matchup_style(game)}">
-                        <div class="insight-card-head">
-                            <span class="insight-card-label">{safe_text(label)}</span>
-                            <span class="insight-card-logos">
+                    <div class="slate-signal" style="{matchup_style(game)}">
+                        <div class="slate-signal-copy">
+                            <div class="slate-signal-label">{safe_text(label)}</div>
+                            <div class="slate-signal-value">{safe_text(value)}</div>
+                            <div class="slate-signal-detail">{safe_text(detail)}</div>
+                            <div class="slate-signal-logos">
                                 <img src="{safe_text(game['away']['logo'])}" alt="" loading="lazy">
                                 <img src="{safe_text(game['home']['logo'])}" alt="" loading="lazy">
-                            </span>
+                            </div>
                         </div>
-                        <div class="insight-card-value">{safe_text(value)}</div>
-                        <div class="insight-card-detail">{safe_text(detail)}</div>
+                        {signal_gauge}
                     </div>
                     """),
                     unsafe_allow_html=True,
@@ -4283,51 +5160,83 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
     context = weather_text(weather, game["venue"])
     away_record = f"{int(away.get('wins') or 0)}-{int(away.get('losses') or 0)}"
     home_record = f"{int(home.get('wins') or 0)}-{int(home.get('losses') or 0)}"
+    pick_gauge = gauge_markup(
+        prediction["target_probability"] * 100.0,
+        "model",
+        kind="prediction-gauge",
+        tone=probability_tone(prediction["target_probability"]),
+    )
+    data_gauge = gauge_markup(
+        prediction["quality_score"],
+        "quality",
+        kind="quality-gauge",
+        tone=quality_tone(prediction["quality_score"]),
+        display=str(prediction["quality_score"]),
+    )
+    support_text = (prediction.get("support") or ["Balanced pregame inputs support this side."])[0]
+    risk_text = (prediction.get("risks") or ["Baseball variance keeps this matchup live."])[0]
+    away_pick_class = "is-pick" if prediction["target_side"] == "away" else ""
+    home_pick_class = "is-pick" if prediction["target_side"] == "home" else ""
+    if status in {"LIVE", "FINAL"}:
+        game_line = (
+            f"{away['short_name']} {away_score} – {home_score} {home['short_name']} · "
+            f"{status_detail}"
+        )
+    else:
+        game_line = (
+            f"{start_text} · projected {away['short_name']} {away_score} – "
+            f"{home_score} {home['short_name']}"
+        )
     with st.container(border=True, key=f"matchup_row_{game['game_pk']}"):
         st.markdown(
             html_block(f"""
-            <div class="premium-matchup" style="{matchup_style(game)}--away-probability:{away_pct:.2f}%;">
-                <div class="premium-teams">
-                    <div class="premium-team-row">
-                        <img class="premium-team-logo" src="{safe_text(away['logo'])}" alt="" loading="lazy">
-                        <div class="premium-team-copy">
-                            <div class="premium-team-name">{safe_text(away['name'])}</div>
-                            <div class="premium-team-meta">{safe_text(away_record)} · {safe_text(away.get('pitcher_name') or 'Starter TBD')}</div>
-                        </div>
-                        <div class="premium-team-probability">{away_pct:.1f}%</div>
+            <div class="match-card" style="{matchup_style(game)}">
+                <div class="match-card-top">
+                    <div class="match-status-wrap">
+                        <span class="match-status {status_class}">{safe_text(status_label)}</span>
+                        <span class="match-clock">{safe_text(game_line)}</span>
                     </div>
-                    <div class="premium-probability-track" aria-label="{safe_text(away['short_name'])} {away_pct:.1f} percent, {safe_text(home['short_name'])} {home_pct:.1f} percent">
-                        <span class="premium-probability-away"></span>
-                        <span class="premium-probability-home"></span>
-                    </div>
-                    <div class="premium-team-row">
-                        <img class="premium-team-logo" src="{safe_text(home['logo'])}" alt="" loading="lazy">
-                        <div class="premium-team-copy">
-                            <div class="premium-team-name">{safe_text(home['name'])}</div>
-                            <div class="premium-team-meta">{safe_text(home_record)} · {safe_text(home.get('pitcher_name') or 'Starter TBD')}</div>
+                    <div class="match-context">{safe_text(context)}</div>
+                </div>
+                <div class="match-comparison">
+                    <div class="team-block away {away_pick_class}">
+                        <img class="team-logo-large" src="{safe_text(away['logo'])}" alt="" loading="lazy">
+                        <div class="team-copy">
+                            <div class="team-name-large">{safe_text(away['name'])}</div>
+                            <div class="team-meta">{safe_text(away_record)} · {safe_text(away.get('pitcher_name') or 'Starter TBD')}</div>
+                            <div class="team-probability">{away_pct:.1f}% win probability</div>
                         </div>
-                        <div class="premium-team-probability">{home_pct:.1f}%</div>
+                    </div>
+                    <div class="forecast-core">
+                        {pick_gauge}
+                        <div class="forecast-label">Locked pick</div>
+                        <div class="forecast-team">{safe_text(target['short_name'])}</div>
+                        <div class="forecast-line">Fair line {safe_text(fmt_odds(fair_odds))}</div>
+                    </div>
+                    <div class="team-block home {home_pick_class}">
+                        <img class="team-logo-large" src="{safe_text(home['logo'])}" alt="" loading="lazy">
+                        <div class="team-copy">
+                            <div class="team-name-large">{safe_text(home['name'])}</div>
+                            <div class="team-meta">{safe_text(home_record)} · {safe_text(home.get('pitcher_name') or 'Starter TBD')}</div>
+                            <div class="team-probability">{home_pct:.1f}% win probability</div>
+                        </div>
                     </div>
                 </div>
-                <div class="premium-pick-panel">
-                    <div class="premium-eyebrow">Locked pregame pick</div>
-                    <div class="premium-pick-team">
-                        <img src="{safe_text(target['logo'])}" alt="" loading="lazy">
-                        <div>
-                            <div class="premium-pick-name">{safe_text(target['short_name'])} {prediction['target_probability']*100:.1f}%</div>
-                            <div class="premium-pick-line">Fair line {safe_text(fmt_odds(fair_odds))}</div>
+                <div class="match-signals">
+                    <div class="signal-strip good">
+                        <div class="signal-strip-label">Model support</div>
+                        <div class="signal-strip-copy">{safe_text(support_text)}</div>
+                    </div>
+                    <div class="signal-strip bad">
+                        <div class="signal-strip-label">Main risk</div>
+                        <div class="signal-strip-copy">{safe_text(risk_text)}</div>
+                    </div>
+                    <div class="quality-lockup">
+                        {data_gauge}
+                        <div class="quality-lockup-copy">
+                            <span>Data profile</span>
+                            <strong>{safe_text(prediction['quality_label'])}</strong>
                         </div>
-                    </div>
-                </div>
-                <div class="premium-game-panel">
-                    <div class="premium-status-row">
-                        <span class="premium-status {status_class}">{safe_text(status_label)}</span>
-                        <span class="premium-start-time">{safe_text(status_detail)}</span>
-                    </div>
-                    <div>
-                        <div class="premium-score-label">{safe_text(score_label)}</div>
-                        <div class="premium-score-row"><span>{safe_text(away['short_name'])}</span><strong>{safe_text(away_score)}</strong></div>
-                        <div class="premium-score-row"><span>{safe_text(home['short_name'])}</span><strong>{safe_text(home_score)}</strong></div>
                     </div>
                 </div>
             </div>
@@ -4339,13 +5248,7 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
         with footer_column:
             st.markdown(
                 html_block(f"""
-                <div class="premium-card-footer">
-                    <div class="premium-context">{safe_text(context)}</div>
-                    <div class="premium-quality">
-                        <span>Data quality</span>
-                        <strong>{prediction['quality_score']}/100 · {safe_text(prediction['quality_label'])}</strong>
-                    </div>
-                </div>
+                <div class="match-action-note">Pregame forecast is frozen at first pitch. Live scoring never changes the selected side.</div>
                 """),
                 unsafe_allow_html=True,
             )
@@ -4366,177 +5269,196 @@ def render_advanced(
     game = prediction["game"]
     explanation = build_model_explanation(prediction, weather, lineup)
     target_side = prediction["target_side"]
+    opponent_side = "home" if target_side == "away" else "away"
+    target = game[target_side]
+    opponent = game[opponent_side]
     target_fair_odds = (
         prediction["fair_away_odds"] if target_side == "away" else prediction["fair_home_odds"]
     )
+    target_probability = prediction["target_probability"] * 100.0
+    hero_gauge = gauge_markup(
+        target_probability,
+        "model",
+        kind="prediction-gauge",
+        tone=probability_tone(prediction["target_probability"]),
+    )
+    quality_class = quality_tone(prediction["quality_score"])
+    if quality_class == "ice":
+        quality_class = "warn"
+    support_cards = "".join(
+        f"<div class='analysis-copy-card good'><div class='analysis-card-label'>Support {index + 1}</div>"
+        f"<div class='analysis-card-copy'>{safe_text(item)}</div></div>"
+        for index, item in enumerate(prediction.get("support") or [])
+    )
+    risk_cards = "".join(
+        f"<div class='analysis-copy-card bad'><div class='analysis-card-label'>Risk {index + 1}</div>"
+        f"<div class='analysis-card-copy'>{safe_text(item)}</div></div>"
+        for index, item in enumerate(prediction.get("risks") or [])
+    )
+    change_cards = "".join(
+        f"<div class='analysis-copy-card warn'><div class='analysis-card-label'>Watch item {index + 1}</div>"
+        f"<div class='analysis-card-copy'>{safe_text(item)}</div></div>"
+        for index, item in enumerate(prediction.get("invalidation") or [])
+    )
+
+    away_pitch_score = (
+        float(prediction["away_starter"]["quality_ra9"]) * .62
+        + float(prediction["away_bullpen"]["quality_ra9"]) * .38
+    )
+    home_pitch_score = (
+        float(prediction["home_starter"]["quality_ra9"]) * .62
+        + float(prediction["home_bullpen"]["quality_ra9"]) * .38
+    )
+    away_pitch_class = "better" if away_pitch_score <= home_pitch_score else "worse"
+    home_pitch_class = "better" if home_pitch_score < away_pitch_score else "worse"
+
     with st.expander(
         f"Full analysis · {game['away']['short_name']} at {game['home']['short_name']}",
         expanded=True,
     ):
-        st.info(
-            "Pregame prediction locked — live and final scores are shown for context "
-            "but never used to change this pick."
+        st.markdown(
+            html_block(f"""
+            <div class="analysis-hero" style="{matchup_style(game)}">
+                <img class="analysis-hero-logo" src="{safe_text(target['logo'])}" alt="" loading="lazy">
+                <div>
+                    <div class="analysis-eyebrow">Locked pregame verdict</div>
+                    <div class="analysis-title">{safe_text(target['name'])} over {safe_text(opponent['name'])}</div>
+                    <div class="analysis-summary">{safe_text(explanation['summary'])}</div>
+                </div>
+                <div class="analysis-hero-gauge">{hero_gauge}</div>
+            </div>
+            <div class="analysis-snapshot">
+                <div class="snapshot-card good">
+                    <div class="snapshot-label">Model selection</div>
+                    <div class="snapshot-value">{safe_text(target['short_name'])} {target_probability:.1f}%</div>
+                    <div class="snapshot-detail">Frozen before the first pitch</div>
+                </div>
+                <div class="snapshot-card">
+                    <div class="snapshot-label">Projected score</div>
+                    <div class="snapshot-value">{safe_text(game['away']['short_name'])} {prediction['projected_away_runs']:.1f} · {safe_text(game['home']['short_name'])} {prediction['projected_home_runs']:.1f}</div>
+                    <div class="snapshot-detail">Monte Carlo run expectation</div>
+                </div>
+                <div class="snapshot-card">
+                    <div class="snapshot-label">Fair moneyline</div>
+                    <div class="snapshot-value">{safe_text(fmt_odds(target_fair_odds))}</div>
+                    <div class="snapshot-detail">Model price before sportsbook margin</div>
+                </div>
+                <div class="snapshot-card {quality_class}">
+                    <div class="snapshot-label">Data quality</div>
+                    <div class="snapshot-value">{prediction['quality_score']}/100</div>
+                    <div class="snapshot-detail">{safe_text(prediction['quality_label'])} · disagreement {prediction['model_agreement_gap']*100:.1f} pts</div>
+                </div>
+            </div>
+            """),
+            unsafe_allow_html=True,
         )
-        st.markdown("### Matchup at a glance")
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric(
-            "Locked pregame pick",
-            game[target_side]["short_name"],
-            f"{prediction['target_probability']*100:.1f}% model probability",
-            delta_color="off",
-        )
-        c2.metric(
-            "Projected score",
-            f"{game['away']['short_name']} {prediction['projected_away_runs']:.1f} · "
-            f"{game['home']['short_name']} {prediction['projected_home_runs']:.1f}",
-        )
-        c3.metric("Fair moneyline", fmt_odds(target_fair_odds))
-        c4.metric(
-            "Data quality",
-            f"{prediction['quality_score']}/100",
-            prediction["quality_label"],
-        )
-        st.caption(
-            f"Model disagreement {prediction['model_agreement_gap']*100:.1f} points · "
-            f"park {prediction['park_factor']:.3f} · weather {prediction['weather_factor']:.3f}"
-        )
-
-        with st.container(border=True, key=f"verdict_{game['game_pk']}"):
-            verdict_logo, verdict_copy = st.columns([0.12, 1.88], vertical_alignment="center")
-            with verdict_logo:
-                st.image(game[target_side]["logo"], width=48)
-            with verdict_copy:
-                st.markdown(f"#### Verdict · {prediction['target_name']}")
-                st.write(explanation["summary"])
 
         why_tab, pitching_tab, context_tab, market_tab = st.tabs(
             ["Why the pick", "Pitching", "Game context", "Market & risks"]
         )
 
         with why_tab:
-            why_left, why_right = st.columns(2)
-            with why_left:
-                with st.container(border=True):
-                    st.markdown("#### Probability build")
-                    st.write(explanation["simulation"])
-            with why_right:
-                with st.container(border=True):
-                    st.markdown("#### Offensive matchup")
-                    st.write(explanation["offense"])
-
-            st.markdown("#### Strongest reasons behind the lean")
-            support_columns = st.columns(min(3, max(1, len(prediction["support"]))))
-            for index, item in enumerate(prediction["support"]):
-                with support_columns[index % len(support_columns)]:
-                    with st.container(border=True):
-                        st.markdown(f"**Reason {index + 1}**")
-                        st.write(item)
+            st.markdown(
+                html_block(f"""
+                <div class="analysis-grid-two">
+                    <div class="analysis-copy-card">
+                        <div class="analysis-card-label">Probability build</div>
+                        <div class="analysis-card-title">How the forecast was formed</div>
+                        <div class="analysis-card-copy">{safe_text(explanation['simulation'])}</div>
+                    </div>
+                    <div class="analysis-copy-card">
+                        <div class="analysis-card-label">Offensive matchup</div>
+                        <div class="analysis-card-title">Run-production comparison</div>
+                        <div class="analysis-card-copy">{safe_text(explanation['offense'])}</div>
+                    </div>
+                </div>
+                <div class="analysis-grid-two">{support_cards}</div>
+                """),
+                unsafe_allow_html=True,
+            )
 
         with pitching_tab:
-            starter_column, bullpen_column = st.columns(2)
-            with starter_column:
-                with st.container(border=True):
-                    st.markdown("#### Starting-pitcher comparison")
-                    st.write(explanation["starters"])
-            with bullpen_column:
-                with st.container(border=True):
-                    st.markdown("#### Bullpen comparison")
-                    st.write(explanation["bullpen"])
-
-            starter_metrics = st.columns(4)
-            starter_metrics[0].metric(
-                f"{game['away']['short_name']} starter grade",
-                f"{prediction['away_starter']['quality_ra9']:.2f}",
-                help="Blended ERA/FIP/xERA/WHIP estimate; lower is better.",
-            )
-            starter_metrics[1].metric(
-                f"{game['home']['short_name']} starter grade",
-                f"{prediction['home_starter']['quality_ra9']:.2f}",
-                help="Blended ERA/FIP/xERA/WHIP estimate; lower is better.",
-            )
-            starter_metrics[2].metric(
-                f"{game['away']['short_name']} bullpen",
-                f"{prediction['away_bullpen']['quality_ra9']:.2f}",
-                help="Blended relief-pitching RA9; lower is better.",
-            )
-            starter_metrics[3].metric(
-                f"{game['home']['short_name']} bullpen",
-                f"{prediction['home_bullpen']['quality_ra9']:.2f}",
-                help="Blended relief-pitching RA9; lower is better.",
+            st.markdown(
+                html_block(f"""
+                <div class="pitch-compare">
+                    <div class="pitch-team-card {away_pitch_class}">
+                        <div class="pitch-team-head">
+                            <img src="{safe_text(game['away']['logo'])}" alt="" loading="lazy">
+                            <div><div class="pitch-team-name">{safe_text(game['away']['name'])}</div><div class="pitch-team-tag">Lower run-prevention grade is better</div></div>
+                        </div>
+                        <div class="pitch-metrics">
+                            <div class="pitch-metric"><span>Starter grade</span><strong>{prediction['away_starter']['quality_ra9']:.2f}</strong></div>
+                            <div class="pitch-metric"><span>Bullpen grade</span><strong>{prediction['away_bullpen']['quality_ra9']:.2f}</strong></div>
+                        </div>
+                    </div>
+                    <div class="pitch-team-card {home_pitch_class}">
+                        <div class="pitch-team-head">
+                            <img src="{safe_text(game['home']['logo'])}" alt="" loading="lazy">
+                            <div><div class="pitch-team-name">{safe_text(game['home']['name'])}</div><div class="pitch-team-tag">Lower run-prevention grade is better</div></div>
+                        </div>
+                        <div class="pitch-metrics">
+                            <div class="pitch-metric"><span>Starter grade</span><strong>{prediction['home_starter']['quality_ra9']:.2f}</strong></div>
+                            <div class="pitch-metric"><span>Bullpen grade</span><strong>{prediction['home_bullpen']['quality_ra9']:.2f}</strong></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="analysis-grid-two">
+                    <div class="analysis-copy-card"><div class="analysis-card-label">Starting pitchers</div><div class="analysis-card-copy">{safe_text(explanation['starters'])}</div></div>
+                    <div class="analysis-copy-card"><div class="analysis-card-label">Bullpens</div><div class="analysis-card-copy">{safe_text(explanation['bullpen'])}</div></div>
+                </div>
+                """),
+                unsafe_allow_html=True,
             )
 
         with context_tab:
-            context_left, context_right = st.columns(2)
-            with context_left:
-                with st.container(border=True):
-                    st.markdown("#### Park and weather")
-                    st.write(explanation["environment"])
-            with context_right:
-                with st.container(border=True):
-                    st.markdown("#### Confidence and missing data")
-                    st.write(explanation["confidence"])
-
             away_lineup = lineup.get("away") or {}
             home_lineup = lineup.get("home") or {}
-            lineup_status = (
-                f"{game['away']['short_name']}: "
-                f"{'confirmed' if away_lineup.get('confirmed') else 'not confirmed'} · "
-                f"{game['home']['short_name']}: "
-                f"{'confirmed' if home_lineup.get('confirmed') else 'not confirmed'}"
+            away_names = away_lineup.get("names") or []
+            home_names = home_lineup.get("names") or []
+            away_order = "".join(
+                f"<li>{index + 1}. {safe_text(name)}</li>" for index, name in enumerate(away_names)
+            ) or "<li>Batting order not confirmed</li>"
+            home_order = "".join(
+                f"<li>{index + 1}. {safe_text(name)}</li>" for index, name in enumerate(home_names)
+            ) or "<li>Batting order not confirmed</li>"
+            st.markdown(
+                html_block(f"""
+                <div class="analysis-grid-two">
+                    <div class="analysis-copy-card"><div class="analysis-card-label">Park and weather</div><div class="analysis-card-copy">{safe_text(explanation['environment'])}</div></div>
+                    <div class="analysis-copy-card {quality_class}"><div class="analysis-card-label">Confidence and missing data</div><div class="analysis-card-copy">{safe_text(explanation['confidence'])}</div></div>
+                </div>
+                <div class="analysis-grid-two">
+                    <div class="analysis-copy-card">
+                        <div class="analysis-card-label">{safe_text(game['away']['short_name'])} lineup · {'confirmed' if away_lineup.get('confirmed') else 'unconfirmed'}</div>
+                        <ol class="lineup-list">{away_order}</ol>
+                    </div>
+                    <div class="analysis-copy-card">
+                        <div class="analysis-card-label">{safe_text(game['home']['short_name'])} lineup · {'confirmed' if home_lineup.get('confirmed') else 'unconfirmed'}</div>
+                        <ol class="lineup-list">{home_order}</ol>
+                    </div>
+                </div>
+                """),
+                unsafe_allow_html=True,
             )
-            st.markdown(f"#### Lineups · {lineup_status}")
-            if away_lineup.get("names") or home_lineup.get("names"):
-                lc1, lc2 = st.columns(2)
-                with lc1:
-                    with st.container(border=True):
-                        st.markdown(f"**{game['away']['name']} batting order**")
-                        st.markdown(
-                            "\n".join(
-                                f"{i+1}. {name}"
-                                for i, name in enumerate(away_lineup.get("names", []))
-                            )
-                            or "Not available"
-                        )
-                with lc2:
-                    with st.container(border=True):
-                        st.markdown(f"**{game['home']['name']} batting order**")
-                        st.markdown(
-                            "\n".join(
-                                f"{i+1}. {name}"
-                                for i, name in enumerate(home_lineup.get("names", []))
-                            )
-                            or "Not available"
-                        )
 
         with market_tab:
             distribution = prediction["distribution"]
-            with st.container(border=True):
-                st.markdown("#### Price interpretation")
-                st.write(explanation["market"])
-
-            market_columns = st.columns(4)
-            market_columns[0].metric("Fair away ML", fmt_odds(prediction["fair_away_odds"]))
-            market_columns[1].metric("Fair home ML", fmt_odds(prediction["fair_home_odds"]))
-            market_columns[2].metric(
-                f"Over {distribution['total_line']}",
-                f"{distribution['over_probability']*100:.1f}%",
+            st.markdown(
+                html_block(f"""
+                <div class="analysis-copy-card warn">
+                    <div class="analysis-card-label">Price interpretation</div>
+                    <div class="analysis-card-copy">{safe_text(explanation['market'])}</div>
+                </div>
+                <div class="analysis-snapshot">
+                    <div class="snapshot-card"><div class="snapshot-label">Fair away ML</div><div class="snapshot-value">{safe_text(fmt_odds(prediction['fair_away_odds']))}</div></div>
+                    <div class="snapshot-card"><div class="snapshot-label">Fair home ML</div><div class="snapshot-value">{safe_text(fmt_odds(prediction['fair_home_odds']))}</div></div>
+                    <div class="snapshot-card"><div class="snapshot-label">Over {distribution['total_line']}</div><div class="snapshot-value">{distribution['over_probability']*100:.1f}%</div></div>
+                    <div class="snapshot-card"><div class="snapshot-label">Under {distribution['total_line']}</div><div class="snapshot-value">{distribution['under_probability']*100:.1f}%</div></div>
+                </div>
+                <div class="analysis-grid-two">{risk_cards}{change_cards}</div>
+                """),
+                unsafe_allow_html=True,
             )
-            market_columns[3].metric(
-                f"Under {distribution['total_line']}",
-                f"{distribution['under_probability']*100:.1f}%",
-            )
-
-            risk_left, risk_right = st.columns(2)
-            with risk_left:
-                with st.container(border=True):
-                    st.markdown("#### Bear case")
-                    for item in prediction["risks"]:
-                        st.markdown(f"- {item}")
-            with risk_right:
-                with st.container(border=True):
-                    st.markdown("#### What would change the pick")
-                    for item in prediction["invalidation"]:
-                        st.markdown(f"- {item}")
 
 
 now_et = datetime.now(ET)
@@ -4571,7 +5493,7 @@ with brand_column:
             <div>
                 <div class="quant-brand-heading">
                     <div class="quant-brand-title">MLB Quant Terminal</div>
-                    <span class="quant-build">Build 19</span>
+                    <span class="quant-build">Build 20</span>
                 </div>
                 <div class="quant-brand-subtitle">Live scores · locked pregame forecasts · matchup intelligence</div>
             </div>
@@ -4750,10 +5672,11 @@ st.markdown(
     """),
     unsafe_allow_html=True,
 )
-st.subheader("Complete Matchup Research")
-st.caption(
+section_heading(
+    "Game-by-game forecast",
+    "Matchup Board",
     f"{len(predictions)} games · {live_count} live · {preview_count} upcoming · "
-    f"{final_count} final · refreshed {datetime.now(ET).strftime('%-I:%M:%S %p ET')}"
+    f"{final_count} final · refreshed {datetime.now(ET).strftime('%-I:%M:%S %p ET')}",
 )
 
 filter_column, sort_column, search_column = st.columns([1.35, 1.1, 1.1], vertical_alignment="bottom")
