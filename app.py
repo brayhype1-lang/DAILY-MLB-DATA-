@@ -2974,7 +2974,7 @@ h3 { font-size: 1.17rem !important; }
 
 
 def stadium_stylesheet() -> str:
-    """Build 20 visual system: graphite stadium surfaces and signal-first hierarchy."""
+    """Build 21 visual system: graphite stadium surfaces and streamlined analysis."""
     return """
 <style>
 :root {
@@ -3563,42 +3563,140 @@ hr {
 
 /* Attached analysis */
 [data-testid="stExpander"] {
-    margin-top: -.2rem;
+    margin-top: .65rem;
     border: 1px solid rgba(255,255,255,.085) !important;
-    border-top: 0 !important;
-    border-radius: 0 0 20px 20px !important;
+    border-radius: 14px !important;
     background: linear-gradient(148deg, rgba(16,22,18,.98), rgba(8,12,10,.98)) !important;
-    box-shadow: 0 22px 50px rgba(0,0,0,.30);
+    box-shadow: 0 14px 34px rgba(0,0,0,.22);
+}
+[class*="st-key-analysis_panel_"] {
+    position: relative;
+    z-index: 1;
+    margin: -.35rem 0 1rem;
+    padding: .9rem 1.05rem 1.15rem;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.085);
+    border-top-color: rgba(var(--good-rgb),.16);
+    border-radius: 0 0 20px 20px;
+    background:
+        radial-gradient(circle at 92% -6%, rgba(var(--good-rgb),.055), transparent 29%),
+        linear-gradient(150deg, rgba(16,22,18,.985), rgba(8,12,10,.985));
+    box-shadow: 0 23px 52px rgba(0,0,0,.31), inset 0 1px 0 rgba(255,255,255,.022);
+}
+[class*="st-key-analysis_panel_"]::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--good-rgb),.45), transparent);
+}
+.analysis-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 0 .05rem .72rem;
+}
+.analysis-panel-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .42rem;
+    color: #a8b5ae;
+    font-size: .6rem;
+    font-weight: 760;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+.analysis-panel-label::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 10px rgba(var(--good-rgb),.34);
+}
+.analysis-panel-matchup { color: var(--muted-2); font-size: .68rem; }
+.analysis-lock-note {
+    display: inline-flex;
+    align-items: center;
+    gap: .34rem;
+    color: #95cda6;
+    font-size: .62rem;
+    font-weight: 650;
 }
 .analysis-hero {
     display: grid;
-    grid-template-columns: 70px minmax(0,1fr) 112px;
+    grid-template-columns: 128px minmax(0,1fr) 96px;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border: 1px solid rgba(var(--good-rgb),.16);
-    border-radius: 16px;
+    gap: 1.05rem;
+    padding: .9rem .95rem;
+    border: 0;
+    border-radius: 14px;
     background:
-        radial-gradient(circle at 88% 16%, rgba(var(--good-rgb),.085), transparent 32%),
-        rgba(var(--good-rgb),.035);
+        linear-gradient(100deg, rgba(var(--good-rgb),.055), rgba(255,255,255,.018) 48%, rgba(var(--ice-rgb),.025));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
 }
-.analysis-hero-logo { width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 10px 13px rgba(0,0,0,.46)); }
+.analysis-matchup-logos { display: grid; grid-template-columns: 48px 20px 48px; align-items: center; justify-content: center; }
+.analysis-matchup-logos img { width: 48px; height: 48px; object-fit: contain; filter: drop-shadow(0 9px 11px rgba(0,0,0,.46)); }
+.analysis-vs { color: var(--muted-2); font-size: .56rem; font-weight: 760; text-align: center; }
 .analysis-eyebrow { color: var(--good); font-size: .57rem; font-weight: 780; letter-spacing: .12em; text-transform: uppercase; }
-.analysis-title { margin-top: .22rem; color: var(--text); font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif; font-size: 1.28rem; font-weight: 710; letter-spacing: -.04em; }
-.analysis-summary { margin-top: .38rem; color: #bac6bf; font-size: .77rem; line-height: 1.55; }
+.analysis-title { margin-top: .2rem; color: var(--text); font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif; font-size: 1.18rem; font-weight: 710; letter-spacing: -.04em; }
+.analysis-summary { max-width: 920px; margin-top: .34rem; color: #bac6bf; font-size: .75rem; line-height: 1.52; }
 .analysis-hero-gauge { justify-self: end; }
-.analysis-snapshot { display: grid; grid-template-columns: repeat(4,1fr); gap: .6rem; margin: .68rem 0 .9rem; }
-.snapshot-card { padding: .72rem .78rem; border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.022); }
-.snapshot-card.good { border-color: rgba(var(--good-rgb),.18); background: rgba(var(--good-rgb),.035); }
-.snapshot-card.bad { border-color: rgba(var(--bad-rgb),.18); background: rgba(var(--bad-rgb),.03); }
+.analysis-hero .prediction-gauge { width: 82px; height: 82px; }
+.analysis-hero .prediction-gauge::before { inset: 6px; }
+.analysis-hero .prediction-gauge .gauge-copy strong { font-size: 1.08rem; }
+.analysis-stat-rail {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    margin: .62rem 0 .88rem;
+    overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,.07);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    background: rgba(0,0,0,.10);
+}
+.analysis-stat { min-width: 0; padding: .64rem .78rem; }
+.analysis-stat + .analysis-stat { border-left: 1px solid rgba(255,255,255,.065); }
+.analysis-stat.good { background: rgba(var(--good-rgb),.025); }
+.analysis-stat.bad { background: rgba(var(--bad-rgb),.022); }
 .snapshot-label { color: var(--muted-2); font-size: .56rem; font-weight: 760; letter-spacing: .085em; text-transform: uppercase; }
-.snapshot-value { margin-top: .28rem; color: var(--text); font-size: .91rem; font-weight: 710; line-height: 1.25; }
-.snapshot-detail { margin-top: .18rem; color: var(--muted-2); font-size: .63rem; line-height: 1.3; }
-.analysis-grid-two { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .68rem; margin-top: .7rem; }
-.analysis-copy-card { padding: .9rem .94rem; border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.022); }
-.analysis-copy-card.good { border-color: rgba(var(--good-rgb),.19); background: rgba(var(--good-rgb),.038); }
-.analysis-copy-card.bad { border-color: rgba(var(--bad-rgb),.19); background: rgba(var(--bad-rgb),.035); }
-.analysis-copy-card.warn { border-color: rgba(244,199,106,.18); background: rgba(244,199,106,.035); }
+.snapshot-value { overflow: hidden; margin-top: .22rem; color: var(--text); font-size: .86rem; font-weight: 700; line-height: 1.22; text-overflow: ellipsis; white-space: nowrap; }
+.snapshot-detail { margin-top: .14rem; color: var(--muted-2); font-size: .61rem; line-height: 1.25; }
+
+[class*="st-key-analysis_panel_"] [data-baseweb="tab-list"] {
+    gap: 1.15rem;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid rgba(255,255,255,.075);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+[class*="st-key-analysis_panel_"] [data-baseweb="tab"] {
+    min-height: 42px;
+    padding: 0 .05rem !important;
+    border-radius: 0;
+    background: transparent !important;
+    color: var(--muted) !important;
+    font-size: .76rem;
+}
+[class*="st-key-analysis_panel_"] [aria-selected="true"][data-baseweb="tab"] {
+    color: #b8efc8 !important;
+    box-shadow: inset 0 -2px 0 var(--good);
+}
+
+.analysis-grid-two { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .66rem; margin-top: .68rem; }
+.analysis-copy-card {
+    padding: .86rem .9rem;
+    border: 0;
+    border-left: 2px solid rgba(255,255,255,.105);
+    border-radius: 0 11px 11px 0;
+    background: rgba(255,255,255,.022);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.018);
+}
+.analysis-copy-card.good { border-left-color: rgba(var(--good-rgb),.70); background: rgba(var(--good-rgb),.03); }
+.analysis-copy-card.bad { border-left-color: rgba(var(--bad-rgb),.72); background: rgba(var(--bad-rgb),.028); }
+.analysis-copy-card.warn { border-left-color: rgba(244,199,106,.68); background: rgba(244,199,106,.027); }
 .analysis-card-label { display: flex; align-items: center; gap: .4rem; color: var(--muted); font-size: .59rem; font-weight: 780; letter-spacing: .1em; text-transform: uppercase; }
 .analysis-copy-card.good .analysis-card-label { color: #9ee9b5; }
 .analysis-copy-card.bad .analysis-card-label { color: #ff9ca7; }
@@ -3606,11 +3704,34 @@ hr {
 .analysis-card-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .analysis-card-title { margin-top: .44rem; color: var(--text); font-size: .92rem; font-weight: 690; letter-spacing: -.02em; }
 .analysis-card-copy { margin-top: .32rem; color: #b5c1ba; font-size: .75rem; line-height: 1.55; }
+.analysis-signal-list { display: grid; gap: .42rem; margin-top: .65rem; }
+.analysis-signal-row {
+    display: grid;
+    grid-template-columns: 84px minmax(0,1fr);
+    align-items: start;
+    gap: .68rem;
+    padding: .58rem .68rem;
+    border-radius: 9px;
+    background: rgba(255,255,255,.018);
+}
+.analysis-signal-row.good { background: rgba(var(--good-rgb),.035); }
+.analysis-signal-row.bad { background: rgba(var(--bad-rgb),.035); }
+.analysis-signal-row.warn { background: rgba(244,199,106,.03); }
+.analysis-signal-tag { display: flex; align-items: center; gap: .35rem; color: var(--muted); font-size: .55rem; font-weight: 780; letter-spacing: .09em; text-transform: uppercase; }
+.analysis-signal-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.analysis-signal-row.good .analysis-signal-tag { color: #9ee9b5; }
+.analysis-signal-row.bad .analysis-signal-tag { color: #ff9ca7; }
+.analysis-signal-row.warn .analysis-signal-tag { color: #f0cf8c; }
+.analysis-signal-copy { color: #bac5bf; font-size: .72rem; line-height: 1.45; }
+.analysis-subsection-title { margin-top: .7rem; color: var(--muted); font-size: .58rem; font-weight: 780; letter-spacing: .1em; text-transform: uppercase; }
+.analysis-subsection-title.good { color: #9ee9b5; }
+.analysis-subsection-title.bad { color: #ff9ca7; }
+.analysis-subsection-title.warn { color: #f0cf8c; }
 .lineup-list { display: grid; gap: .24rem; margin: .55rem 0 0; padding: 0; list-style: none; color: #b5c1ba; font-size: .72rem; line-height: 1.4; }
 .pitch-compare { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .68rem; margin: .72rem 0; }
-.pitch-team-card { padding: .9rem; border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.02); }
-.pitch-team-card.better { border-color: rgba(var(--good-rgb),.20); background: rgba(var(--good-rgb),.035); }
-.pitch-team-card.worse { border-color: rgba(var(--bad-rgb),.18); background: rgba(var(--bad-rgb),.027); }
+.pitch-team-card { padding: .86rem; border: 0; border-top: 2px solid rgba(255,255,255,.10); border-radius: 11px; background: rgba(255,255,255,.02); }
+.pitch-team-card.better { border-top-color: rgba(var(--good-rgb),.72); background: rgba(var(--good-rgb),.03); }
+.pitch-team-card.worse { border-top-color: rgba(var(--bad-rgb),.64); background: rgba(var(--bad-rgb),.025); }
 .pitch-team-head { display: flex; align-items: center; gap: .58rem; }
 .pitch-team-head img { width: 34px; height: 34px; object-fit: contain; }
 .pitch-team-name { color: var(--text); font-size: .88rem; font-weight: 700; }
@@ -3708,10 +3829,13 @@ hr {
     .forecast-core { grid-row: 1; }
     .match-signals { grid-template-columns: 1fr; }
     .quality-lockup { grid-column: auto; justify-self: start; }
-    .analysis-hero { grid-template-columns: 54px minmax(0,1fr); }
-    .analysis-hero-logo { width: 50px; height: 50px; }
+    .analysis-hero { grid-template-columns: 112px minmax(0,1fr); }
+    .analysis-matchup-logos { grid-template-columns: 42px 18px 42px; justify-content: start; }
+    .analysis-matchup-logos img { width: 42px; height: 42px; }
     .analysis-hero-gauge { grid-column: 1 / -1; justify-self: center; }
-    .analysis-snapshot { grid-template-columns: repeat(2,1fr); }
+    .analysis-stat-rail { grid-template-columns: repeat(2,1fr); }
+    .analysis-stat:nth-child(3) { border-left: 0; border-top: 1px solid rgba(255,255,255,.065); }
+    .analysis-stat:nth-child(4) { border-top: 1px solid rgba(255,255,255,.065); }
 }
 
 @media (max-width: 600px) {
@@ -3722,7 +3846,15 @@ hr {
     .match-card-top { align-items: flex-start; flex-direction: column; gap: .35rem; }
     .match-context { text-align: left; white-space: normal; }
     .team-name-large { font-size: 1rem; }
-    .analysis-grid-two, .pitch-compare, .analysis-snapshot { grid-template-columns: 1fr; }
+    [class*="st-key-analysis_panel_"] { padding: .76rem .72rem .95rem; }
+    .analysis-panel-heading { align-items: flex-start; flex-direction: column; gap: .22rem; }
+    .analysis-hero { grid-template-columns: 1fr; gap: .72rem; padding: .78rem; }
+    .analysis-matchup-logos { justify-content: start; }
+    .analysis-hero-gauge { grid-column: auto; justify-self: start; }
+    .analysis-stat-rail, .analysis-grid-two, .pitch-compare { grid-template-columns: 1fr; }
+    .analysis-stat + .analysis-stat { border-left: 0; border-top: 1px solid rgba(255,255,255,.065); }
+    .analysis-signal-row { grid-template-columns: 1fr; gap: .28rem; }
+    [class*="st-key-analysis_panel_"] [data-baseweb="tab-list"] { gap: .72rem; }
 }
 </style>
 """
@@ -5286,18 +5418,18 @@ def render_advanced(
     if quality_class == "ice":
         quality_class = "warn"
     support_cards = "".join(
-        f"<div class='analysis-copy-card good'><div class='analysis-card-label'>Support {index + 1}</div>"
-        f"<div class='analysis-card-copy'>{safe_text(item)}</div></div>"
+        f"<div class='analysis-signal-row good'><div class='analysis-signal-tag'>Support {index + 1}</div>"
+        f"<div class='analysis-signal-copy'>{safe_text(item)}</div></div>"
         for index, item in enumerate(prediction.get("support") or [])
     )
     risk_cards = "".join(
-        f"<div class='analysis-copy-card bad'><div class='analysis-card-label'>Risk {index + 1}</div>"
-        f"<div class='analysis-card-copy'>{safe_text(item)}</div></div>"
+        f"<div class='analysis-signal-row bad'><div class='analysis-signal-tag'>Risk {index + 1}</div>"
+        f"<div class='analysis-signal-copy'>{safe_text(item)}</div></div>"
         for index, item in enumerate(prediction.get("risks") or [])
     )
     change_cards = "".join(
-        f"<div class='analysis-copy-card warn'><div class='analysis-card-label'>Watch item {index + 1}</div>"
-        f"<div class='analysis-card-copy'>{safe_text(item)}</div></div>"
+        f"<div class='analysis-signal-row warn'><div class='analysis-signal-tag'>Watch {index + 1}</div>"
+        f"<div class='analysis-signal-copy'>{safe_text(item)}</div></div>"
         for index, item in enumerate(prediction.get("invalidation") or [])
     )
 
@@ -5312,14 +5444,22 @@ def render_advanced(
     away_pitch_class = "better" if away_pitch_score <= home_pitch_score else "worse"
     home_pitch_class = "better" if home_pitch_score < away_pitch_score else "worse"
 
-    with st.expander(
-        f"Full analysis · {game['away']['short_name']} at {game['home']['short_name']}",
-        expanded=True,
-    ):
+    with st.container(key=f"analysis_panel_{game['game_pk']}"):
         st.markdown(
             html_block(f"""
+            <div class="analysis-panel-heading">
+                <div>
+                    <div class="analysis-panel-label">Full matchup analysis</div>
+                    <div class="analysis-panel-matchup">{safe_text(game['away']['short_name'])} at {safe_text(game['home']['short_name'])}</div>
+                </div>
+                <div class="analysis-lock-note">Locked before first pitch</div>
+            </div>
             <div class="analysis-hero" style="{matchup_style(game)}">
-                <img class="analysis-hero-logo" src="{safe_text(target['logo'])}" alt="" loading="lazy">
+                <div class="analysis-matchup-logos">
+                    <img src="{safe_text(game['away']['logo'])}" alt="" loading="lazy">
+                    <span class="analysis-vs">VS</span>
+                    <img src="{safe_text(game['home']['logo'])}" alt="" loading="lazy">
+                </div>
                 <div>
                     <div class="analysis-eyebrow">Locked pregame verdict</div>
                     <div class="analysis-title">{safe_text(target['name'])} over {safe_text(opponent['name'])}</div>
@@ -5327,23 +5467,23 @@ def render_advanced(
                 </div>
                 <div class="analysis-hero-gauge">{hero_gauge}</div>
             </div>
-            <div class="analysis-snapshot">
-                <div class="snapshot-card good">
+            <div class="analysis-stat-rail">
+                <div class="analysis-stat good">
                     <div class="snapshot-label">Model selection</div>
                     <div class="snapshot-value">{safe_text(target['short_name'])} {target_probability:.1f}%</div>
                     <div class="snapshot-detail">Frozen before the first pitch</div>
                 </div>
-                <div class="snapshot-card">
+                <div class="analysis-stat">
                     <div class="snapshot-label">Projected score</div>
                     <div class="snapshot-value">{safe_text(game['away']['short_name'])} {prediction['projected_away_runs']:.1f} · {safe_text(game['home']['short_name'])} {prediction['projected_home_runs']:.1f}</div>
                     <div class="snapshot-detail">Monte Carlo run expectation</div>
                 </div>
-                <div class="snapshot-card">
+                <div class="analysis-stat">
                     <div class="snapshot-label">Fair moneyline</div>
                     <div class="snapshot-value">{safe_text(fmt_odds(target_fair_odds))}</div>
                     <div class="snapshot-detail">Model price before sportsbook margin</div>
                 </div>
-                <div class="snapshot-card {quality_class}">
+                <div class="analysis-stat {quality_class}">
                     <div class="snapshot-label">Data quality</div>
                     <div class="snapshot-value">{prediction['quality_score']}/100</div>
                     <div class="snapshot-detail">{safe_text(prediction['quality_label'])} · disagreement {prediction['model_agreement_gap']*100:.1f} pts</div>
@@ -5372,7 +5512,8 @@ def render_advanced(
                         <div class="analysis-card-copy">{safe_text(explanation['offense'])}</div>
                     </div>
                 </div>
-                <div class="analysis-grid-two">{support_cards}</div>
+                <div class="analysis-subsection-title good">Strongest reasons behind the pick</div>
+                <div class="analysis-signal-list">{support_cards}</div>
                 """),
                 unsafe_allow_html=True,
             )
@@ -5449,13 +5590,16 @@ def render_advanced(
                     <div class="analysis-card-label">Price interpretation</div>
                     <div class="analysis-card-copy">{safe_text(explanation['market'])}</div>
                 </div>
-                <div class="analysis-snapshot">
-                    <div class="snapshot-card"><div class="snapshot-label">Fair away ML</div><div class="snapshot-value">{safe_text(fmt_odds(prediction['fair_away_odds']))}</div></div>
-                    <div class="snapshot-card"><div class="snapshot-label">Fair home ML</div><div class="snapshot-value">{safe_text(fmt_odds(prediction['fair_home_odds']))}</div></div>
-                    <div class="snapshot-card"><div class="snapshot-label">Over {distribution['total_line']}</div><div class="snapshot-value">{distribution['over_probability']*100:.1f}%</div></div>
-                    <div class="snapshot-card"><div class="snapshot-label">Under {distribution['total_line']}</div><div class="snapshot-value">{distribution['under_probability']*100:.1f}%</div></div>
+                <div class="analysis-stat-rail">
+                    <div class="analysis-stat"><div class="snapshot-label">Fair away ML</div><div class="snapshot-value">{safe_text(fmt_odds(prediction['fair_away_odds']))}</div></div>
+                    <div class="analysis-stat"><div class="snapshot-label">Fair home ML</div><div class="snapshot-value">{safe_text(fmt_odds(prediction['fair_home_odds']))}</div></div>
+                    <div class="analysis-stat"><div class="snapshot-label">Over {distribution['total_line']}</div><div class="snapshot-value">{distribution['over_probability']*100:.1f}%</div></div>
+                    <div class="analysis-stat"><div class="snapshot-label">Under {distribution['total_line']}</div><div class="snapshot-value">{distribution['under_probability']*100:.1f}%</div></div>
                 </div>
-                <div class="analysis-grid-two">{risk_cards}{change_cards}</div>
+                <div class="analysis-grid-two">
+                    <div><div class="analysis-subsection-title bad">Bear case</div><div class="analysis-signal-list">{risk_cards}</div></div>
+                    <div><div class="analysis-subsection-title warn">What could change the view</div><div class="analysis-signal-list">{change_cards}</div></div>
+                </div>
                 """),
                 unsafe_allow_html=True,
             )
@@ -5493,7 +5637,7 @@ with brand_column:
             <div>
                 <div class="quant-brand-heading">
                     <div class="quant-brand-title">MLB Quant Terminal</div>
-                    <span class="quant-build">Build 20</span>
+                    <span class="quant-build">Build 21</span>
                 </div>
                 <div class="quant-brand-subtitle">Live scores · locked pregame forecasts · matchup intelligence</div>
             </div>
