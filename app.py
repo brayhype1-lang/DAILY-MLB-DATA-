@@ -1636,7 +1636,7 @@ def native_stylesheet() -> str:
     """
     return """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
     --quant-bg-0: #050a12;
@@ -1660,6 +1660,7 @@ html, body, .stApp,
 }
 
 .stApp {
+    font-size: 15.5px;
     color: var(--quant-text);
     background-color: var(--quant-bg-0);
     background-image:
@@ -1743,17 +1744,22 @@ html, body, .stApp,
 
 h1, h2, h3, h4,
 [data-testid="stHeadingWithActionElements"] {
-    font-family: "Barlow Condensed", Bahnschrift, "Arial Narrow", sans-serif !important;
-    font-stretch: condensed;
-    letter-spacing: -.012em !important;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif !important;
+    font-stretch: normal;
+    font-weight: 750 !important;
+    letter-spacing: -.028em !important;
     color: var(--quant-text) !important;
 }
 
-h2 { letter-spacing: -.035em !important; }
+h2 { letter-spacing: -.032em !important; }
 p, label, li, [data-testid="stCaptionContainer"] {
     color: inherit;
 }
-[data-testid="stCaptionContainer"] { color: var(--quant-muted) !important; }
+[data-testid="stCaptionContainer"] {
+    color: var(--quant-muted) !important;
+    font-size: .82rem !important;
+    line-height: 1.45 !important;
+}
 
 hr {
     border-color: rgba(125,211,252,.14) !important;
@@ -1795,16 +1801,16 @@ hr {
 [class*="st-key-matchup_row_"] [data-testid="stVerticalBlockBorderWrapper"] {
     position: relative;
     overflow: hidden;
-    padding: .95rem 1.05rem .86rem !important;
-    border: 1px solid rgba(125,211,252,.16) !important;
-    border-left: 1px solid rgba(125,211,252,.16) !important;
+    padding: 1.08rem 1.18rem .96rem !important;
+    border: 1px solid rgba(125,211,252,.11) !important;
+    border-left: 1px solid rgba(125,211,252,.11) !important;
     border-radius: 18px !important;
     background:
-        radial-gradient(circle at 92% 16%, rgba(96,165,250,.11), transparent 30%),
-        linear-gradient(145deg, rgba(13,31,49,.97), rgba(7,18,31,.95)) !important;
+        radial-gradient(circle at 92% 14%, rgba(96,165,250,.085), transparent 31%),
+        linear-gradient(145deg, rgba(12,29,46,.975), rgba(7,18,31,.965)) !important;
     box-shadow:
-        0 18px 42px rgba(0,0,0,.27),
-        inset 0 1px 0 rgba(255,255,255,.045) !important;
+        0 17px 40px rgba(0,0,0,.25),
+        inset 0 1px 0 rgba(255,255,255,.035) !important;
     transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
@@ -1827,7 +1833,7 @@ hr {
 }
 
 [class*="st-key-matchup_row_"] [data-testid="stHorizontalBlock"] {
-    gap: .82rem !important;
+    gap: 1rem !important;
 }
 
 [class*="st-key-matchup_row_"] [data-testid="stProgress"] {
@@ -1849,54 +1855,52 @@ hr {
 
 .matchup-team-stack {
     display: grid;
-    gap: .35rem;
+    gap: .32rem;
     min-width: 0;
 }
 
 .matchup-team-line {
     display: flex;
     align-items: center;
-    gap: .6rem;
+    gap: .68rem;
     min-width: 0;
 }
 
 .matchup-team-line img {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     object-fit: contain;
     filter: drop-shadow(0 5px 7px rgba(0,0,0,.42));
-    flex: 0 0 30px;
+    flex: 0 0 32px;
 }
 
 .matchup-team-name {
     overflow: hidden;
     color: #f7fbff;
-    font-family: "Barlow Condensed", Bahnschrift, sans-serif;
-    font-size: 1.23rem;
-    font-weight: 700;
-    letter-spacing: .005em;
-    line-height: 1.05;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif;
+    font-size: 1.02rem;
+    font-weight: 750;
+    letter-spacing: -.018em;
+    line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .matchup-at {
-    margin-left: 40px;
-    color: #71869b;
-    font-size: .64rem;
-    font-weight: 800;
-    letter-spacing: .14em;
-    line-height: .7;
-    text-transform: uppercase;
+    margin-left: 43px;
+    color: #7f94a8;
+    font-size: .70rem;
+    font-weight: 650;
+    letter-spacing: .02em;
+    line-height: .85;
 }
 
 .matchup-kicker {
-    margin-bottom: .32rem;
-    color: #7f96ac;
-    font-size: .63rem;
-    font-weight: 800;
-    letter-spacing: .12em;
-    text-transform: uppercase;
+    margin-bottom: .42rem;
+    color: #91a6ba;
+    font-size: .73rem;
+    font-weight: 650;
+    letter-spacing: .005em;
 }
 
 .matchup-probability-labels {
@@ -1904,10 +1908,10 @@ hr {
     align-items: center;
     justify-content: space-between;
     gap: .5rem;
-    margin-bottom: .42rem;
-    color: #c7d6e6;
-    font-size: .72rem;
-    font-weight: 800;
+    margin-bottom: .5rem;
+    color: #d2deea;
+    font-size: .77rem;
+    font-weight: 700;
 }
 
 .matchup-probability-labels span:last-child {
@@ -1917,7 +1921,7 @@ hr {
 .matchup-probability-bar {
     display: flex;
     width: 100%;
-    height: 10px;
+    height: 9px;
     overflow: hidden;
     border: 2px solid rgba(4,12,22,.80);
     border-radius: 999px;
@@ -1939,11 +1943,11 @@ hr {
 .matchup-pick-card {
     position: relative;
     overflow: hidden;
-    min-height: 82px;
-    padding: .68rem .72rem;
-    border: 1px solid rgba(110,231,183,.17);
-    border-radius: 13px;
-    background: linear-gradient(145deg, rgba(15,53,54,.44), rgba(5,18,29,.58));
+    min-height: 88px;
+    padding: .78rem .82rem;
+    border: 1px solid rgba(110,231,183,.13);
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(15,53,54,.35), rgba(5,18,29,.48));
 }
 
 .matchup-pick-card::after {
@@ -1959,7 +1963,7 @@ hr {
 
 .matchup-score-lines {
     display: grid;
-    gap: .22rem;
+    gap: .3rem;
 }
 
 .matchup-score-line {
@@ -1967,37 +1971,39 @@ hr {
     align-items: baseline;
     justify-content: space-between;
     gap: .4rem;
-    color: #b8c9d9;
-    font-size: .73rem;
-    font-weight: 650;
+    color: #bccbd9;
+    font-size: .77rem;
+    font-weight: 600;
 }
 
 .matchup-score-line strong {
     color: #f7fbff;
-    font-family: "Barlow Condensed", Bahnschrift, sans-serif;
-    font-size: 1.14rem;
-    line-height: 1;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif;
+    font-size: .96rem;
+    font-weight: 750;
+    line-height: 1.15;
 }
 
 .matchup-value {
     color: #f7fbff;
-    font-family: "Barlow Condensed", Bahnschrift, sans-serif;
-    font-size: 1.08rem;
-    font-weight: 700;
-    line-height: 1.12;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif;
+    font-size: .98rem;
+    font-weight: 750;
+    letter-spacing: -.02em;
+    line-height: 1.28;
 }
 
 .matchup-value--pick {
     color: #8ff3df;
-    font-size: 1.25rem;
+    font-size: 1.06rem;
 }
 
 .matchup-subvalue {
-    margin-top: .24rem;
-    color: #92a8bc;
-    font-size: .72rem;
-    font-weight: 600;
-    line-height: 1.3;
+    margin-top: .32rem;
+    color: #9eb1c3;
+    font-size: .76rem;
+    font-weight: 550;
+    line-height: 1.4;
 }
 
 .matchup-status {
@@ -2005,14 +2011,14 @@ hr {
     align-items: center;
     gap: .38rem;
     width: fit-content;
-    padding: .32rem .56rem;
+    padding: .34rem .58rem;
     border: 1px solid rgba(148,163,184,.18);
     border-radius: 999px;
     background: rgba(4,12,22,.52);
     color: #dce8f4;
-    font-size: .65rem;
-    font-weight: 800;
-    letter-spacing: .08em;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .045em;
     text-transform: uppercase;
 }
 
@@ -2047,44 +2053,70 @@ hr {
 }
 
 .matchup-start {
-    margin-top: .45rem;
     color: #eef6ff;
-    font-family: "Barlow Condensed", Bahnschrift, sans-serif;
-    font-size: 1rem;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif;
+    font-size: .79rem;
     font-weight: 700;
+    text-align: right;
+}
+
+.matchup-game-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.matchup-score-kicker {
+    margin-top: .78rem;
 }
 
 .matchup-context-strip {
-    margin-top: .18rem;
-    padding-top: .72rem;
-    border-top: 1px solid rgba(125,211,252,.11);
-    color: #8197ab;
-    font-size: .72rem;
-    font-weight: 600;
-    line-height: 1.35;
+    margin-top: .22rem;
+    padding-top: .78rem;
+    border-top: 1px solid rgba(125,211,252,.085);
+    color: #91a5b8;
+    font-size: .76rem;
+    font-weight: 500;
+    line-height: 1.45;
 }
 
 .matchup-quality {
-    margin-top: .45rem;
-    color: #8399ad;
-    font-size: .68rem;
-    font-weight: 700;
+    display: grid;
+    gap: .08rem;
+    padding-top: .76rem;
+    color: #8fa3b6;
+    font-size: .69rem;
+    font-weight: 600;
+    line-height: 1.2;
 }
 
 .matchup-quality strong {
-    color: #d8e6f2;
+    color: #edf5fc;
+    font-size: .86rem;
+    font-weight: 750;
+}
+
+.matchup-quality small {
+    color: #7890a5;
+    font-size: .66rem;
+    font-weight: 550;
 }
 
 [class*="st-key-matchup_row_"] [data-testid="stBaseButton-secondary"] {
-    min-height: 38px;
-    border-color: rgba(103,232,249,.30) !important;
-    background: linear-gradient(135deg, rgba(8,145,178,.22), rgba(37,99,235,.16)) !important;
-    color: #e9fbff !important;
+    min-height: 40px;
+    margin-top: .54rem;
+    border-color: rgba(125,211,252,.20) !important;
+    border-radius: 11px !important;
+    background: linear-gradient(135deg, rgba(13,39,59,.96), rgba(12,31,51,.96)) !important;
+    color: #e7f3fc !important;
+    font-size: .79rem !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 18px rgba(0,0,0,.14) !important;
 }
 
 [class*="st-key-matchup_row_"] [data-testid="stBaseButton-secondary"]:hover {
-    border-color: rgba(103,232,249,.62) !important;
-    background: linear-gradient(135deg, rgba(8,145,178,.34), rgba(37,99,235,.26)) !important;
+    border-color: rgba(103,232,249,.48) !important;
+    background: linear-gradient(135deg, rgba(16,55,78,.98), rgba(14,39,62,.98)) !important;
 }
 
 @keyframes quantLivePulse {
@@ -2106,7 +2138,7 @@ hr {
 
 [data-baseweb="tab"] {
     border-radius: 9px;
-    font-family: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif !important;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif !important;
     font-weight: 650 !important;
     letter-spacing: .015em;
 }
@@ -2151,7 +2183,8 @@ hr {
 }
 
 [data-testid="stMetricValue"] {
-    font-family: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif !important;
+    font-family: "Manrope", "Aptos", "Segoe UI Variable", sans-serif !important;
+    font-weight: 750 !important;
     color: #f8fbff !important;
 }
 
@@ -2182,8 +2215,8 @@ a { color: #72e6f4; }
 
 @media (max-width: 900px) {
     [data-testid="stMainBlockContainer"] { padding-top: .9rem; }
-    .matchup-team-name { font-size: 1.08rem; }
-    .matchup-value { font-size: .96rem; }
+    .matchup-team-name { font-size: .96rem; }
+    .matchup-value { font-size: .94rem; }
 }
 </style>
 """
@@ -3463,8 +3496,8 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
     analysis_is_open = st.session_state.get("open_game_pk") == game["game_pk"]
     context = weather_text(weather, game["venue"])
     with st.container(border=True, key=f"matchup_row_{game['game_pk']}"):
-        team_column, probability_column, pick_column, score_column, status_column = st.columns(
-            [2.05, 1.72, 1.38, 1.08, 1.08], vertical_alignment="center"
+        team_column, probability_column, pick_column, game_column = st.columns(
+            [2.15, 1.78, 1.38, 1.48], vertical_alignment="center"
         )
         with team_column:
             st.markdown(
@@ -3513,10 +3546,14 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
                 """,
                 unsafe_allow_html=True,
             )
-        with score_column:
+        with game_column:
             st.markdown(
                 f"""
-                <div class="matchup-kicker">{safe_text(score_label)}</div>
+                <div class="matchup-game-head">
+                    <div class="matchup-status matchup-status--{status_class}">{safe_text(status_label)}</div>
+                    <div class="matchup-start">{safe_text(status_detail)}</div>
+                </div>
+                <div class="matchup-kicker matchup-score-kicker">{safe_text(score_label)}</div>
                 <div class="matchup-score-lines">
                     <div class="matchup-score-line"><span>{safe_text(away['short_name'])}</span><strong>{safe_text(away_score)}</strong></div>
                     <div class="matchup-score-line"><span>{safe_text(home['short_name'])}</span><strong>{safe_text(home_score)}</strong></div>
@@ -3524,23 +3561,27 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
                 """,
                 unsafe_allow_html=True,
             )
-        with status_column:
-            st.markdown(
-                f"""
-                <div class="matchup-status matchup-status--{status_class}">{safe_text(status_label)}</div>
-                <div class="matchup-start">{safe_text(status_detail)}</div>
-                <div class="matchup-quality"><strong>{prediction['quality_score']}/100</strong> data · {safe_text(prediction['quality_label'])}</div>
-                """,
-                unsafe_allow_html=True,
-            )
 
-        context_column, action_column = st.columns([5.15, 1.05], vertical_alignment="center")
+        context_column, quality_column, action_column = st.columns(
+            [4.25, 1.08, 1.05], vertical_alignment="center"
+        )
         with context_column:
             st.markdown(
                 f"""
                 <div class="matchup-context-strip">
                     {safe_text(away.get('pitcher_name') or 'Starter TBD')} vs
                     {safe_text(home.get('pitcher_name') or 'Starter TBD')} · {safe_text(context)}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with quality_column:
+            st.markdown(
+                f"""
+                <div class="matchup-quality">
+                    <span>Data quality</span>
+                    <strong>{prediction['quality_score']}/100</strong>
+                    <small>{safe_text(prediction['quality_label'])}</small>
                 </div>
                 """,
                 unsafe_allow_html=True,
