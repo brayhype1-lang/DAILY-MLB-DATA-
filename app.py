@@ -85,13 +85,16 @@ import csv
 import io
 import json
 import math
+import os
 import re
+import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Iterable
 
 
@@ -2974,7 +2977,7 @@ h3 { font-size: 1.17rem !important; }
 
 
 def stadium_stylesheet() -> str:
-    """Build 21 visual system: graphite stadium surfaces and streamlined analysis."""
+    """Build 22 visual system: graphite stadium surfaces and verified performance tracking."""
     return """
 <style>
 :root {
@@ -3255,6 +3258,271 @@ hr {
     line-height: 1.4;
     text-align: right;
 }
+
+/* Build 22 performance tracker */
+[class*="st-key-tracker_summary"] [data-testid="stVerticalBlockBorderWrapper"] {
+    margin-top: .82rem;
+    padding: .82rem 1rem !important;
+    border: 1px solid rgba(117,228,155,.17) !important;
+    border-radius: 15px !important;
+    background:
+        linear-gradient(100deg, rgba(117,228,155,.055), transparent 37%),
+        linear-gradient(145deg, rgba(18,24,20,.96), rgba(10,14,12,.97)) !important;
+    box-shadow: 0 15px 34px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03);
+}
+.tracker-strip {
+    display: flex;
+    align-items: center;
+    gap: 1.35rem;
+    min-height: 48px;
+}
+.tracker-strip-brand {
+    flex: 0 0 auto;
+    padding-right: 1.35rem;
+    border-right: 1px solid rgba(255,255,255,.09);
+}
+.tracker-strip-brand span,
+.tracker-strip-metrics span {
+    display: block;
+    color: var(--muted-2);
+    font-size: .61rem;
+    font-weight: 720;
+    letter-spacing: .08em;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
+.tracker-strip-brand strong {
+    display: block;
+    margin-top: .22rem;
+    color: var(--text);
+    font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif;
+    font-size: 1.55rem;
+    font-weight: 720;
+    letter-spacing: -.055em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.tracker-strip-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(88px, 1fr));
+    flex: 1 1 auto;
+    gap: .55rem;
+}
+.tracker-strip-metrics > div {
+    min-width: 0;
+    padding: .15rem .55rem;
+}
+.tracker-strip-metrics strong {
+    display: block;
+    margin-top: .22rem;
+    color: #e9efeb;
+    font-size: .94rem;
+    font-weight: 690;
+    letter-spacing: -.025em;
+    font-variant-numeric: tabular-nums;
+}
+.tracker-strip-metrics .pending strong { color: var(--warn); }
+[class*="st-key-tracker_summary"] .stButton > button {
+    min-height: 42px !important;
+    border-color: rgba(117,228,155,.22) !important;
+    background: rgba(117,228,155,.075) !important;
+    color: #c8f4d4 !important;
+}
+
+[class*="st-key-tracker_panel"] {
+    margin: .7rem 0 1.2rem;
+    padding: 1.05rem 1.12rem 1.15rem;
+    border: 1px solid rgba(117,228,155,.16);
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 96% 3%, rgba(139,217,239,.055), transparent 25%),
+        linear-gradient(150deg, rgba(15,21,17,.97), rgba(8,12,10,.98));
+    box-shadow: 0 24px 56px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.035);
+}
+.tracker-panel-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .18rem .1rem .85rem;
+}
+.tracker-panel-kicker {
+    color: var(--good);
+    font-size: .61rem;
+    font-weight: 740;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+.tracker-panel-title {
+    margin-top: .22rem;
+    color: var(--text);
+    font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif;
+    font-size: 1.42rem;
+    font-weight: 710;
+    letter-spacing: -.045em;
+}
+.tracker-panel-subtitle {
+    margin-top: .22rem;
+    color: var(--muted);
+    font-size: .77rem;
+}
+.tracker-panel-count {
+    padding: .36rem .58rem;
+    border: 1px solid rgba(139,217,239,.16);
+    border-radius: 8px;
+    color: #bed8df;
+    background: rgba(139,217,239,.045);
+    font-size: .67rem;
+    font-weight: 680;
+}
+.tracker-overview {
+    display: grid;
+    grid-template-columns: minmax(300px, .9fr) minmax(0, 1.55fr);
+    gap: .75rem;
+    padding-top: .5rem;
+}
+.tracker-record-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 158px;
+    padding: 1.05rem 1.08rem;
+    border: 1px solid rgba(139,217,239,.16);
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(24,32,27,.93), rgba(12,17,14,.96));
+}
+.tracker-record-hero.good { border-color: rgba(117,228,155,.30); box-shadow: inset 3px 0 0 rgba(117,228,155,.78); }
+.tracker-record-hero.bad { border-color: rgba(255,104,120,.28); box-shadow: inset 3px 0 0 rgba(255,104,120,.74); }
+.tracker-record-eyebrow {
+    color: var(--muted-2);
+    font-size: .61rem;
+    font-weight: 720;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+.tracker-record-big {
+    margin-top: .3rem;
+    color: var(--text);
+    font-family: "Segoe UI Variable Display", "Aptos Display", sans-serif;
+    font-size: 2.35rem;
+    font-weight: 720;
+    letter-spacing: -.07em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.tracker-record-copy {
+    max-width: 190px;
+    margin-top: .45rem;
+    color: var(--muted-2);
+    font-size: .66rem;
+    line-height: 1.4;
+}
+.tracker-win-gauge {
+    --gauge-angle: 0deg;
+    --gauge-color: var(--ice);
+    display: grid;
+    place-items: center;
+    width: 94px;
+    height: 94px;
+    flex: 0 0 94px;
+    border-radius: 50%;
+    background: conic-gradient(var(--gauge-color) var(--gauge-angle), rgba(255,255,255,.075) 0);
+    box-shadow: 0 0 28px color-mix(in srgb, var(--gauge-color) 18%, transparent);
+}
+.tracker-win-gauge::before {
+    content: "";
+    grid-area: 1/1;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: #0d130f;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.045);
+}
+.tracker-win-gauge .gauge-copy { grid-area: 1/1; z-index: 1; text-align: center; }
+.tracker-win-gauge strong { display: block; color: var(--text); font-size: 1.05rem; font-weight: 720; letter-spacing: -.035em; }
+.tracker-win-gauge span { display: block; margin-top: .1rem; color: var(--muted-2); font-size: .52rem; font-weight: 700; text-transform: uppercase; }
+.tracker-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: .75rem;
+}
+.tracker-overview-card {
+    min-height: 74px;
+    padding: .85rem .9rem;
+    border: 1px solid rgba(255,255,255,.075);
+    border-radius: 13px;
+    background: rgba(255,255,255,.018);
+}
+.tracker-overview-card.pending { border-color: rgba(244,199,106,.16); }
+.tracker-overview-card > span { display: block; color: var(--muted-2); font-size: .61rem; font-weight: 690; text-transform: uppercase; letter-spacing: .08em; }
+.tracker-overview-card > strong { display: block; margin-top: .24rem; color: var(--text); font-size: 1.12rem; font-weight: 700; letter-spacing: -.03em; }
+.tracker-overview-card.pending > strong { color: var(--warn); }
+.tracker-overview-card > small { display: block; margin-top: .1rem; color: var(--muted-2); font-size: .62rem; }
+.tracker-split-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: .72rem 0 .52rem;
+}
+.tracker-split-heading.quality { margin-top: 1rem; }
+.tracker-split-heading strong { color: #e9efeb; font-size: .85rem; font-weight: 690; }
+.tracker-split-heading span { color: var(--muted-2); font-size: .68rem; }
+.tracker-bucket-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .72rem; }
+.tracker-bucket {
+    min-height: 116px;
+    padding: .86rem .9rem;
+    border: 1px solid rgba(255,255,255,.075);
+    border-radius: 13px;
+    background: linear-gradient(145deg, rgba(25,32,28,.86), rgba(12,17,14,.91));
+}
+.tracker-bucket.good { border-color: rgba(117,228,155,.26); box-shadow: inset 3px 0 0 rgba(117,228,155,.75); }
+.tracker-bucket.bad { border-color: rgba(255,104,120,.25); box-shadow: inset 3px 0 0 rgba(255,104,120,.72); }
+.tracker-bucket-label { color: var(--muted); font-size: .69rem; font-weight: 680; }
+.tracker-bucket-record { margin-top: .3rem; color: var(--text); font-size: 1.35rem; font-weight: 710; letter-spacing: -.045em; font-variant-numeric: tabular-nums; }
+.tracker-bucket-rate { margin-top: .08rem; color: #cdd8d1; font-size: .68rem; font-weight: 650; }
+.tracker-bucket.good .tracker-bucket-rate { color: var(--good); }
+.tracker-bucket.bad .tracker-bucket-rate { color: var(--bad); }
+.tracker-bucket-note { margin-top: .38rem; color: var(--muted-2); font-size: .6rem; line-height: 1.35; }
+.tracker-log { display: grid; gap: .55rem; padding-top: .58rem; }
+.tracker-log-row {
+    display: grid;
+    grid-template-columns: minmax(210px,1.25fr) minmax(190px,1fr) minmax(170px,.9fr) 100px;
+    align-items: center;
+    gap: .75rem;
+    padding: .76rem .82rem;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px;
+    background: rgba(255,255,255,.018);
+}
+.tracker-log-row.win { border-left: 3px solid var(--good); }
+.tracker-log-row.loss { border-left: 3px solid var(--bad); }
+.tracker-log-row.pending { border-left: 3px solid var(--warn); }
+.tracker-log-row.void { border-left: 3px solid var(--muted-2); }
+.tracker-log-matchup, .tracker-log-pick { display: flex; align-items: center; gap: .65rem; min-width: 0; }
+.tracker-log-logos { display: flex; align-items: center; flex: 0 0 auto; }
+.tracker-log-logos img, .tracker-log-pick img { width: 28px; height: 28px; object-fit: contain; }
+.tracker-log-logos img + img { margin-left: -7px; }
+.tracker-log-teams { overflow: hidden; color: #e9efeb; font-size: .77rem; font-weight: 680; text-overflow: ellipsis; white-space: nowrap; }
+.tracker-log-date, .tracker-log-pick span, .tracker-log-score span { display: block; margin-bottom: .12rem; color: var(--muted-2); font-size: .56rem; font-weight: 680; letter-spacing: .06em; text-transform: uppercase; }
+.tracker-log-pick strong, .tracker-log-score strong { display: block; overflow: hidden; color: #dbe5df; font-size: .69rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.tracker-result {
+    justify-self: end;
+    padding: .32rem .48rem;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 7px;
+    color: var(--muted);
+    background: rgba(255,255,255,.025);
+    font-size: .59rem;
+    font-weight: 760;
+    letter-spacing: .06em;
+}
+.tracker-result.win { border-color: rgba(117,228,155,.27); color: var(--good); background: rgba(117,228,155,.065); }
+.tracker-result.loss { border-color: rgba(255,104,120,.25); color: var(--bad); background: rgba(255,104,120,.06); }
+.tracker-result.pending { border-color: rgba(244,199,106,.22); color: var(--warn); background: rgba(244,199,106,.055); }
+.tracker-tools-heading { margin: 1.05rem 0 .55rem; padding-top: .8rem; border-top: 1px solid rgba(255,255,255,.07); }
+.tracker-tools-heading strong { display: block; color: #e9efeb; font-size: .79rem; }
+.tracker-tools-heading span { display: block; margin-top: .12rem; color: var(--muted-2); font-size: .64rem; }
 
 [data-baseweb="tab-list"] {
     gap: .25rem;
@@ -4265,6 +4533,7 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     .insights-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .compact-game { grid-template-columns: minmax(0,1.45fr) minmax(160px,.6fr); }
     .compact-score { grid-column: 1 / -1; padding: .72rem 0 0; border-left: 0; border-top: 1px solid rgba(148,163,184,.14); }
+    .tracker-log-row { grid-template-columns: minmax(190px,1.15fr) minmax(170px,1fr) minmax(150px,.85fr) 92px; }
 }
 
 @media (max-width: 900px) {
@@ -4276,6 +4545,12 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     .score-card { flex-basis: 226px; }
     .compact-game { grid-template-columns: 1fr; scroll-margin-top: 1rem; }
     .compact-pick, .compact-score { padding: .72rem 0 0; border-left: 0; border-top: 1px solid rgba(148,163,184,.14); }
+    .tracker-strip { align-items: flex-start; flex-direction: column; gap: .72rem; }
+    .tracker-strip-brand { width: 100%; padding: 0 0 .65rem; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .tracker-strip-metrics { width: 100%; }
+    .tracker-overview { grid-template-columns: 1fr; }
+    .tracker-log-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+    .tracker-result { justify-self: start; }
     [data-testid="stMainBlockContainer"] { padding-left: .8rem; padding-right: .8rem; }
 }
 
@@ -4283,6 +4558,12 @@ h1, h2, h3, h4 { font-family: 'Sora', system-ui, sans-serif !important; letter-s
     .insights-grid { grid-template-columns: 1fr; }
     .top-nav-sub, .top-nav-sync small { display: none; }
     .hero-card { padding: 1.1rem; }
+    .tracker-strip-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .tracker-bucket-grid, .tracker-overview-grid { grid-template-columns: 1fr; }
+    .tracker-record-hero { align-items: flex-start; flex-direction: column; gap: .8rem; }
+    .tracker-log-row { grid-template-columns: 1fr; }
+    .tracker-split-heading, .tracker-panel-head { align-items: flex-start; flex-direction: column; }
+    .tracker-panel-count { align-self: flex-start; }
 }
 </style>
 """
@@ -4349,6 +4630,362 @@ def toggle_game_analysis(game_pk: int) -> None:
     """Keep only one heavyweight matchup report mounted in the browser."""
     current = st.session_state.get("open_game_pk")
     st.session_state["open_game_pk"] = None if current == game_pk else game_pk
+
+
+TRACKER_SCHEMA_VERSION = 1
+TRACKER_RESULT_OPTIONS = ("PENDING", "WIN", "LOSS", "VOID")
+_tracker_path_override = os.environ.get("MLB_TRACKER_PATH", "").strip()
+TRACKER_PATH = (
+    Path(_tracker_path_override).expanduser()
+    if _tracker_path_override
+    else Path(__file__).resolve().with_name(".mlb_quant_tracker.json")
+)
+_TRACKER_LOCK = threading.RLock()
+
+
+def _tracker_timestamp(moment: datetime | None = None) -> str:
+    value = moment or datetime.now(ET)
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=ET)
+    return value.astimezone(ET).isoformat(timespec="seconds")
+
+
+def empty_prediction_tracker() -> dict[str, Any]:
+    created_at = _tracker_timestamp()
+    return {
+        "schema_version": TRACKER_SCHEMA_VERSION,
+        "created_at": created_at,
+        "updated_at": created_at,
+        "picks": {},
+    }
+
+
+def _validate_tracker_payload(raw: Any) -> dict[str, Any]:
+    """Return a normalized tracker payload or raise a clear validation error."""
+    if not isinstance(raw, dict):
+        raise ValueError("The tracker backup must contain a JSON object.")
+    raw_picks = raw.get("picks")
+    if not isinstance(raw_picks, dict):
+        raise ValueError("The tracker backup is missing its picks collection.")
+
+    payload = {
+        "schema_version": TRACKER_SCHEMA_VERSION,
+        "created_at": str(raw.get("created_at") or _tracker_timestamp()),
+        "updated_at": str(raw.get("updated_at") or _tracker_timestamp()),
+        "picks": {},
+    }
+    for raw_key, raw_entry in raw_picks.items():
+        if not isinstance(raw_entry, dict):
+            raise ValueError(f"Tracker entry {raw_key!s} is not valid.")
+        try:
+            game_pk = int(raw_entry.get("game_pk", raw_key))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Tracker entry {raw_key!s} has no valid game ID.") from exc
+        result = str(raw_entry.get("result") or "PENDING").upper()
+        if result not in TRACKER_RESULT_OPTIONS:
+            raise ValueError(f"Tracker entry {game_pk} has an unsupported result.")
+        entry = dict(raw_entry)
+        entry["game_pk"] = game_pk
+        entry["result"] = result
+        entry["manual_override"] = bool(entry.get("manual_override", False))
+        payload["picks"][str(game_pk)] = entry
+    return payload
+
+
+def load_prediction_tracker() -> tuple[dict[str, Any], str]:
+    """Load the local ledger without allowing a damaged file to break the app."""
+    with _TRACKER_LOCK:
+        if not TRACKER_PATH.exists():
+            return empty_prediction_tracker(), "ready"
+        try:
+            with TRACKER_PATH.open("r", encoding="utf-8") as handle:
+                payload = _validate_tracker_payload(json.load(handle))
+            return payload, "ready"
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            return empty_prediction_tracker(), f"Tracker storage needs attention: {exc}"
+
+
+def save_prediction_tracker(payload: dict[str, Any]) -> tuple[bool, str]:
+    """Atomically persist the ledger so an interrupted rerun cannot corrupt it."""
+    try:
+        normalized = _validate_tracker_payload(payload)
+        normalized["updated_at"] = _tracker_timestamp()
+        with _TRACKER_LOCK:
+            TRACKER_PATH.parent.mkdir(parents=True, exist_ok=True)
+            temporary_path = TRACKER_PATH.with_name(f"{TRACKER_PATH.name}.tmp")
+            with temporary_path.open("w", encoding="utf-8") as handle:
+                json.dump(normalized, handle, indent=2, sort_keys=True)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary_path, TRACKER_PATH)
+        return True, "ready"
+    except (OSError, ValueError, TypeError) as exc:
+        return False, f"Tracker could not save: {exc}"
+
+
+def _tracker_fair_moneyline(prediction: dict[str, Any]) -> int | None:
+    value = (
+        prediction.get("fair_away_odds")
+        if prediction.get("target_side") == "away"
+        else prediction.get("fair_home_odds")
+    )
+    try:
+        return int(round(float(value))) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def prediction_tracker_entry(
+    prediction: dict[str, Any], captured_at: datetime
+) -> dict[str, Any]:
+    """Freeze the published pregame pick and its supporting display fields."""
+    game = prediction["game"]
+    target_side = str(prediction["target_side"])
+    target = game[target_side]
+    scheduled = game.get("game_datetime_utc")
+    return {
+        "game_pk": int(game["game_pk"]),
+        "game_date": str(game.get("official_date") or captured_at.date().isoformat()),
+        "scheduled_at": (
+            scheduled.astimezone(timezone.utc).isoformat(timespec="seconds")
+            if isinstance(scheduled, datetime)
+            else str(game.get("game_datetime_raw") or "")
+        ),
+        "away_id": int(game["away"].get("id") or 0),
+        "away_name": str(game["away"].get("name") or "Away team"),
+        "away_short_name": str(game["away"].get("short_name") or "Away"),
+        "away_logo": str(game["away"].get("logo") or ""),
+        "home_id": int(game["home"].get("id") or 0),
+        "home_name": str(game["home"].get("name") or "Home team"),
+        "home_short_name": str(game["home"].get("short_name") or "Home"),
+        "home_logo": str(game["home"].get("logo") or ""),
+        "target_side": target_side,
+        "target_id": int(target.get("id") or 0),
+        "target_name": str(target.get("name") or "Model pick"),
+        "target_short_name": str(target.get("short_name") or target.get("name") or "Pick"),
+        "target_logo": str(target.get("logo") or ""),
+        "target_probability": round(float(prediction["target_probability"]), 6),
+        "fair_moneyline": _tracker_fair_moneyline(prediction),
+        "projected_away_runs": round(float(prediction["projected_away_runs"]), 3),
+        "projected_home_runs": round(float(prediction["projected_home_runs"]), 3),
+        "quality_score": int(prediction.get("quality_score") or 0),
+        "quality_label": str(prediction.get("quality_label") or "Limited"),
+        "captured_at_et": _tracker_timestamp(captured_at),
+        "source_build": 22,
+        "result": "PENDING",
+        "manual_override": False,
+        "final_away_runs": None,
+        "final_home_runs": None,
+        "graded_at_et": None,
+        "latest_status": "PREVIEW",
+        "status_label": str(game["live"].get("status_label") or "Scheduled"),
+    }
+
+
+def _pregame_snapshot_allowed(game: dict[str, Any], now_et: datetime) -> bool:
+    live = game.get("live") or {}
+    if live.get("status") != "PREVIEW":
+        return False
+    if str(game.get("official_date") or "") != now_et.date().isoformat():
+        return False
+    state_text = " ".join(
+        str(live.get(key) or "") for key in ("status_label", "detailed_state")
+    ).lower()
+    blocked_states = ("postpon", "cancel", "suspend", "completed early")
+    return not any(blocked in state_text for blocked in blocked_states)
+
+
+def _automatic_result(entry: dict[str, Any], away_runs: int, home_runs: int) -> str:
+    if away_runs == home_runs:
+        return "VOID"
+    winning_side = "away" if away_runs > home_runs else "home"
+    return "WIN" if entry.get("target_side") == winning_side else "LOSS"
+
+
+def sync_prediction_tracker(
+    predictions: list[dict[str, Any]], now_et: datetime
+) -> tuple[dict[str, Any], str]:
+    """Capture today's pregame picks and grade existing picks from official finals."""
+    payload, storage_status = load_prediction_tracker()
+    picks = payload["picks"]
+    changed = False
+
+    for prediction in predictions:
+        game = prediction["game"]
+        game_pk = int(game["game_pk"])
+        key = str(game_pk)
+        live = game.get("live") or {}
+        status = str(live.get("status") or "PREVIEW")
+        entry = picks.get(key)
+
+        if entry is None and _pregame_snapshot_allowed(game, now_et):
+            entry = prediction_tracker_entry(prediction, now_et)
+            picks[key] = entry
+            changed = True
+
+        if entry is None:
+            continue
+
+        status_label = str(live.get("status_label") or status.title())
+        if entry.get("latest_status") != status or entry.get("status_label") != status_label:
+            entry["latest_status"] = status
+            entry["status_label"] = status_label
+            changed = True
+
+        if status == "FINAL":
+            away_runs = int(live.get("away_runs") or 0)
+            home_runs = int(live.get("home_runs") or 0)
+            score_changed = False
+            if entry.get("final_away_runs") != away_runs or entry.get("final_home_runs") != home_runs:
+                entry["final_away_runs"] = away_runs
+                entry["final_home_runs"] = home_runs
+                score_changed = True
+                changed = True
+            if not bool(entry.get("manual_override")):
+                official_result = _automatic_result(entry, away_runs, home_runs)
+                result_changed = entry.get("result") != official_result
+                if result_changed:
+                    entry["result"] = official_result
+                    changed = True
+                if score_changed or result_changed or not entry.get("graded_at_et"):
+                    entry["graded_at_et"] = _tracker_timestamp(now_et)
+                    entry["graded_source"] = "official MLB final"
+                    changed = True
+
+    if changed:
+        saved, save_status = save_prediction_tracker(payload)
+        storage_status = save_status
+        if saved:
+            payload, _ = load_prediction_tracker()
+    return payload, storage_status
+
+
+def _tracker_sort_key(entry: dict[str, Any]) -> tuple[str, str, int]:
+    return (
+        str(entry.get("game_date") or ""),
+        str(entry.get("scheduled_at") or entry.get("captured_at_et") or ""),
+        int(entry.get("game_pk") or 0),
+    )
+
+
+def tracker_record(entries: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    rows = list(entries)
+    completed = [row for row in rows if row.get("result") in {"WIN", "LOSS"}]
+    completed.sort(key=_tracker_sort_key, reverse=True)
+    wins = sum(row.get("result") == "WIN" for row in completed)
+    losses = sum(row.get("result") == "LOSS" for row in completed)
+    decisions = wins + losses
+    recent = completed[:10]
+    recent_wins = sum(row.get("result") == "WIN" for row in recent)
+    recent_losses = sum(row.get("result") == "LOSS" for row in recent)
+    streak = "—"
+    if completed:
+        streak_result = str(completed[0]["result"])
+        streak_count = 0
+        for row in completed:
+            if row.get("result") != streak_result:
+                break
+            streak_count += 1
+        streak = f"{'W' if streak_result == 'WIN' else 'L'}{streak_count}"
+    return {
+        "wins": wins,
+        "losses": losses,
+        "decisions": decisions,
+        "pending": sum(row.get("result") == "PENDING" for row in rows),
+        "void": sum(row.get("result") == "VOID" for row in rows),
+        "win_rate": wins / decisions if decisions else None,
+        "last_ten": f"{recent_wins}-{recent_losses}" if recent else "—",
+        "streak": streak,
+    }
+
+
+def tracker_confidence_group(entry: dict[str, Any]) -> str:
+    probability = float(entry.get("target_probability") or 0.0) * 100.0
+    if probability >= 60.0:
+        return "60%+"
+    if probability >= 55.0:
+        return "55–59.9%"
+    return "50–54.9%"
+
+
+def tracker_quality_group(entry: dict[str, Any]) -> str:
+    quality = int(entry.get("quality_score") or 0)
+    if quality >= 80:
+        return "Higher quality"
+    if quality >= 65:
+        return "Solid quality"
+    return "Limited quality"
+
+
+def tracker_group_records(
+    entries: Iterable[dict[str, Any]], group_function: Any, labels: Iterable[str]
+) -> list[tuple[str, dict[str, Any]]]:
+    rows = list(entries)
+    return [
+        (label, tracker_record(row for row in rows if group_function(row) == label))
+        for label in labels
+    ]
+
+
+def tracker_json_bytes(payload: dict[str, Any]) -> bytes:
+    normalized = _validate_tracker_payload(payload)
+    return json.dumps(normalized, indent=2, sort_keys=True).encode("utf-8")
+
+
+def tracker_csv_bytes(payload: dict[str, Any]) -> bytes:
+    columns = [
+        "game_date", "away_name", "home_name", "target_name", "target_probability",
+        "fair_moneyline", "quality_score", "result", "final_away_runs",
+        "final_home_runs", "captured_at_et", "graded_at_et", "manual_override",
+    ]
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=columns)
+    writer.writeheader()
+    for entry in sorted(payload["picks"].values(), key=_tracker_sort_key, reverse=True):
+        row = {column: entry.get(column) for column in columns}
+        probability = entry.get("target_probability")
+        row["target_probability"] = (
+            round(float(probability) * 100.0, 1) if probability is not None else None
+        )
+        writer.writerow(row)
+    return output.getvalue().encode("utf-8")
+
+
+def apply_tracker_override(game_pk: int, result: str) -> tuple[bool, str]:
+    payload, status = load_prediction_tracker()
+    entry = payload["picks"].get(str(int(game_pk)))
+    if entry is None:
+        return False, "That tracked game could not be found."
+    normalized_result = str(result).upper()
+    if normalized_result == "AUTO":
+        entry["manual_override"] = False
+        entry["result"] = "PENDING"
+        entry["graded_at_et"] = None
+        entry["graded_source"] = None
+    elif normalized_result in TRACKER_RESULT_OPTIONS:
+        entry["manual_override"] = True
+        entry["result"] = normalized_result
+        entry["graded_at_et"] = _tracker_timestamp()
+        entry["graded_source"] = "manual correction"
+    else:
+        return False, "Choose Auto, Win, Loss, Void or Pending."
+    return save_prediction_tracker(payload)
+
+
+def restore_prediction_tracker(uploaded_bytes: bytes) -> tuple[bool, str]:
+    try:
+        raw = json.loads(uploaded_bytes.decode("utf-8"))
+        payload = _validate_tracker_payload(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        return False, f"That backup could not be restored: {exc}"
+    saved, status = save_prediction_tracker(payload)
+    return (True, "Tracker backup restored.") if saved else (False, status)
+
+
+def toggle_tracker_dashboard() -> None:
+    st.session_state["show_tracker_dashboard"] = not bool(
+        st.session_state.get("show_tracker_dashboard", False)
+    )
 
 
 @st.cache_data(ttl=45, show_spinner=False)
@@ -5138,6 +5775,308 @@ def render_game_center(predictions: list[dict[str, Any]], selected_date: date) -
             render_score_card_grid(games, empty_message)
 
 
+def _tracker_rate_text(stats: dict[str, Any]) -> str:
+    rate = stats.get("win_rate")
+    return f"{float(rate) * 100.0:.1f}%" if rate is not None else "—"
+
+
+def _tracker_record_tone(stats: dict[str, Any]) -> str:
+    rate = stats.get("win_rate")
+    if rate is None:
+        return "neutral"
+    if float(rate) >= 0.55:
+        return "good"
+    if float(rate) < 0.50:
+        return "bad"
+    return "neutral"
+
+
+def tracker_bucket_markup(label: str, stats: dict[str, Any], subtitle: str) -> str:
+    tone = _tracker_record_tone(stats)
+    decisions = int(stats["decisions"])
+    sample_text = f"{decisions} graded {'pick' if decisions == 1 else 'picks'}"
+    if int(stats["pending"]):
+        sample_text += f" · {int(stats['pending'])} pending"
+    return f"""
+    <div class="tracker-bucket {tone}">
+        <div class="tracker-bucket-label">{safe_text(label)}</div>
+        <div class="tracker-bucket-record">{int(stats['wins'])}–{int(stats['losses'])}</div>
+        <div class="tracker-bucket-rate">{safe_text(_tracker_rate_text(stats))} win rate</div>
+        <div class="tracker-bucket-note">{safe_text(subtitle)} · {safe_text(sample_text)}</div>
+    </div>
+    """
+
+
+def tracker_pick_log_markup(entries: Iterable[dict[str, Any]]) -> str:
+    rows: list[str] = []
+    for entry in sorted(entries, key=_tracker_sort_key, reverse=True):
+        result = str(entry.get("result") or "PENDING").upper()
+        result_class = result.lower()
+        probability = float(entry.get("target_probability") or 0.0) * 100.0
+        away_runs = entry.get("final_away_runs")
+        home_runs = entry.get("final_home_runs")
+        if away_runs is not None and home_runs is not None:
+            game_state = (
+                f"{entry.get('away_short_name') or 'Away'} {int(away_runs)} · "
+                f"{entry.get('home_short_name') or 'Home'} {int(home_runs)}"
+            )
+        else:
+            game_state = str(entry.get("status_label") or "Awaiting first pitch")
+        date_text = str(entry.get("game_date") or "")
+        try:
+            date_text = date.fromisoformat(date_text).strftime("%b %-d, %Y")
+        except ValueError:
+            pass
+        manual_text = " · corrected" if entry.get("manual_override") else ""
+        rows.append(
+            f"""
+            <div class="tracker-log-row {result_class}">
+                <div class="tracker-log-matchup">
+                    <div class="tracker-log-logos">
+                        <img src="{safe_text(entry.get('away_logo'))}" alt="" loading="lazy">
+                        <img src="{safe_text(entry.get('home_logo'))}" alt="" loading="lazy">
+                    </div>
+                    <div>
+                        <div class="tracker-log-teams">{safe_text(entry.get('away_short_name'))} at {safe_text(entry.get('home_short_name'))}</div>
+                        <div class="tracker-log-date">{safe_text(date_text)}</div>
+                    </div>
+                </div>
+                <div class="tracker-log-pick">
+                    <img src="{safe_text(entry.get('target_logo'))}" alt="" loading="lazy">
+                    <div><span>Locked pick</span><strong>{safe_text(entry.get('target_short_name'))} {probability:.1f}%</strong></div>
+                </div>
+                <div class="tracker-log-score"><span>Official score</span><strong>{safe_text(game_state)}</strong></div>
+                <div class="tracker-result {result_class}">{safe_text(result)}{safe_text(manual_text)}</div>
+            </div>
+            """
+        )
+    return "".join(rows)
+
+
+def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
+    entries = list(payload["picks"].values())
+    stats = tracker_record(entries)
+    rate_value = float(stats["win_rate"] or 0.0) * 100.0
+    rate_gauge = gauge_markup(
+        rate_value,
+        "win rate",
+        kind="tracker-win-gauge",
+        tone="good" if stats["win_rate"] is not None and stats["win_rate"] >= 0.5 else "ice",
+        display=_tracker_rate_text(stats),
+    )
+
+    with st.container(key="tracker_panel"):
+        st.markdown(
+            html_block(f"""
+            <div class="tracker-panel-head">
+                <div>
+                    <div class="tracker-panel-kicker">Verified model history</div>
+                    <div class="tracker-panel-title">Performance Tracker</div>
+                    <div class="tracker-panel-subtitle">Every entry is frozen before first pitch and graded from the official MLB final.</div>
+                </div>
+                <div class="tracker-panel-count">{len(entries)} tracked {'pick' if len(entries) == 1 else 'picks'}</div>
+            </div>
+            """),
+            unsafe_allow_html=True,
+        )
+
+        feedback = st.session_state.pop("tracker_feedback", None)
+        if feedback:
+            message_type, message = feedback
+            if message_type == "success":
+                st.success(message)
+            else:
+                st.error(message)
+        if storage_status != "ready":
+            st.error(storage_status)
+
+        overview_tab, confidence_tab, log_tab = st.tabs(
+            ["Overview", "Confidence splits", "Pick log"]
+        )
+
+        with overview_tab:
+            st.markdown(
+                html_block(f"""
+                <div class="tracker-overview">
+                    <div class="tracker-record-hero {_tracker_record_tone(stats)}">
+                        <div>
+                            <div class="tracker-record-eyebrow">Official record</div>
+                            <div class="tracker-record-big">{int(stats['wins'])}–{int(stats['losses'])}</div>
+                            <div class="tracker-record-copy">Wins and losses only. Voids never affect the percentage.</div>
+                        </div>
+                        {rate_gauge}
+                    </div>
+                    <div class="tracker-overview-grid">
+                        <div class="tracker-overview-card"><span>Last 10</span><strong>{safe_text(stats['last_ten'])}</strong><small>Most recent decisions</small></div>
+                        <div class="tracker-overview-card"><span>Current streak</span><strong>{safe_text(stats['streak'])}</strong><small>Consecutive results</small></div>
+                        <div class="tracker-overview-card pending"><span>Pending</span><strong>{int(stats['pending'])}</strong><small>Waiting for a final</small></div>
+                        <div class="tracker-overview-card"><span>Voids</span><strong>{int(stats['void'])}</strong><small>Excluded from record</small></div>
+                    </div>
+                </div>
+                """),
+                unsafe_allow_html=True,
+            )
+            if not entries:
+                st.info(
+                    "Tracking starts when Build 22 sees a matchup before first pitch. "
+                    "It will not invent or backfill older picks."
+                )
+
+        with confidence_tab:
+            confidence_groups = tracker_group_records(
+                entries,
+                tracker_confidence_group,
+                ("50–54.9%", "55–59.9%", "60%+"),
+            )
+            quality_groups = tracker_group_records(
+                entries,
+                tracker_quality_group,
+                ("Higher quality", "Solid quality", "Limited quality"),
+            )
+            confidence_markup = "".join(
+                tracker_bucket_markup(label, group_stats, "Locked win probability")
+                for label, group_stats in confidence_groups
+            )
+            quality_markup = "".join(
+                tracker_bucket_markup(label, group_stats, "Pregame data completeness")
+                for label, group_stats in quality_groups
+            )
+            st.markdown(
+                html_block(f"""
+                <div class="tracker-split-heading"><strong>By model probability</strong><span>Shows where the model has actually performed best.</span></div>
+                <div class="tracker-bucket-grid">{confidence_markup}</div>
+                <div class="tracker-split-heading quality"><strong>By data quality</strong><span>Data quality measures completeness, not certainty.</span></div>
+                <div class="tracker-bucket-grid">{quality_markup}</div>
+                """),
+                unsafe_allow_html=True,
+            )
+
+        with log_tab:
+            if entries:
+                st.markdown(
+                    html_block(f"<div class='tracker-log'>{tracker_pick_log_markup(entries)}</div>"),
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.info("No picks have been captured yet. Today's pregame slate will appear here automatically.")
+
+        st.markdown(
+            html_block("""
+            <div class="tracker-tools-heading">
+                <div><strong>Tracker controls</strong><span>Keep a backup before replacing or redeploying the app.</span></div>
+            </div>
+            """),
+            unsafe_allow_html=True,
+        )
+        backup_column, csv_column, correction_column = st.columns([1, 1, 1.15])
+        with backup_column:
+            st.download_button(
+                "Download tracker backup",
+                data=tracker_json_bytes(payload),
+                file_name="mlb_quant_tracker_backup.json",
+                mime="application/json",
+                key="tracker_backup_download",
+                use_container_width=True,
+            )
+        with csv_column:
+            st.download_button(
+                "Export pick log CSV",
+                data=tracker_csv_bytes(payload),
+                file_name="mlb_quant_pick_log.csv",
+                mime="text/csv",
+                key="tracker_csv_download",
+                use_container_width=True,
+            )
+        with correction_column:
+            with st.popover("Corrections & restore", use_container_width=True):
+                if entries:
+                    entry_labels = {
+                        (
+                            f"{entry.get('game_date', '')} · {entry.get('away_short_name', 'Away')} at "
+                            f"{entry.get('home_short_name', 'Home')} · {entry.get('result', 'PENDING')}"
+                        ): int(entry["game_pk"])
+                        for entry in sorted(entries, key=_tracker_sort_key, reverse=True)
+                    }
+                    selected_entry_label = st.selectbox(
+                        "Tracked game",
+                        list(entry_labels),
+                        key="tracker_correction_game",
+                    )
+                    corrected_result = st.selectbox(
+                        "Recorded result",
+                        ["Auto (official final)", "Win", "Loss", "Void", "Pending"],
+                        key="tracker_correction_result",
+                    )
+                    if st.button("Save correction", key="tracker_save_correction", use_container_width=True):
+                        result_value = "AUTO" if corrected_result.startswith("Auto") else corrected_result.upper()
+                        saved, message = apply_tracker_override(
+                            entry_labels[selected_entry_label], result_value
+                        )
+                        st.session_state["tracker_feedback"] = (
+                            "success" if saved else "error",
+                            "Tracker result updated." if saved else message,
+                        )
+                        st.rerun()
+                    st.divider()
+                uploaded_backup = st.file_uploader(
+                    "Restore JSON backup",
+                    type=["json"],
+                    key="tracker_restore_upload",
+                    help="Restoring replaces the tracker ledger with the selected backup.",
+                )
+                if st.button(
+                    "Restore selected backup",
+                    key="tracker_restore_button",
+                    disabled=uploaded_backup is None,
+                    use_container_width=True,
+                ):
+                    restored, message = restore_prediction_tracker(uploaded_backup.getvalue())
+                    st.session_state["tracker_feedback"] = (
+                        "success" if restored else "error",
+                        message,
+                    )
+                    st.rerun()
+        st.caption(
+            "Automatic grading uses official MLB final scores. Manual corrections are visibly marked in the pick log."
+        )
+
+
+def render_tracker_summary(payload: dict[str, Any], storage_status: str) -> None:
+    entries = list(payload["picks"].values())
+    stats = tracker_record(entries)
+    with st.container(border=True, key="tracker_summary"):
+        summary_column, action_column = st.columns([6, 1.25], vertical_alignment="center")
+        with summary_column:
+            st.markdown(
+                html_block(f"""
+                <div class="tracker-strip">
+                    <div class="tracker-strip-brand">
+                        <span>Model record</span>
+                        <strong>{int(stats['wins'])}–{int(stats['losses'])}</strong>
+                    </div>
+                    <div class="tracker-strip-metrics">
+                        <div><span>Win rate</span><strong>{safe_text(_tracker_rate_text(stats))}</strong></div>
+                        <div><span>Last 10</span><strong>{safe_text(stats['last_ten'])}</strong></div>
+                        <div><span>Streak</span><strong>{safe_text(stats['streak'])}</strong></div>
+                        <div class="pending"><span>Pending</span><strong>{int(stats['pending'])}</strong></div>
+                    </div>
+                </div>
+                """),
+                unsafe_allow_html=True,
+            )
+        with action_column:
+            st.button(
+                "Close tracker" if st.session_state.get("show_tracker_dashboard") else "View full tracker",
+                key="tracker_dashboard_toggle",
+                on_click=toggle_tracker_dashboard,
+                use_container_width=True,
+            )
+    if storage_status != "ready":
+        st.warning(storage_status)
+    if st.session_state.get("show_tracker_dashboard"):
+        render_full_tracker(payload, storage_status)
+
+
 def slate_insight_card(
     prediction: dict[str, Any], icon: str, label: str, value: str, detail: str
 ) -> str:
@@ -5637,7 +6576,7 @@ with brand_column:
             <div>
                 <div class="quant-brand-heading">
                     <div class="quant-brand-title">MLB Quant Terminal</div>
-                    <span class="quant-build">Build 21</span>
+                    <span class="quant-build">Build 22</span>
                 </div>
                 <div class="quant-brand-subtitle">Live scores · locked pregame forecasts · matchup intelligence</div>
             </div>
@@ -5801,10 +6740,13 @@ predictions.sort(
     )
 )
 
+tracker_payload, tracker_storage_status = sync_prediction_tracker(predictions, now_et)
+
 live_count = sum(p["game"]["live"]["status"] == "LIVE" for p in predictions)
 preview_count = sum(p["game"]["live"]["status"] == "PREVIEW" for p in predictions)
 final_count = sum(p["game"]["live"]["status"] == "FINAL" for p in predictions)
 render_game_center(predictions, selected_date)
+render_tracker_summary(tracker_payload, tracker_storage_status)
 
 render_slate_insights(predictions)
 st.markdown(
