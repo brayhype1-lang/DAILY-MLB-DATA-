@@ -82,11 +82,15 @@ WEATHER_CODES = {
     99: "Severe thunderstorms",
 }
 import csv
+import base64
+import copy
 import io
+import hmac
 import json
 import math
 import os
 import re
+import sys
 import threading
 import time
 import urllib.error
@@ -1014,9 +1018,12 @@ def offense_profile(team_row: dict[str, Any], league: dict[str, float]) -> dict[
     recent = team_row.get("recent_hitting", {})
     games = safe_float(season.get("gamesPlayed"), 0.0) or 0.0
     recent_games = safe_float(recent.get("gamesPlayed"), 0.0) or 0.0
-    season_rpg = _rate(season, "runs", "gamesPlayed") or league["runs_per_game"]
-    recent_rpg = _rate(recent, "runs", "gamesPlayed") or season_rpg
-    ops = safe_float(season.get("ops"), league["ops"]) or league["ops"]
+    season_rpg = _rate(season, "runs", "gamesPlayed")
+    recent_rpg = _rate(recent, "runs", "gamesPlayed")
+    ops = safe_float(season.get("ops"))
+    season_rpg = league["runs_per_game"] if season_rpg is None else season_rpg
+    recent_rpg = season_rpg if recent_rpg is None else recent_rpg
+    ops = league["ops"] if ops is None else ops
 
     season_index_raw = season_rpg / league["runs_per_game"]
     season_index = 1.0 + (season_index_raw - 1.0) * (games / (games + 24.0))
@@ -1038,10 +1045,11 @@ def _fip(stat: dict[str, Any], constant: float) -> float | None:
     innings = innings_to_float(stat.get("inningsPitched"))
     if innings <= 0:
         return None
-    home_runs = safe_float(stat.get("homeRuns"), 0.0) or 0.0
-    walks = safe_float(stat.get("baseOnBalls"), 0.0) or 0.0
-    hit_batters = safe_float(stat.get("hitByPitch"), 0.0) or 0.0
-    strikeouts = safe_float(stat.get("strikeOuts"), 0.0) or 0.0
+    counts = [safe_float(stat.get(key)) for key in
+              ("homeRuns", "baseOnBalls", "hitByPitch", "strikeOuts")]
+    if any(value is None or value < 0 for value in counts):
+        return None
+    home_runs, walks, hit_batters, strikeouts = counts
     return (13.0 * home_runs + 3.0 * (walks + hit_batters) - 2.0 * strikeouts) / innings + constant
 
 
@@ -1116,7 +1124,7 @@ def starter_profile(
         "days_rest": days_rest,
         "fatigue_score": clamp(fatigue_score, 0.0, 100.0),
         "sample_bf": batters_faced,
-        "has_stats": bool(stat),
+        "has_stats": innings > 0 and any(value is not None for value in (era, fip, xera, whip_ra9)),
         "has_statcast": xera is not None or safe_float(statcast.get("xwoba")) is not None,
     }
 
@@ -2977,7 +2985,7 @@ h3 { font-size: 1.17rem !important; }
 
 
 def stadium_stylesheet() -> str:
-    """Build 22 visual system: graphite stadium surfaces and verified performance tracking."""
+    """Build 24: retain the established readable stadium presentation."""
     return """
 <style>
 :root {
@@ -4580,19 +4588,20 @@ import streamlit as st
 ET = ZoneInfo("America/New_York")
 
 # Change these two numbers if you want a different daily forced-update time.
-# The app also keeps live scores, lineups, weather and odds on their shorter TTLs.
+# Live scores refresh independently; saved forecast inputs remain immutable.
 DAILY_REFRESH_HOUR_ET = 8
 DAILY_REFRESH_MINUTE_ET = 0
 LIVE_REFRESH_SECONDS = 30
+MODEL_VERSION = "24.1-input-integrity"
+SHORTLIST_RULE_VERSION = "24.1-prospective"
 
-st.set_page_config(
-    page_title="MLB Quantitative Matchup & Winner Engine",
-    page_icon="⚾",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
-st.markdown(stadium_stylesheet(), unsafe_allow_html=True)
-st.markdown(floating_logo_markup(), unsafe_allow_html=True)
+def initialize_page() -> None:
+    st.set_page_config(
+        page_title="MLB Quantitative Matchup & Winner Engine",
+        page_icon="⚾", layout="wide", initial_sidebar_state="collapsed",
+    )
+    st.markdown(stadium_stylesheet(), unsafe_allow_html=True)
+    st.markdown(floating_logo_markup(), unsafe_allow_html=True)
 
 
 @st.cache_resource
@@ -4633,6 +4642,8 @@ def toggle_game_analysis(game_pk: int) -> None:
 
 
 TRACKER_SCHEMA_VERSION = 1
+TRACKER_BUILD = 24
+TRACKER_MAX_BYTES = 50_000_000
 TRACKER_RESULT_OPTIONS = ("PENDING", "WIN", "LOSS", "VOID")
 _tracker_path_override = os.environ.get("MLB_TRACKER_PATH", "").strip()
 TRACKER_PATH = (
@@ -4640,7 +4651,15 @@ TRACKER_PATH = (
     if _tracker_path_override
     else Path(__file__).resolve().with_name(".mlb_quant_tracker.json")
 )
-_TRACKER_LOCK = threading.RLock()
+
+
+@st.cache_resource(show_spinner=False)
+def _shared_tracker_lock(path: str) -> Any:
+    """One transaction lock per ledger, shared across Streamlit reruns/sessions."""
+    return threading.RLock()
+
+
+_TRACKER_LOCK = _shared_tracker_lock(str(TRACKER_PATH.resolve()))
 
 
 def _tracker_timestamp(moment: datetime | None = None) -> str:
@@ -4664,16 +4683,19 @@ def _validate_tracker_payload(raw: Any) -> dict[str, Any]:
     """Return a normalized tracker payload or raise a clear validation error."""
     if not isinstance(raw, dict):
         raise ValueError("The tracker backup must contain a JSON object.")
+    if raw.get("schema_version", TRACKER_SCHEMA_VERSION) != TRACKER_SCHEMA_VERSION:
+        raise ValueError("This backup uses an unsupported tracker format.")
     raw_picks = raw.get("picks")
     if not isinstance(raw_picks, dict):
         raise ValueError("The tracker backup is missing its picks collection.")
 
-    payload = {
+    payload = dict(raw)
+    payload.update({
         "schema_version": TRACKER_SCHEMA_VERSION,
         "created_at": str(raw.get("created_at") or _tracker_timestamp()),
         "updated_at": str(raw.get("updated_at") or _tracker_timestamp()),
         "picks": {},
-    }
+    })
     for raw_key, raw_entry in raw_picks.items():
         if not isinstance(raw_entry, dict):
             raise ValueError(f"Tracker entry {raw_key!s} is not valid.")
@@ -4681,13 +4703,55 @@ def _validate_tracker_payload(raw: Any) -> dict[str, Any]:
             game_pk = int(raw_entry.get("game_pk", raw_key))
         except (TypeError, ValueError) as exc:
             raise ValueError(f"Tracker entry {raw_key!s} has no valid game ID.") from exc
+        if game_pk <= 0 or str(game_pk) != str(raw_key):
+            raise ValueError(f"Tracker entry {raw_key!s} has a mismatched game ID.")
+        if raw_entry.get("target_side") not in {"away", "home"}:
+            raise ValueError(f"Tracker entry {game_pk} has no valid frozen pick.")
+        try:
+            probability = float(raw_entry.get("target_probability"))
+            quality = float(raw_entry.get("quality_score", 0))
+            date.fromisoformat(str(raw_entry.get("game_date")))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Tracker entry {game_pk} has invalid pick details.") from exc
+        if not math.isfinite(probability) or not 0.0 <= probability <= 1.0:
+            raise ValueError(f"Tracker entry {game_pk} has an invalid probability.")
+        if not math.isfinite(quality) or not 0 <= quality <= 100:
+            raise ValueError(f"Tracker entry {game_pk} has an invalid data-quality score.")
         result = str(raw_entry.get("result") or "PENDING").upper()
         if result not in TRACKER_RESULT_OPTIONS:
             raise ValueError(f"Tracker entry {game_pk} has an unsupported result.")
         entry = dict(raw_entry)
         entry["game_pk"] = game_pk
         entry["result"] = result
-        entry["manual_override"] = bool(entry.get("manual_override", False))
+        if not isinstance(entry.get("manual_override", False), bool):
+            raise ValueError(f"Tracker entry {game_pk} has an invalid correction flag.")
+        entry["manual_override"] = entry.get("manual_override", False)
+        snapshot = entry.get("frozen_prediction")
+        if snapshot is not None:
+            if not isinstance(snapshot, dict):
+                raise ValueError(f"Tracker entry {game_pk} has an invalid frozen forecast.")
+            required_numbers = ("away_probability", "home_probability", "target_probability",
+                                "projected_away_runs", "projected_home_runs", "quality_score",
+                                "simulation_home_probability", "record_home_probability", "model_agreement_gap",
+                                "park_factor", "weather_factor", "shared_environment_factor", "simulations")
+            if any(safe_float(snapshot.get(field)) is None for field in required_numbers):
+                raise ValueError(f"Tracker entry {game_pk} has incomplete frozen model values.")
+            if (snapshot.get("target_side") != entry["target_side"]
+                    or abs(float(snapshot["target_probability"]) - probability) > 0.000002
+                    or abs(float(snapshot["away_probability"]) + float(snapshot["home_probability"]) - 1.0) > 0.000002):
+                raise ValueError(f"Tracker entry {game_pk} has a conflicting frozen pick.")
+            numeric_profiles = {
+                "away_offense": ("strength", "season_rpg", "recent_rpg", "ops"),
+                "home_offense": ("strength", "season_rpg", "recent_rpg", "ops"),
+                "away_starter": ("quality_ra9", "expected_ip"),
+                "home_starter": ("quality_ra9", "expected_ip"),
+                "away_bullpen": ("quality_ra9",), "home_bullpen": ("quality_ra9",),
+                "distribution": ("total_line", "over_probability", "under_probability"),
+            }
+            for field, keys in numeric_profiles.items():
+                profile = snapshot.get(field)
+                if not isinstance(profile, dict) or any(safe_float(profile.get(key)) is None for key in keys):
+                    raise ValueError(f"Tracker entry {game_pk} has invalid frozen {field} data.")
         payload["picks"][str(game_pk)] = entry
     return payload
 
@@ -4695,12 +4759,12 @@ def _validate_tracker_payload(raw: Any) -> dict[str, Any]:
 def load_prediction_tracker() -> tuple[dict[str, Any], str]:
     """Load the local ledger without allowing a damaged file to break the app."""
     with _TRACKER_LOCK:
-        if not TRACKER_PATH.exists():
-            return empty_prediction_tracker(), "ready"
         try:
             with TRACKER_PATH.open("r", encoding="utf-8") as handle:
                 payload = _validate_tracker_payload(json.load(handle))
             return payload, "ready"
+        except FileNotFoundError:
+            return empty_prediction_tracker(), "ready"
         except (OSError, json.JSONDecodeError, ValueError) as exc:
             return empty_prediction_tracker(), f"Tracker storage needs attention: {exc}"
 
@@ -4735,6 +4799,212 @@ def _tracker_fair_moneyline(prediction: dict[str, Any]) -> int | None:
         return None
 
 
+def forecast_research_selection(prediction: dict[str, Any]) -> dict[str, Any]:
+    """A fixed prospective research rule, not a claim of proven betting value."""
+    probability = float(prediction.get("target_probability") or 0.5)
+    quality = float(prediction.get("quality_score") or 0)
+    agreement = safe_float(prediction.get("model_agreement_gap"))
+    starters_ready = all(
+        bool((prediction.get(f"{side}_starter") or {}).get("has_stats"))
+        and float((prediction.get(f"{side}_starter") or {}).get("sample_bf") or 0) >= 80
+        for side in ("away", "home")
+    )
+    reasons = []
+    if probability < 0.60:
+        reasons.append("Win probability is below the 60% research cutoff.")
+    if quality < 80:
+        reasons.append("Data completeness is below 80/100.")
+    if not starters_ready:
+        reasons.append("Both starters need usable statistics and at least 80 batters faced.")
+    if agreement is None or agreement > 0.10:
+        reasons.append("The simulation and record estimate do not agree within 10 points.")
+    qualifies = not reasons
+    if qualifies:
+        label, tone = "Stronger setup", "good"
+    elif probability < 0.55:
+        label, tone = "Close matchup · pass", "warn"
+    elif quality < 80 or not starters_ready:
+        label, tone = "Incomplete setup · pass", "warn"
+    else:
+        label, tone = "Standard forecast", "ice"
+    return {
+        "rule_version": SHORTLIST_RULE_VERSION, "qualifies": qualifies,
+        "label": label, "tone": tone, "reasons": reasons,
+        "notice": "Experimental research selection, not a validated edge or guaranteed winner.",
+    }
+
+
+def _wilson_interval(wins: int, total: int) -> tuple[float | None, float | None]:
+    if not total:
+        return None, None
+    z = 1.959963984540054
+    proportion = wins / total
+    denominator = 1.0 + z * z / total
+    center = (proportion + z * z / (2.0 * total)) / denominator
+    radius = z * math.sqrt(proportion * (1.0 - proportion) / total + z * z / (4.0 * total * total)) / denominator
+    return max(0.0, center - radius), min(1.0, center + radius)
+
+
+def evaluate_frozen_forecasts(entries: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    rows = list(entries)
+    graded = [row for row in rows if row.get("result") in {"WIN", "LOSS"}
+              and not row.get("manual_override")]
+    probabilities = [float(row["target_probability"]) for row in graded]
+    outcomes = [float(row["result"] == "WIN") for row in graded]
+    count = len(graded)
+    wins = int(sum(outcomes))
+    low, high = _wilson_interval(wins, count)
+    brier = sum((p - y) ** 2 for p, y in zip(probabilities, outcomes)) / count if count else None
+    log_loss = -sum(y * math.log(clamp(p, 1e-12, 1.0 - 1e-12))
+                    + (1.0 - y) * math.log(clamp(1.0 - p, 1e-12, 1.0 - 1e-12))
+                    for p, y in zip(probabilities, outcomes)) / count if count else None
+    mean_probability = sum(probabilities) / count if count else None
+    observed = wins / count if count else None
+    prospectively_labeled = [row for row in rows
+                            if (row.get("research_selection") or {}).get("rule_version") == SHORTLIST_RULE_VERSION]
+    shortlisted = [row for row in prospectively_labeled
+                   if row["research_selection"].get("qualifies")]
+    comparisons = []
+    for key, label in (("simulation_home", "Run simulation"), ("record_home", "Record baseline"),
+                       ("market_home", "No-vig sportsbook"), ("calibrated_target", "Calibration challenger")):
+        paired = []
+        for row in graded:
+            evidence = row.get("evaluation_probabilities") or {}
+            candidate = safe_float(evidence.get(key))
+            if candidate is None or not 0.0 <= candidate <= 1.0:
+                continue
+            y = float(row["result"] == "WIN")
+            candidate_target = candidate if key == "calibrated_target" or row["target_side"] == "home" else 1.0 - candidate
+            paired.append(((float(row["target_probability"]) - y) ** 2, (candidate_target - y) ** 2))
+        if paired:
+            comparisons.append({
+                "name": label, "n": len(paired),
+                "main_brier": sum(pair[0] for pair in paired) / len(paired),
+                "candidate_brier": sum(pair[1] for pair in paired) / len(paired),
+            })
+    return {
+        "n": count, "wins": wins, "win_rate": observed,
+        "mean_probability": mean_probability, "brier": brier, "log_loss": log_loss,
+        "interval_low": low, "interval_high": high,
+        "calibration_gap": observed - mean_probability if count else None,
+        "manual_excluded": sum(bool(row.get("manual_override")) for row in rows),
+        "shortlisted": tracker_record(shortlisted),
+        "prospective_count": len(prospectively_labeled), "comparisons": comparisons,
+    }
+
+
+def fit_calibration_challenger(entries: Iterable[dict[str, Any]], as_of: datetime) -> dict[str, Any] | None:
+    """Fit only on older verified results; never alter the published main pick."""
+    cutoff = as_of.astimezone(timezone.utc)
+    training = []
+    for row in entries:
+        graded_at = _parse_utc(str(row.get("graded_at_et") or ""))
+        captured_at = _parse_utc(str(row.get("captured_at_et") or ""))
+        if (row.get("model_version") != MODEL_VERSION or row.get("manual_override")
+                or row.get("result") not in {"WIN", "LOSS"}
+                or row.get("graded_source") != "official MLB final"
+                or not graded_at or not captured_at or not captured_at < graded_at < cutoff):
+            continue
+        training.append(row)
+    training.sort(key=lambda row: _parse_utc(str(row["graded_at_et"])))
+    training = training[-2000:]
+    if len(training) < 200 or len({row["game_date"] for row in training}) < 14:
+        return None
+    examples = [(math.log(clamp(float(row["target_probability"]), .001, .999)
+                           / (1.0 - clamp(float(row["target_probability"]), .001, .999))),
+                 float(row["result"] == "WIN")) for row in training]
+    def loss(scale: float) -> float:
+        total = 0.0
+        for logit, outcome in examples:
+            p = 1.0 / (1.0 + math.exp(-scale * logit))
+            total -= outcome * math.log(p) + (1.0 - outcome) * math.log(1.0 - p)
+        return total / len(examples) + .01 * (scale - 1.0) ** 2
+    scale = min((.25 + .05 * step for step in range(26)), key=loss)
+    return {"scale": round(scale, 3), "training_count": len(training),
+            "trained_through_et": str(training[-1]["graded_at_et"])}
+
+
+def attach_forecast_evidence(prediction: dict[str, Any], weather: dict[str, Any],
+                             lineup: dict[str, Any], calibration: dict[str, Any] | None) -> dict[str, Any]:
+    prediction = dict(prediction)
+    prediction["model_version"] = MODEL_VERSION
+    prediction["research_selection"] = forecast_research_selection(prediction)
+    prediction["captured_context"] = {"weather": copy.deepcopy(weather), "lineup": copy.deepcopy(lineup)}
+    prediction["evaluation_probabilities"] = {
+        "simulation_home": safe_float(prediction.get("simulation_home_probability")),
+        "record_home": safe_float(prediction.get("record_home_probability")),
+        "market_home": safe_float((prediction.get("odds") or {}).get("home_no_vig")),
+    }
+    if calibration:
+        probability = clamp(float(prediction["target_probability"]), .001, .999)
+        calibrated = 1.0 / (1.0 + math.exp(-float(calibration["scale"]) * math.log(probability / (1.0 - probability))))
+        prediction["evaluation_probabilities"]["calibrated_target"] = calibrated
+        prediction["calibration_training"] = dict(calibration)
+    return prediction
+
+
+def apply_frozen_forecast(prediction: dict[str, Any], entry: dict[str, Any] | None) -> dict[str, Any]:
+    """Use the saved forecast for display; only the separate scoreboard stays live."""
+    current_game = prediction["game"]
+    if entry is None:
+        output = dict(prediction)
+        output["snapshot_state"] = "preview" if current_game["live"]["status"] == "PREVIEW" else "untracked"
+        output["pregame_locked"] = False
+        if output["snapshot_state"] == "untracked":
+            output["research_selection"] = {"label": "No pregame record", "tone": "warn", "qualifies": False,
+                                            "reasons": ["Not eligible for a pregame research trial after play has started."]}
+        return output
+    if any(int(current_game[side].get("id") or 0) != int(entry.get(f"{side}_id") or 0)
+           for side in ("away", "home")):
+        raise ValueError("A saved forecast's team IDs do not match the official game.")
+    snapshot = entry.get("frozen_prediction")
+    output = copy.deepcopy(snapshot) if isinstance(snapshot, dict) else dict(prediction)
+    output["game"] = copy.deepcopy(current_game)
+    original_teams = entry.get("frozen_teams") or {}
+    for side in ("away", "home"):
+        if isinstance(original_teams.get(side), dict):
+            for field in ("pitcher_id", "pitcher_name"):
+                output["game"][side][field] = original_teams[side].get(field)
+    target_side = entry["target_side"]
+    target_probability = float(entry["target_probability"])
+    output.update({
+        "target_side": target_side, "target_name": entry["target_name"],
+        "target_probability": target_probability,
+        "home_probability": target_probability if target_side == "home" else 1.0 - target_probability,
+        "away_probability": target_probability if target_side == "away" else 1.0 - target_probability,
+        "projected_away_runs": float(entry["projected_away_runs"]),
+        "projected_home_runs": float(entry["projected_home_runs"]),
+        "quality_score": int(entry["quality_score"]), "quality_label": entry["quality_label"],
+        "pregame_locked": True, "live_score_used": False,
+        "snapshot_state": "saved" if isinstance(snapshot, dict) else "legacy",
+        "captured_at_et": entry["captured_at_et"],
+        "research_selection": copy.deepcopy(entry.get("research_selection")) or {
+            "label": "Earlier-build pick", "tone": "ice", "qualifies": False,
+            "reasons": ["Not retrospectively added to the new research shortlist."],
+        },
+    })
+    for side in ("away", "home"):
+        output[f"fair_{side}_odds"] = american_from_probability(output[f"{side}_probability"])
+    output[f"fair_{target_side}_odds"] = entry.get("fair_moneyline") or output[f"fair_{target_side}_odds"]
+    if not snapshot:
+        output["value"] = None
+        output["support"], output["risks"] = _comparison_reasons(
+            output["game"], output["away_offense"], output["home_offense"],
+            output["away_starter"], output["home_starter"], output["away_bullpen"], output["home_bullpen"],
+            (prediction.get("captured_context") or {}).get("weather") or {}, target_side,
+        )
+    return output
+
+
+def forecast_lock_label(prediction: dict[str, Any]) -> str:
+    state = prediction.get("snapshot_state")
+    if state == "untracked":
+        return "Not recorded pregame"
+    if state == "preview":
+        return "Pregame preview · not saved"
+    return "Saved pregame pick"
+
+
 def prediction_tracker_entry(
     prediction: dict[str, Any], captured_at: datetime
 ) -> dict[str, Any]:
@@ -4743,7 +5013,7 @@ def prediction_tracker_entry(
     target_side = str(prediction["target_side"])
     target = game[target_side]
     scheduled = game.get("game_datetime_utc")
-    return {
+    entry = {
         "game_pk": int(game["game_pk"]),
         "game_date": str(game.get("official_date") or captured_at.date().isoformat()),
         "scheduled_at": (
@@ -4771,7 +5041,7 @@ def prediction_tracker_entry(
         "quality_score": int(prediction.get("quality_score") or 0),
         "quality_label": str(prediction.get("quality_label") or "Limited"),
         "captured_at_et": _tracker_timestamp(captured_at),
-        "source_build": 22,
+        "source_build": TRACKER_BUILD,
         "result": "PENDING",
         "manual_override": False,
         "final_away_runs": None,
@@ -4780,6 +5050,15 @@ def prediction_tracker_entry(
         "latest_status": "PREVIEW",
         "status_label": str(game["live"].get("status_label") or "Scheduled"),
     }
+    entry.update({
+        "model_version": prediction.get("model_version", MODEL_VERSION),
+        "research_selection": copy.deepcopy(prediction.get("research_selection")) or forecast_research_selection(prediction),
+        "evaluation_probabilities": copy.deepcopy(prediction.get("evaluation_probabilities") or {}),
+    })
+    if prediction.get("captured_context") is not None:
+        entry["frozen_prediction"] = copy.deepcopy({key: value for key, value in prediction.items() if key != "game"})
+        entry["frozen_teams"] = {side: copy.deepcopy(game[side]) for side in ("away", "home")}
+    return entry
 
 
 def _pregame_snapshot_allowed(game: dict[str, Any], now_et: datetime) -> bool:
@@ -4787,6 +5066,13 @@ def _pregame_snapshot_allowed(game: dict[str, Any], now_et: datetime) -> bool:
     if live.get("status") != "PREVIEW":
         return False
     if str(game.get("official_date") or "") != now_et.date().isoformat():
+        return False
+    scheduled = game.get("game_datetime_utc") or _parse_utc(str(game.get("game_datetime_raw") or ""))
+    if not isinstance(scheduled, datetime) or scheduled.tzinfo is None:
+        return False
+    # A stale Preview response must not let the model create a pick after play.
+    # Conservatively skip late captures even when a scheduled start is delayed.
+    if now_et.astimezone(timezone.utc) >= scheduled.astimezone(timezone.utc):
         return False
     state_text = " ".join(
         str(live.get(key) or "") for key in ("status_label", "detailed_state")
@@ -4802,62 +5088,216 @@ def _automatic_result(entry: dict[str, Any], away_runs: int, home_runs: int) -> 
     return "WIN" if entry.get("target_side") == winning_side else "LOSS"
 
 
-def sync_prediction_tracker(
-    predictions: list[dict[str, Any]], now_et: datetime
-) -> tuple[dict[str, Any], str]:
-    """Capture today's pregame picks and grade existing picks from official finals."""
-    payload, storage_status = load_prediction_tracker()
-    picks = payload["picks"]
-    changed = False
+def fetch_tracker_official_results(game_pks: tuple[int, ...]) -> dict[str, Any]:
+    """Look up saved game IDs across ALL dates, independently of the viewed slate."""
+    unique_ids = sorted({int(game_pk) for game_pk in game_pks})
+    batches = [unique_ids[index:index + 50] for index in range(0, len(unique_ids), 50)]
+    games: dict[int, dict[str, Any]] = {}
+    warnings: list[str] = []
 
-    for prediction in predictions:
-        game = prediction["game"]
-        game_pk = int(game["game_pk"])
-        key = str(game_pk)
-        live = game.get("live") or {}
-        status = str(live.get("status") or "PREVIEW")
-        entry = picks.get(key)
+    def fetch_batch(batch: list[int]) -> dict[str, Any]:
+        body = _request_bytes(
+            f"{MLB_API_BASE}/schedule",
+            {"sportId": 1, "gamePks": ",".join(str(pk) for pk in batch), "hydrate": "linescore"},
+            timeout=10,
+            attempts=1,
+        )
+        response = json.loads(body.decode("utf-8"))
+        if not isinstance(response, dict) or not isinstance(response.get("dates"), list):
+            raise DataSourceError("The MLB result response was incomplete.")
+        return response
 
-        if entry is None and _pregame_snapshot_allowed(game, now_et):
-            entry = prediction_tracker_entry(prediction, now_et)
-            picks[key] = entry
-            changed = True
+    if batches:
+        with ThreadPoolExecutor(max_workers=min(4, len(batches))) as executor:
+            futures = {executor.submit(fetch_batch, batch): batch for batch in batches}
+            for future in as_completed(futures):
+                batch = futures[future]
+                try:
+                    response = future.result()
+                    # A gamePks lookup can return several separate date objects.
+                    # Reading only dates[0] recreates the rollover bug.
+                    for day in response["dates"]:
+                        for raw in day.get("games", []):
+                            game_pk = int(raw.get("gamePk") or 0)
+                            if game_pk in batch:
+                                games[game_pk] = raw
+                except (DataSourceError, OSError, ValueError, TypeError, AttributeError):
+                    warnings.append(f"MLB result lookup failed for {len(batch)} saved games.")
 
-        if entry is None:
+    missing = [game_pk for game_pk in unique_ids if game_pk not in games]
+    if missing and not warnings:
+        warnings.append(f"MLB did not return {len(missing)} saved games.")
+    return {
+        "games": games,
+        "requested_ids": unique_ids,
+        "missing_ids": missing,
+        "checked_at_et": _tracker_timestamp(),
+        "warnings": warnings,
+    }
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_tracker_official_results(game_pks: tuple[int, ...]) -> dict[str, Any]:
+    return fetch_tracker_official_results(game_pks)
+
+
+def _tracker_official_score(raw: dict[str, Any], side: str) -> int | None:
+    """Missing scores must stay missing; never turn an absent result into 0–0."""
+    teams = raw.get("teams") or {}
+    line_teams = (raw.get("linescore") or {}).get("teams") or {}
+    value = (teams.get(side) or {}).get("score")
+    if value is None:
+        value = (line_teams.get(side) or {}).get("runs")
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number) or number < 0 or not number.is_integer():
+        return None
+    return int(number)
+
+
+def reconcile_tracker_payload(
+    payload: dict[str, Any], result_batch: dict[str, Any]
+) -> tuple[int, list[str]]:
+    """Settle existing pending entries only; never recalculate or invent a pick."""
+    settled = 0
+    warnings = list(result_batch.get("warnings") or [])
+    checked_at = str(result_batch.get("checked_at_et") or _tracker_timestamp())
+    official_games = result_batch.get("games") or {}
+
+    for entry in payload["picks"].values():
+        if entry.get("result") != "PENDING" or entry.get("manual_override"):
+            continue
+        game_pk = int(entry["game_pk"])
+        raw = official_games.get(game_pk) or official_games.get(str(game_pk))
+        if raw is None:
+            continue
+        try:
+            raw_teams = raw.get("teams") or {}
+            identity_matches = int(raw.get("gamePk") or 0) == game_pk and all(
+                int(((raw_teams.get(side) or {}).get("team") or {}).get("id") or 0)
+                == int(entry.get(f"{side}_id") or 0)
+                for side in ("away", "home")
+            )
+        except (AttributeError, TypeError, ValueError, OverflowError):
+            identity_matches = False
+        if not identity_matches:
+            warnings.append(f"Game {game_pk}: team identity could not be verified; kept pending.")
             continue
 
-        status_label = str(live.get("status_label") or status.title())
-        if entry.get("latest_status") != status or entry.get("status_label") != status_label:
-            entry["latest_status"] = status
-            entry["status_label"] = status_label
-            changed = True
+        official_status = raw.get("status") or {}
+        abstract_state = str(official_status.get("abstractGameState") or "Preview").upper()
+        detail = str(official_status.get("detailedState") or abstract_state.title())
+        detail_lower = detail.lower()
+        entry["latest_status"] = abstract_state
+        entry["status_label"] = detail
+        entry["last_result_checked_at_et"] = checked_at
 
-        if status == "FINAL":
-            away_runs = int(live.get("away_runs") or 0)
-            home_runs = int(live.get("home_runs") or 0)
-            score_changed = False
-            if entry.get("final_away_runs") != away_runs or entry.get("final_home_runs") != home_runs:
-                entry["final_away_runs"] = away_runs
-                entry["final_home_runs"] = home_runs
-                score_changed = True
-                changed = True
-            if not bool(entry.get("manual_override")):
-                official_result = _automatic_result(entry, away_runs, home_runs)
-                result_changed = entry.get("result") != official_result
-                if result_changed:
-                    entry["result"] = official_result
-                    changed = True
-                if score_changed or result_changed or not entry.get("graded_at_et"):
-                    entry["graded_at_et"] = _tracker_timestamp(now_et)
-                    entry["graded_source"] = "official MLB final"
-                    changed = True
+        # Postponed/suspended games may have an abstract Final status but have
+        # not produced a usable result. Keep checking the same saved game ID.
+        if "postpon" in detail_lower or "suspend" in detail_lower:
+            continue
+        if "cancel" in detail_lower:
+            entry["result"] = "VOID"
+            entry["graded_source"] = "official MLB cancellation"
+        elif abstract_state == "FINAL":
+            away_runs = _tracker_official_score(raw, "away")
+            home_runs = _tracker_official_score(raw, "home")
+            if away_runs is None or home_runs is None:
+                warnings.append(f"Game {game_pk}: final score is missing; kept pending.")
+                continue
+            entry["final_away_runs"] = away_runs
+            entry["final_home_runs"] = home_runs
+            entry["result"] = _automatic_result(entry, away_runs, home_runs)
+            entry["graded_source"] = "official MLB final"
+        else:
+            continue
 
-    if changed:
-        saved, save_status = save_prediction_tracker(payload)
-        storage_status = save_status
-        if saved:
-            payload, _ = load_prediction_tracker()
-    return payload, storage_status
+        entry["graded_at_et"] = checked_at
+        entry["graded_by_build"] = TRACKER_BUILD
+        settled += 1
+
+    payload["result_sync"] = {
+        "checked_at_et": checked_at,
+        "requested_count": len(result_batch.get("requested_ids") or []),
+        "returned_count": len(official_games),
+        "settled_count": settled,
+        "warnings": warnings,
+    }
+    return settled, warnings
+
+
+def sync_prediction_tracker(
+    predictions: list[dict[str, Any]], now_et: datetime, *, reconcile: bool = True
+) -> tuple[dict[str, Any], str]:
+    """Capture today's previews, then reconcile pending IDs from every saved date."""
+    snapshot, storage_status = load_prediction_tracker()
+    if storage_status != "ready":
+        # Never overwrite an unreadable ledger with an apparently empty one.
+        return snapshot, storage_status
+
+    requested_ids = {
+        int(entry["game_pk"])
+        for entry in snapshot["picks"].values()
+        if entry.get("result") == "PENDING" and not entry.get("manual_override")
+    }
+    requested_ids.update(
+        int(prediction["game"]["game_pk"])
+        for prediction in predictions
+        if str(prediction["game"]["game_pk"]) not in snapshot["picks"]
+        and _pregame_snapshot_allowed(prediction["game"], now_et)
+    )
+    result_batch = None
+    if reconcile and requested_ids:
+        # Network calls run outside the write lock. Reload under the lock below
+        # so another browser session's captures/corrections are not lost.
+        result_batch = cached_tracker_official_results(tuple(sorted(requested_ids)))
+
+    with _TRACKER_LOCK:
+        payload, storage_status = load_prediction_tracker()
+        if storage_status != "ready":
+            return payload, storage_status
+        before = json.dumps(payload, sort_keys=True)
+        for prediction in predictions:
+            game = prediction["game"]
+            key = str(int(game["game_pk"]))
+            entry = payload["picks"].get(key)
+            if entry is None and _pregame_snapshot_allowed(game, now_et):
+                entry = prediction_tracker_entry(prediction, now_et)
+                payload["picks"][key] = entry
+            if entry is not None and entry.get("result") == "PENDING" and not entry.get("manual_override"):
+                live = game.get("live") or {}
+                entry["latest_status"] = str(live.get("status") or "PREVIEW")
+                entry["status_label"] = str(live.get("status_label") or "Scheduled")
+
+        warnings: list[str] = []
+        if result_batch is not None:
+            _, warnings = reconcile_tracker_payload(payload, result_batch)
+        elif reconcile and not requested_ids:
+            # There is nothing automatic left to settle, so stale network
+            # warnings should not persist after a manual correction/restore.
+            if payload.get("result_sync", {}).get("warnings"):
+                payload["result_sync"]["warnings"] = []
+
+        if json.dumps(payload, sort_keys=True) != before:
+            saved, save_status = save_prediction_tracker(payload)
+            if not saved:
+                return payload, save_status
+            payload, storage_status = load_prediction_tracker()
+        if warnings:
+            storage_status = " ".join(warnings) + " Saved picks are unchanged; the tracker will retry."
+        return payload, storage_status
+
+
+def tracker_sync_can_publish(payload: dict[str, Any], status: str) -> bool:
+    """A partial results-feed failure must not block other saved progress."""
+    if status == "ready":
+        return True
+    warnings = (payload.get("result_sync") or {}).get("warnings") or []
+    return bool(warnings) and status == " ".join(warnings) + " Saved picks are unchanged; the tracker will retry."
 
 
 def _tracker_sort_key(entry: dict[str, Any]) -> tuple[str, str, int]:
@@ -4952,34 +5392,272 @@ def tracker_csv_bytes(payload: dict[str, Any]) -> bytes:
 
 
 def apply_tracker_override(game_pk: int, result: str) -> tuple[bool, str]:
-    payload, status = load_prediction_tracker()
-    entry = payload["picks"].get(str(int(game_pk)))
-    if entry is None:
-        return False, "That tracked game could not be found."
-    normalized_result = str(result).upper()
-    if normalized_result == "AUTO":
-        entry["manual_override"] = False
-        entry["result"] = "PENDING"
-        entry["graded_at_et"] = None
-        entry["graded_source"] = None
-    elif normalized_result in TRACKER_RESULT_OPTIONS:
-        entry["manual_override"] = True
-        entry["result"] = normalized_result
-        entry["graded_at_et"] = _tracker_timestamp()
-        entry["graded_source"] = "manual correction"
-    else:
-        return False, "Choose Auto, Win, Loss, Void or Pending."
-    return save_prediction_tracker(payload)
+    with _TRACKER_LOCK:
+        payload, status = load_prediction_tracker()
+        if status != "ready":
+            return False, status
+        entry = payload["picks"].get(str(int(game_pk)))
+        if entry is None:
+            return False, "That tracked game could not be found."
+        normalized_result = str(result).upper()
+        if normalized_result == "AUTO":
+            entry["manual_override"] = False
+            entry["result"] = "PENDING"
+            entry["graded_at_et"] = None
+            entry["graded_source"] = None
+        elif normalized_result in TRACKER_RESULT_OPTIONS:
+            entry["manual_override"] = True
+            entry["result"] = normalized_result
+            entry["graded_at_et"] = _tracker_timestamp()
+            entry["graded_source"] = "manual correction"
+        else:
+            return False, "Choose Auto, Win, Loss, Void or Pending."
+        entry["correction_updated_at_et"] = _tracker_timestamp()
+        return save_prediction_tracker(payload)
+
+
+def _tracker_captured_utc(entry: dict[str, Any]) -> datetime:
+    return _parse_utc(str(entry.get("captured_at_et") or "")) or datetime.max.replace(tzinfo=timezone.utc)
+
+
+def merge_tracker_backup(
+    current: dict[str, Any], restored: dict[str, Any]
+) -> dict[str, Any]:
+    """Merge by game ID without dropping picks captured since the backup."""
+    merged = dict(current)
+    merged["picks"] = dict(current["picks"])
+    for game_pk, restored_entry in restored["picks"].items():
+        existing = merged["picks"].get(game_pk)
+        if existing is None:
+            merged["picks"][game_pk] = restored_entry
+            continue
+        if existing.get("manual_override"):
+            continue
+        restored_time = _tracker_captured_utc(restored_entry)
+        existing_time = _tracker_captured_utc(existing)
+        same_pick = all(
+            existing.get(field) == restored_entry.get(field)
+            for field in ("away_id", "home_id", "target_side", "target_probability", "captured_at_et")
+        )
+        # After a redeploy, a fresh capture may exist for the same game. The
+        # earlier recorded forecast is the canonical original, not the rerun.
+        if restored_time < existing_time or (
+            same_pick and existing.get("result") == "PENDING"
+            and restored_entry.get("result") != "PENDING"
+        ):
+            merged["picks"][game_pk] = restored_entry
+    merged["created_at"] = min(
+        str(current.get("created_at") or _tracker_timestamp()),
+        str(restored.get("created_at") or _tracker_timestamp()),
+    )
+    merged["restored_at_et"] = _tracker_timestamp()
+    return merged
 
 
 def restore_prediction_tracker(uploaded_bytes: bytes) -> tuple[bool, str]:
     try:
+        if len(uploaded_bytes) > TRACKER_MAX_BYTES:
+            raise ValueError("The backup is too large; the limit is 50 MB.")
         raw = json.loads(uploaded_bytes.decode("utf-8"))
         payload = _validate_tracker_payload(raw)
     except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         return False, f"That backup could not be restored: {exc}"
-    saved, status = save_prediction_tracker(payload)
-    return (True, "Tracker backup restored.") if saved else (False, status)
+    with _TRACKER_LOCK:
+        current, status = load_prediction_tracker()
+        if status == "ready":
+            payload = merge_tracker_backup(current, payload)
+        # Explicit restore can repair an unreadable ledger; automatic sync
+        # never overwrites one. The uploaded backup remains the recovery source.
+        saved, status = save_prediction_tracker(payload)
+    if saved:
+        cached_tracker_official_results.clear()
+        return True, f"Backup restored: {len(payload['picks'])} picks saved. Newer entries and manual corrections were retained."
+    return False, status
+
+
+class RemoteTrackerError(RuntimeError):
+    def __init__(self, message: str, status: int | None = None):
+        super().__init__(message)
+        self.status = status
+
+
+def _remote_tracker_settings() -> tuple[str, str] | None:
+    repo, token = secret_value("MLB_TRACKER_REPO"), secret_value("MLB_TRACKER_TOKEN")
+    if not repo and not token:
+        return None
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repo) or not token:
+        raise RemoteTrackerError("Shared tracker needs MLB_TRACKER_REPO (owner/repository) and MLB_TRACKER_TOKEN in Streamlit Secrets.")
+    return repo, token
+
+
+def _github_tracker_request(repo: str, token: str, path: str, *, method: str = "GET", body: dict | None = None, raw: bool = False) -> Any:
+    """Use only explicitly configured credentials and the fixed GitHub API host."""
+    # Object metadata remains available above 1 MiB; fetch its raw bytes below.
+    accept = ("application/vnd.github.raw+json" if raw else
+              "application/vnd.github.object+json" if method == "GET" and path.startswith("contents/") else
+              "application/vnd.github+json")
+    request = urllib.request.Request(
+        f"https://api.github.com/repos/{repo}/{path}",
+        data=json.dumps(body).encode("utf-8") if body is not None else None,
+        method=method,
+        headers={"Authorization": f"Bearer {token}", "Accept": accept,
+                 "Content-Type": "application/json", "User-Agent": USER_AGENT,
+                 "X-GitHub-Api-Version": "2022-11-28"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=25) as response:
+            data = response.read(TRACKER_MAX_BYTES + 1)
+            if len(data) > TRACKER_MAX_BYTES:
+                raise ValueError("Response too large")
+            return data if raw else json.loads(data.decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        raise RemoteTrackerError(f"Shared tracker returned HTTP {exc.code}; no remote data was overwritten.", exc.code) from None
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        raise RemoteTrackerError("Shared tracker could not be reached; the local tracker is retained.") from None
+
+
+def _read_remote_tracker(repo: str, token: str) -> tuple[dict, str]:
+    item = _github_tracker_request(repo, token, "contents/tracker.json?ref=mlb-tracker-data")
+    try:
+        if item.get("encoding") == "none" or not item.get("content"):
+            content = _github_tracker_request(repo, token, "contents/tracker.json?ref=mlb-tracker-data", raw=True)
+        else:
+            content = base64.b64decode(item["content"], validate=False)
+        if len(content) > TRACKER_MAX_BYTES:
+            raise ValueError("Ledger too large")
+        return _validate_tracker_payload(json.loads(content)), str(item["sha"])
+    except (KeyError, TypeError, ValueError):
+        raise RemoteTrackerError("Shared tracker data did not validate; existing local picks were kept.") from None
+
+
+def tracker_owner_access() -> bool:
+    if not secret_value("MLB_TRACKER_REPO") and not secret_value("MLB_TRACKER_TOKEN"):
+        return True
+    password = secret_value("MLB_TRACKER_ADMIN_PASSWORD")
+    if not password:
+        st.caption("Shared-tracker corrections are locked. Configure MLB_TRACKER_ADMIN_PASSWORD in Streamlit Secrets to enable owner access.")
+        return False
+    entered = st.text_input("Owner password", type="password", key="tracker_owner_password")
+    return bool(entered) and hmac.compare_digest(entered.encode("utf-8"), password.encode("utf-8"))
+
+
+@st.cache_data(ttl=45, show_spinner=False)
+def cached_remote_tracker(repo: str, token: str) -> tuple[dict, str]:
+    return _read_remote_tracker(repo, token)
+
+
+@st.cache_resource(show_spinner=False)
+def remote_permission_blocks() -> set[str]:
+    return set()
+
+
+def _tracker_material_digest(payload: dict[str, Any]) -> str:
+    volatile = {"latest_status", "status_label", "last_result_checked_at_et"}
+    stable = {key: {name: value for name, value in row.items() if name not in volatile}
+              for key, row in payload["picks"].items()}
+    return hashlib.sha256(json.dumps(stable, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _merge_remote_ledger(local: dict, remote: dict) -> dict:
+    merged = merge_tracker_backup(copy.deepcopy(local), copy.deepcopy(remote))
+    if "restored_at_et" in local:
+        merged["restored_at_et"] = local["restored_at_et"]
+    else:
+        merged.pop("restored_at_et", None)
+    for key, row in merged["picks"].items():
+        left, right = local["picks"].get(key), remote["picks"].get(key)
+        if not left or not right or left["target_side"] != right["target_side"]:
+            continue
+        left_at = _parse_utc(str(left.get("correction_updated_at_et") or (left.get("graded_at_et") if left.get("manual_override") else "") or ""))
+        right_at = _parse_utc(str(right.get("correction_updated_at_et") or (right.get("graded_at_et") if right.get("manual_override") else "") or ""))
+        if right_at and (not left_at or right_at > left_at):
+            for field in ("result", "manual_override", "graded_at_et", "graded_source", "graded_by_build",
+                          "final_away_runs", "final_home_runs", "correction_updated_at_et"):
+                if field in right:
+                    row[field] = right[field]
+    worker_times = [str(item.get("worker_last_run_at_et") or "") for item in (local, remote)]
+    if any(worker_times):
+        merged["worker_last_run_at_et"] = max(worker_times)
+    return merged
+
+
+def sync_remote_tracker(*, write: bool, heartbeat: bool = False) -> str:
+    """Optional shared durable ledger; never needed for local automatic grading."""
+    settings = None
+    try:
+        settings = _remote_tracker_settings()
+        if settings is None:
+            return "not configured"
+        repo, token = settings
+        identity = hashlib.sha256((repo + token).encode()).hexdigest()
+        if identity in remote_permission_blocks():
+            return "Shared tracker access was denied. Check the configured token permissions and reboot the app to retry. Local picks are retained."
+        for attempt in range(3 if write else 1):
+            remote, sha = _read_remote_tracker(repo, token) if write else cached_remote_tracker(repo, token)
+            with _TRACKER_LOCK:
+                local, status = load_prediction_tracker()
+                if status != "ready":
+                    return status
+                merged = _merge_remote_ledger(local, remote)
+                if heartbeat:
+                    merged["worker_last_run_at_et"] = _tracker_timestamp()
+                if merged != local:
+                    saved, status = save_prediction_tracker(merged)
+                    if not saved:
+                        return status
+            if not write or (not heartbeat and _tracker_material_digest(merged) == _tracker_material_digest(remote)):
+                return "ready"
+            # Content hashes are an optimistic lock across app sessions and workers.
+            try:
+                _github_tracker_request(repo, token, "contents/tracker.json", method="PUT", body={
+                    "message": "Update frozen MLB forecasts and official grades",
+                    "branch": "mlb-tracker-data", "sha": sha,
+                    "content": base64.b64encode(tracker_json_bytes(merged)).decode("ascii"),
+                })
+                cached_remote_tracker.clear()
+                return "ready"
+            except RemoteTrackerError as exc:
+                if exc.status not in {409, 422} or attempt == 2:
+                    raise
+        return "Shared tracker changed concurrently; local picks are retained and will retry."
+    except RemoteTrackerError as exc:
+        if settings and exc.status in {401, 403}:
+            remote_permission_blocks().add(hashlib.sha256((settings[0] + settings[1]).encode()).hexdigest())
+        if exc.status == 404:
+            return "Shared tracker has not been initialized or cannot be accessed. Run the GitHub tracker workflow once and check its repository permissions. Local picks are retained."
+        return str(exc)
+
+
+def initialize_remote_tracker() -> None:
+    """Explicit worker setup only; normal dashboard visits never create branches."""
+    settings = _remote_tracker_settings()
+    if settings is None:
+        raise RemoteTrackerError("The background worker needs its repository and token settings.")
+    repo, token = settings
+    repository = _github_tracker_request(repo, token, "")
+    try:
+        _github_tracker_request(repo, token, "git/ref/heads/mlb-tracker-data")
+    except RemoteTrackerError as exc:
+        if exc.status != 404:
+            raise
+        default = urllib.parse.quote(str(repository["default_branch"]), safe="")
+        reference = _github_tracker_request(repo, token, f"git/ref/heads/{default}")
+        _github_tracker_request(repo, token, "git/refs", method="POST", body={
+            "ref": "refs/heads/mlb-tracker-data", "sha": reference["object"]["sha"],
+        })
+    try:
+        _read_remote_tracker(repo, token)
+    except RemoteTrackerError as exc:
+        if exc.status != 404:
+            raise
+        local, status = load_prediction_tracker()
+        if status != "ready":
+            raise RemoteTrackerError(status)
+        _github_tracker_request(repo, token, "contents/tracker.json", method="PUT", body={
+            "message": "Initialize shared MLB tracker", "branch": "mlb-tracker-data",
+            "content": base64.b64encode(tracker_json_bytes(local)).decode("ascii"),
+        })
+        cached_remote_tracker.clear()
 
 
 def toggle_tracker_dashboard() -> None:
@@ -5036,6 +5714,8 @@ def cached_odds(api_key: str) -> list[dict[str, Any]]:
 
 
 def secret_value(name: str) -> str:
+    if os.environ.get(name):
+        return str(os.environ[name]).strip()
     try:
         return str(st.secrets.get(name, "") or "").strip()
     except Exception:
@@ -5281,7 +5961,11 @@ def build_model_explanation(
     target_probability = prediction["target_probability"]
     status = game["live"]["status"]
 
-    if prediction.get("pregame_locked") and status in {"LIVE", "FINAL"}:
+    if prediction.get("snapshot_state") == "untracked":
+        summary = ("No forecast was saved before this game's scheduled first pitch. "
+                   "The estimate below is not an original pregame pick and will not be added to the record.")
+        short_summary = "Untracked estimate · excluded from the pregame record."
+    elif prediction.get("pregame_locked") and status in {"LIVE", "FINAL"}:
         game_state_copy = (
             "The live score is displayed separately" if status == "LIVE"
             else "The final score is displayed separately"
@@ -5345,6 +6029,10 @@ def build_model_explanation(
         f"{agreement_description(prediction['model_agreement_gap'])}. The final pregame "
         "probability blends both estimates and shrinks the result toward 50% to reduce false precision."
     )
+    if prediction.get("snapshot_state") == "legacy":
+        simulation = ("This earlier build saved the original pick, probability and projected score, "
+                      "but not the full simulation inputs. Those original values are retained. "
+                      "The other panels show current context, not a reconstruction of the original model.")
     branch_short = (
         f"Score simulations: {simulation_target*100:.1f}% · record/home baseline: "
         f"{record_target*100:.1f}% · disagreement: "
@@ -5428,6 +6116,8 @@ def build_model_explanation(
             f"It {'passes' if value.get('qualifies') else 'does not pass'} the app's minimum "
             "edge/data-quality filter."
         )
+        if prediction.get("snapshot_state") == "saved":
+            market = "At the original forecast capture: " + market + " These are saved prices, not a current offer."
         market_short = (
             f"{value['team']} {fmt_odds(value['price'])} · edge {value['edge']*100:+.1f} points · "
             f"{'qualifies' if value.get('qualifies') else 'below filter'}."
@@ -5714,7 +6404,7 @@ def render_native_score_card(prediction: dict[str, Any]) -> None:
                 </div>
                 <div class="score-tile-model">
                     <div class="score-model-copy">
-                        <span>Locked pregame pick</span>
+                        <span>{safe_text(forecast_lock_label(prediction))}</span>
                         <strong>{safe_text(target['short_name'])}</strong>
                     </div>
                     {score_gauge}
@@ -5853,6 +6543,53 @@ def tracker_pick_log_markup(entries: Iterable[dict[str, Any]]) -> str:
     return "".join(rows)
 
 
+def render_model_lab(payload: dict[str, Any]) -> None:
+    assessment = evaluate_frozen_forecasts(payload["picks"].values())
+    st.markdown("**Measured performance—not promised accuracy**")
+    st.caption("Uses saved probabilities and official win/loss grades. Manual corrections, pending games and voids are excluded from the probability checks.")
+    if not assessment["n"]:
+        st.info("The first official finals will start the probability checks. No historical picks are invented.")
+    else:
+        columns = st.columns(3)
+        columns[0].metric("Forecast average", f"{assessment['mean_probability']:.1%}")
+        columns[1].metric("Actual win rate", f"{assessment['win_rate']:.1%}")
+        columns[2].metric("Probability error · Brier", f"{assessment['brier']:.4f}")
+        st.caption(
+            f"{assessment['n']} official decisions · 95% win-rate interval "
+            f"{assessment['interval_low']:.1%}–{assessment['interval_high']:.1%}. "
+            "This descriptive interval assumes independent games; it is not a future win-rate guarantee. "
+            "Lower Brier error is better; assigning 50% to every game scores 0.2500. "
+            "That is a simple reference—not proof of beating sportsbook prices."
+        )
+        if assessment["n"] < 200:
+            st.info("Early sample: keep collecting games. A few good or bad days do not establish an accurate 70% model.")
+    st.markdown("**Stronger-setup trial**")
+    trial = assessment["shortlisted"]
+    st.write(f"{trial['wins']} wins · {trial['losses']} losses · {trial['pending']} pending")
+    st.caption(
+        "Fixed rule for new Build 24 captures: at least 60% model probability, data quality 80/100, "
+        "both starters with usable stats and 80 batters faced, and model disagreement no greater than 10 points. "
+        "This is an experimental research shortlist, not validated betting advice. Every game still remains in the main record. "
+        "Older picks are not retrospectively labeled to improve this trial's results."
+    )
+    st.markdown("**Future-game comparisons**")
+    if assessment["comparisons"]:
+        st.dataframe([
+            {"Alternative": row["name"], "Same games": row["n"],
+             "Main model error": round(row["main_brier"], 4),
+             "Alternative error": round(row["candidate_brier"], 4)}
+            for row in assessment["comparisons"]
+        ], hide_index=True, use_container_width=True)
+    else:
+        st.caption("Comparisons begin when newly saved Build 24 forecasts finish. Older inputs were not recorded, so they are not backfilled.")
+    st.caption(
+        "The calibration challenger waits for 200 official results from this model version across at least 14 dates. "
+        "It learns only from results available before each new forecast, then is scored on later games. "
+        "It never replaces the published probability automatically. Lineups are currently a completeness check, "
+        "not yet a batter-by-batter offensive adjustment."
+    )
+
+
 def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
     entries = list(payload["picks"].values())
     stats = tracker_record(entries)
@@ -5872,7 +6609,7 @@ def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
                 <div>
                     <div class="tracker-panel-kicker">Verified model history</div>
                     <div class="tracker-panel-title">Performance Tracker</div>
-                    <div class="tracker-panel-subtitle">Every entry is frozen before first pitch and graded from the official MLB final.</div>
+                    <div class="tracker-panel-subtitle">Saved pregame forecasts · Official MLB results · Manual corrections are labeled.</div>
                 </div>
                 <div class="tracker-panel-count">{len(entries)} tracked {'pick' if len(entries) == 1 else 'picks'}</div>
             </div>
@@ -5890,8 +6627,8 @@ def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
         if storage_status != "ready":
             st.error(storage_status)
 
-        overview_tab, confidence_tab, log_tab = st.tabs(
-            ["Overview", "Confidence splits", "Pick log"]
+        overview_tab, confidence_tab, log_tab, lab_tab = st.tabs(
+            ["Overview", "Confidence splits", "Pick log", "Model lab"]
         )
 
         with overview_tab:
@@ -5918,7 +6655,7 @@ def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
             )
             if not entries:
                 st.info(
-                    "Tracking starts when Build 22 sees a matchup before first pitch. "
+                    "Tracking starts when the app sees a matchup before first pitch. "
                     "It will not invent or backfill older picks."
                 )
 
@@ -5950,6 +6687,9 @@ def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
                 """),
                 unsafe_allow_html=True,
             )
+
+        with lab_tab:
+            render_model_lab(payload)
 
         with log_tab:
             if entries:
@@ -5989,11 +6729,12 @@ def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
             )
         with correction_column:
             with st.popover("Corrections & restore", use_container_width=True):
+                can_edit = tracker_owner_access()
                 if entries:
                     entry_labels = {
                         (
                             f"{entry.get('game_date', '')} · {entry.get('away_short_name', 'Away')} at "
-                            f"{entry.get('home_short_name', 'Home')} · {entry.get('result', 'PENDING')}"
+                            f"{entry.get('home_short_name', 'Home')} · {entry.get('result', 'PENDING')} · Game {entry['game_pk']}"
                         ): int(entry["game_pk"])
                         for entry in sorted(entries, key=_tracker_sort_key, reverse=True)
                     }
@@ -6007,7 +6748,7 @@ def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
                         ["Auto (official final)", "Win", "Loss", "Void", "Pending"],
                         key="tracker_correction_result",
                     )
-                    if st.button("Save correction", key="tracker_save_correction", use_container_width=True):
+                    if st.button("Save correction", key="tracker_save_correction", use_container_width=True, disabled=not can_edit) and can_edit:
                         result_value = "AUTO" if corrected_result.startswith("Auto") else corrected_result.upper()
                         saved, message = apply_tracker_override(
                             entry_labels[selected_entry_label], result_value
@@ -6022,14 +6763,15 @@ def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
                     "Restore JSON backup",
                     type=["json"],
                     key="tracker_restore_upload",
-                    help="Restoring replaces the tracker ledger with the selected backup.",
+                    disabled=not can_edit,
+                    help="Restoring merges saved games by ID, keeps the earliest frozen pick, and retains newer games and existing manual corrections.",
                 )
                 if st.button(
                     "Restore selected backup",
                     key="tracker_restore_button",
-                    disabled=uploaded_backup is None,
+                    disabled=uploaded_backup is None or not can_edit,
                     use_container_width=True,
-                ):
+                ) and can_edit:
                     restored, message = restore_prediction_tracker(uploaded_backup.getvalue())
                     st.session_state["tracker_feedback"] = (
                         "success" if restored else "error",
@@ -6038,6 +6780,14 @@ def render_full_tracker(payload: dict[str, Any], storage_status: str) -> None:
                     st.rerun()
         st.caption(
             "Automatic grading uses official MLB final scores. Manual corrections are visibly marked in the pick log."
+        )
+        if st.button("Check results now", key="tracker_check_results", use_container_width=True):
+            cached_tracker_official_results.clear()
+            st.rerun()
+        st.caption(
+            "Checks all pending game IDs, including earlier dates, every 60 seconds while open. "
+            "After the app sleeps, results catch up when it is reopened. "
+            "App-local storage can reset on redeployment; keep a downloaded backup."
         )
 
 
@@ -6073,8 +6823,57 @@ def render_tracker_summary(payload: dict[str, Any], storage_status: str) -> None
             )
     if storage_status != "ready":
         st.warning(storage_status)
+    sync_info = payload.get("result_sync") or {}
+    checked_at = _parse_utc(str(sync_info.get("checked_at_et") or ""))
+    if checked_at:
+        st.caption(
+            f"Results last checked {checked_at.astimezone(ET).strftime('%b %-d, %-I:%M:%S %p ET')} "
+            "· All saved dates · Auto-check every 60 seconds while open"
+        )
+    elif stats["pending"]:
+        st.caption("Pending picks are saved. An official-result check is due.")
     if st.session_state.get("show_tracker_dashboard"):
         render_full_tracker(payload, storage_status)
+
+
+def dashboard_refresh_due(now: datetime, last_rendered: datetime | None, calendar_day: str) -> bool:
+    return (calendar_day != now.date().isoformat()
+            or last_rendered is None or (now - last_rendered).total_seconds() >= 60)
+
+
+@st.fragment(run_every=30)
+def render_live_tracker(capture_status: str = "ready", *, page_started_at: str | None = None) -> None:
+    """Refresh the tracker independently of slate date, predictions and widgets."""
+    now = datetime.now(ET)
+    if st.session_state.get("_tracker_page_token") != page_started_at or not st.session_state.get("_dashboard_rendered_at"):
+        st.session_state["_tracker_page_token"] = page_started_at
+        st.session_state["_dashboard_rendered_at"] = _tracker_timestamp(now)
+    elif dashboard_refresh_due(now, _parse_utc(st.session_state["_dashboard_rendered_at"]),
+                               str(st.session_state.get("calendar_day") or now.date().isoformat())):
+        # A full rerun also refreshes scores and captures the next day's slate.
+        # The new token prevents slow first loads from entering a rerun loop.
+        st.rerun()
+    remote_status = sync_remote_tracker(write=False)
+    payload, status = sync_prediction_tracker([], datetime.now(ET))
+    if tracker_sync_can_publish(payload, status):
+        pushed = sync_remote_tracker(write=True)
+        remote_status = pushed if pushed != "not configured" else remote_status
+    if capture_status != "ready" and status == "ready":
+        status = capture_status
+    render_tracker_summary(payload, status)
+    if remote_status not in {"ready", "not configured"}:
+        st.warning(remote_status)
+    if remote_status == "not configured":
+        st.caption("Automatic checks run while this page is open. Overnight worker: not connected yet.")
+    elif remote_status == "ready":
+        st.caption("Shared tracker connected. The overnight schedule must also be enabled in GitHub Actions.")
+        worker_at = _parse_utc(str(payload.get("worker_last_run_at_et") or ""))
+        if worker_at:
+            st.caption(f"Background worker last checked {worker_at.astimezone(ET).strftime('%b %-d, %-I:%M %p ET')}")
+            if (datetime.now(ET) - worker_at).total_seconds() > 45 * 60:
+                st.warning("The background worker has not checked in for over 45 minutes. Review its GitHub Actions run; this page continues checking saved results.")
+        else:
+            st.caption("No background-worker check-in has been recorded yet.")
 
 
 def slate_insight_card(
@@ -6319,7 +7118,7 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
         with footer_column:
             st.markdown(
                 html_block(f"""
-                <div class="match-action-note">Pregame forecast is frozen at first pitch. Live scoring never changes the selected side.</div>
+                <div class="match-action-note"><strong style="color:{tone_color((prediction.get('research_selection') or {}).get('tone', 'ice'))}">{safe_text((prediction.get('research_selection') or {}).get('label', 'Forecast'))}</strong> · {safe_text(forecast_lock_label(prediction))}. All recorded picks stay in the main record.</div>
                 """),
                 unsafe_allow_html=True,
             )
@@ -6337,6 +7136,10 @@ def render_compact_game_row(prediction: dict[str, Any], weather: dict[str, Any])
 def render_advanced(
     prediction: dict[str, Any], weather: dict[str, Any], lineup: dict[str, Any]
 ) -> None:
+    context = prediction.get("captured_context") or {}
+    if prediction.get("snapshot_state") == "saved":
+        weather = context.get("weather") or {}
+        lineup = context.get("lineup") or {}
     game = prediction["game"]
     explanation = build_model_explanation(prediction, weather, lineup)
     target_side = prediction["target_side"]
@@ -6391,7 +7194,7 @@ def render_advanced(
                     <div class="analysis-panel-label">Full matchup analysis</div>
                     <div class="analysis-panel-matchup">{safe_text(game['away']['short_name'])} at {safe_text(game['home']['short_name'])}</div>
                 </div>
-                <div class="analysis-lock-note">Locked before first pitch</div>
+                <div class="analysis-lock-note">{safe_text(forecast_lock_label(prediction))}</div>
             </div>
             <div class="analysis-hero" style="{matchup_style(game)}">
                 <div class="analysis-matchup-logos">
@@ -6400,7 +7203,7 @@ def render_advanced(
                     <img src="{safe_text(game['home']['logo'])}" alt="" loading="lazy">
                 </div>
                 <div>
-                    <div class="analysis-eyebrow">Locked pregame verdict</div>
+                    <div class="analysis-eyebrow">{safe_text(forecast_lock_label(prediction))}</div>
                     <div class="analysis-title">{safe_text(target['name'])} over {safe_text(opponent['name'])}</div>
                     <div class="analysis-summary">{safe_text(explanation['summary'])}</div>
                 </div>
@@ -6410,7 +7213,7 @@ def render_advanced(
                 <div class="analysis-stat good">
                     <div class="snapshot-label">Model selection</div>
                     <div class="snapshot-value">{safe_text(target['short_name'])} {target_probability:.1f}%</div>
-                    <div class="snapshot-detail">Frozen before the first pitch</div>
+                    <div class="snapshot-detail">{safe_text(forecast_lock_label(prediction))}</div>
                 </div>
                 <div class="analysis-stat">
                     <div class="snapshot-label">Projected score</div>
@@ -6432,6 +7235,13 @@ def render_advanced(
             unsafe_allow_html=True,
         )
 
+        if prediction.get("snapshot_state") == "legacy":
+            st.info("Earlier-build pick: the original selection, percentage and projected score are preserved. Detailed inputs were not saved then, so the other panels show current context—not the original research.")
+        elif prediction.get("snapshot_state") == "untracked":
+            st.warning("Not recorded before scheduled first pitch. This estimate will not be counted as an original model pick.")
+        selection = prediction.get("research_selection") or {}
+        if selection.get("rule_version") == SHORTLIST_RULE_VERSION:
+            st.caption(str(selection["label"]) + " · " + ("Meets the experimental research rule. No win or profit is guaranteed." if selection.get("qualifies") else " ".join(selection.get("reasons") or [])))
         why_tab, pitching_tab, context_tab, market_tab = st.tabs(
             ["Why the pick", "Pitching", "Game context", "Market & risks"]
         )
@@ -6544,307 +7354,377 @@ def render_advanced(
             )
 
 
-now_et = datetime.now(ET)
-today_et = now_et.date()
-scheduled_today = scheduled_update_at(today_et)
-refresh_tracker = daily_refresh_tracker()
+def build_slate_forecasts(games: list[dict[str, Any]], selected_date: date, simulations: int,
+                          payload: dict[str, Any], odds_api_key: str = "") -> tuple[list[dict[str, Any]], dict, dict]:
+    needed = [game for game in games if not isinstance(
+        (payload["picks"].get(str(game["game_pk"])) or {}).get("frozen_prediction"), dict)]
+    weather_by_game: dict = {}
+    lineups_by_game: dict = {}
+    fresh: dict = {}
+    if needed:
+        season, as_of = selected_date.year, selected_date.isoformat()
+        team_ids = tuple(sorted({int(game[side]["id"]) for game in needed for side in ("away", "home") if game[side].get("id")}))
+        pitcher_ids = tuple(sorted({int(game[side]["pitcher_id"]) for game in needed for side in ("away", "home") if game[side].get("pitcher_id")}))
+        calls = {
+            "teams": (cached_team_stats, (season, as_of)),
+            "pitchers": (cached_pitchers, (pitcher_ids, season, as_of)),
+            "bullpens": (cached_bullpens, (team_ids, season)),
+            "statcast": (cached_statcast, (season,)),
+            "parks": (cached_park_factors, (season,)),
+            "weather": (cached_weather, (needed,)),
+            "lineups": (cached_lineups, (tuple(game["game_pk"] for game in needed),)),
+        }
+        if odds_api_key:
+            calls["odds"] = (cached_odds, (odds_api_key,))
+        feeds: dict[str, Any] = {}
+        required_error = None
+        with ThreadPoolExecutor(max_workers=len(calls)) as executor:
+            futures = {name: executor.submit(function, *arguments) for name, (function, arguments) in calls.items()}
+            for name, future in futures.items():
+                try:
+                    feeds[name] = future.result()
+                except Exception as exc:
+                    feeds[name] = [] if name == "odds" else {}
+                    if name == "teams":
+                        required_error = exc
+        if required_error or not feeds.get("teams"):
+            raise DataSourceError("Team statistics were unavailable; no new forecasts were invented.")
+        weather_by_game = feeds.get("weather") or {}
+        lineups_by_game = feeds.get("lineups") or {}
+        calibration = fit_calibration_challenger(payload["picks"].values(), datetime.now(ET))
+        for game in needed:
+            if any(not (feeds["teams"].get(game[side]["id"]) or {}).get("hitting") for side in ("away", "home")):
+                raise DataSourceError("One of the teams is missing required hitting data; its forecast was withheld.")
+            weather = weather_by_game.get(game["game_pk"], {"available": False, "controlled": False, "run_multiplier": 1.0})
+            lineup = lineups_by_game.get(game["game_pk"], {})
+            odds = match_moneyline_odds(game, feeds.get("odds") or [])
+            prediction = build_game_prediction(game, feeds["teams"], feeds["pitchers"], feeds["statcast"],
+                                               feeds["bullpens"], feeds["parks"], weather, lineup, odds,
+                                               simulations=simulations, lock_pregame=True)
+            fresh[game["game_pk"]] = attach_forecast_evidence(prediction, weather, lineup, calibration)
+    predictions = []
+    for game in games:
+        entry = payload["picks"].get(str(game["game_pk"]))
+        prediction = fresh.get(game["game_pk"]) or {"game": game}
+        prediction = apply_frozen_forecast(prediction, entry)
+        context = prediction.get("captured_context") or {}
+        if prediction.get("snapshot_state") == "saved":
+            weather_by_game[game["game_pk"]] = context.get("weather") or {}
+            lineups_by_game[game["game_pk"]] = context.get("lineup") or {}
+        predictions.append(prediction)
+    return predictions, weather_by_game, lineups_by_game
 
-# Force one full data-cache refresh on the first app run at or after the daily
-# update time. If Community Cloud is asleep then, this runs immediately when the
-# next visitor wakes the app.
-if now_et >= scheduled_today and refresh_tracker.get("completed_for") != today_et.isoformat():
-    st.cache_data.clear()
-    refresh_tracker["completed_for"] = today_et.isoformat()
-    st.session_state["slate_date"] = today_et
 
-# Keep an open browser session from remaining on yesterday's slate after midnight.
-if st.session_state.get("calendar_day") != today_et.isoformat():
-    st.session_state["calendar_day"] = today_et.isoformat()
-    st.session_state["slate_date"] = today_et
+def run_background_tracker(*, initialize: bool = False, grade_only: bool = False, seed_path: str | None = None) -> int:
+    """Headless scheduled entry point. No dashboard or browser is required."""
+    if seed_path:
+        seed = Path(seed_path)
+        if not seed.is_file() or seed.stat().st_size > TRACKER_MAX_BYTES:
+            print("Seed backup is missing or too large.")
+            return 1
+        success, message = restore_prediction_tracker(seed.read_bytes())
+        if not success:
+            print(message)
+            return 1
+    if initialize:
+        try:
+            initialize_remote_tracker()
+        except RemoteTrackerError as exc:
+            print(str(exc))
+            return 1
+    remote = sync_remote_tracker(write=False)
+    if remote not in {"ready", "not configured"}:
+        print(remote)
+        return 1
+    before, status = sync_prediction_tracker([], datetime.now(ET))
+    if not tracker_sync_can_publish(before, status):
+        print(status)
+        return 1
+    grading_warning = status if status != "ready" else None
+    capture_error = None
+    captured = 0
+    if not grade_only:
+        try:
+            now = datetime.now(ET)
+            games = cached_schedule(now.date().isoformat())
+            needed = [game for game in games if str(game["game_pk"]) not in before["picks"]
+                      and _pregame_snapshot_allowed(game, now)
+                      and (game["game_datetime_utc"] - now).total_seconds() <= 3 * 3600]
+            if needed:
+                predictions, _, _ = build_slate_forecasts(needed, now.date(), 30_000, before, secret_value("ODDS_API_KEY"))
+                after, status = sync_prediction_tracker(predictions, datetime.now(ET), reconcile=False)
+                captured = len(after["picks"]) - len(before["picks"])
+                if status != "ready":
+                    capture_error = status
+        except (DataSourceError, ValueError) as exc:
+            capture_error = str(exc)
+    pushed = sync_remote_tracker(write=True, heartbeat=True)
+    if pushed not in {"ready", "not configured"}:
+        print(pushed)
+        return 1
+    latest, status = load_prediction_tracker()
+    print(json.dumps({"build": TRACKER_BUILD, "captured": captured,
+                      "record": tracker_record(latest["picks"].values()),
+                      "checked_at_et": _tracker_timestamp(), "shared_storage": pushed,
+                      "capture_error": capture_error, "grading_warning": grading_warning}, sort_keys=True))
+    return 1 if capture_error or grading_warning or status != "ready" else 0
 
-next_update = next_scheduled_update(now_et)
-odds_api_key = secret_value("ODDS_API_KEY")
 
-brand_column, sync_column, refresh_column, settings_column = st.columns(
-    [4.55, 1.32, 0.72, 0.9], vertical_alignment="center"
-)
-with brand_column:
-    st.markdown(
-        html_block("""
-        <div class="quant-brand">
-            <div class="quant-brand-mark">Q</div>
-            <div>
-                <div class="quant-brand-heading">
-                    <div class="quant-brand-title">MLB Quant Terminal</div>
-                    <span class="quant-build">Build 22</span>
-                </div>
-                <div class="quant-brand-subtitle">Live scores · locked pregame forecasts · matchup intelligence</div>
-            </div>
-        </div>
-        """),
-        unsafe_allow_html=True,
-    )
-with sync_column:
-    st.markdown(
-        html_block(f"""
-        <div class="quant-sync">
-            <span class="quant-sync-dot"></span>
-            <span class="quant-sync-copy">
-                <span>Live data</span>
-                <small>{now_et.strftime('%-I:%M:%S %p ET')}</small>
-            </span>
-        </div>
-        """),
-        unsafe_allow_html=True,
-    )
-with refresh_column:
-    if st.button("Refresh", key="top_refresh", use_container_width=True, help="Refresh all data"):
+def run_dashboard() -> None:
+    now_et = datetime.now(ET)
+    page_token = str(time.monotonic_ns())
+    initialize_page()
+    startup_remote_status = sync_remote_tracker(write=False)
+    today_et = now_et.date()
+    scheduled_today = scheduled_update_at(today_et)
+    refresh_tracker = daily_refresh_tracker()
+
+    # Force one full data-cache refresh on the first app run at or after the daily
+    # update time. If Community Cloud is asleep then, this runs immediately when the
+    # next visitor wakes the app.
+    if now_et >= scheduled_today and refresh_tracker.get("completed_for") != today_et.isoformat():
         st.cache_data.clear()
-        st.rerun()
-with settings_column:
-    with st.popover("Settings", use_container_width=True):
-        selected_date = st.date_input(
-            "Slate date",
-            min_value=today_et,
-            max_value=today_et + timedelta(days=7),
-            key="slate_date",
-            help="Choose today's slate or an upcoming MLB date.",
+        refresh_tracker["completed_for"] = today_et.isoformat()
+        st.session_state["slate_date"] = today_et
+
+    # Keep an open browser session from remaining on yesterday's slate after midnight.
+    if st.session_state.get("calendar_day") != today_et.isoformat():
+        st.session_state["calendar_day"] = today_et.isoformat()
+        st.session_state["slate_date"] = today_et
+
+    next_update = next_scheduled_update(now_et)
+    odds_api_key = secret_value("ODDS_API_KEY")
+
+    brand_column, sync_column, refresh_column, settings_column = st.columns(
+        [4.55, 1.32, 0.72, 0.9], vertical_alignment="center"
+    )
+    with brand_column:
+        st.markdown(
+            html_block("""
+            <div class="quant-brand">
+                <div class="quant-brand-mark">Q</div>
+                <div>
+                    <div class="quant-brand-heading">
+                        <div class="quant-brand-title">MLB Quant Terminal</div>
+                        <span class="quant-build">Build 24</span>
+                    </div>
+                    <div class="quant-brand-subtitle">Live scores · locked pregame forecasts · matchup intelligence</div>
+                </div>
+            </div>
+            """),
+            unsafe_allow_html=True,
         )
-        simulations = st.select_slider(
-            "Monte Carlo simulations",
-            options=[10_000, 20_000, 30_000, 50_000, 75_000],
-            value=30_000,
+    with sync_column:
+        st.markdown(
+            html_block(f"""
+            <div class="quant-sync">
+                <span class="quant-sync-dot"></span>
+                <span class="quant-sync-copy">
+                    <span>Live data</span>
+                    <small>{now_et.strftime('%-I:%M:%S %p ET')}</small>
+                </span>
+            </div>
+            """),
+            unsafe_allow_html=True,
         )
-        st.caption("Picks use pregame inputs. Live scores never change them.")
-        if st.button("Force complete refresh", use_container_width=True):
+    with refresh_column:
+        if st.button("Refresh", key="top_refresh", use_container_width=True, help="Refresh all data"):
             st.cache_data.clear()
             st.rerun()
-        st.divider()
-        st.markdown("**Connections**")
-        st.caption("MLB + Baseball Savant connected\n\nGame-time weather connected")
-        if odds_api_key:
-            st.caption("Sportsbook comparison connected")
-        else:
-            st.caption("Sportsbook comparison needs an API key")
-        st.markdown("**Scheduled update**")
-        st.caption(
-            f"Daily refresh {scheduled_today.strftime('%-I:%M %p ET')} · next "
-            f"{next_update.strftime('%a, %b %-d at %-I:%M %p ET')}"
-        )
+    with settings_column:
+        with st.popover("Settings", use_container_width=True):
+            selected_date = st.date_input(
+                "Slate date",
+                min_value=today_et,
+                max_value=today_et + timedelta(days=7),
+                key="slate_date",
+                help="Choose today's slate or an upcoming MLB date.",
+            )
+            simulations = st.select_slider(
+                "Monte Carlo simulations",
+                options=[10_000, 20_000, 30_000, 50_000, 75_000],
+                value=30_000,
+            )
+            st.caption("Picks use pregame inputs. Live scores never change them.")
+            if st.button("Force complete refresh", use_container_width=True):
+                st.cache_data.clear()
+                st.rerun()
+            st.divider()
+            st.markdown("**Connections**")
+            st.caption("MLB + Baseball Savant connected\n\nGame-time weather connected")
+            if odds_api_key:
+                st.caption("Sportsbook comparison connected")
+            else:
+                st.caption("Sportsbook comparison needs an API key")
+            st.markdown("**Scheduled update**")
+            st.caption(
+                f"Daily refresh {scheduled_today.strftime('%-I:%M %p ET')} · next "
+                f"{next_update.strftime('%a, %b %-d at %-I:%M %p ET')}"
+            )
 
-st.divider()
-as_of = selected_date.isoformat()
-try:
-    with st.spinner("Syncing the MLB slate and official game states…"):
-        games = cached_schedule(as_of)
-except DataSourceError as exc:
-    st.error(f"The MLB schedule feed is currently unavailable: {exc}")
-    st.stop()
-
-if not games:
-    st.info("No MLB games were returned for this date.")
-    st.stop()
-
-season = selected_date.year
-team_ids = tuple(sorted({int(game[side]["id"]) for game in games for side in ("away", "home") if game[side].get("id")}))
-pitcher_ids = tuple(sorted({int(game[side]["pitcher_id"]) for game in games for side in ("away", "home") if game[side].get("pitcher_id")}))
-game_pks = tuple(game["game_pk"] for game in games)
-
-with st.spinner("Building real-stat pitcher, offense, bullpen, park and weather profiles…"):
-    # These feeds are independent. Running them concurrently keeps a cold
-    # Community Cloud boot inside its startup window instead of making the
-    # browser wait through every network timeout one after another.
-    feed_defaults: dict[str, Any] = {
-        "team_stats": {},
-        "pitcher_profiles": {},
-        "bullpen_stats": {},
-        "pitcher_statcast": {},
-        "park_factors": {},
-        "weather_by_game": {},
-        "lineups_by_game": {},
-        "odds_events": [],
-    }
-    feed_calls: dict[str, tuple[Any, tuple[Any, ...]]] = {
-        "team_stats": (cached_team_stats, (season, as_of)),
-        "pitcher_profiles": (cached_pitchers, (pitcher_ids, season, as_of)),
-        "bullpen_stats": (cached_bullpens, (team_ids, season)),
-        "pitcher_statcast": (cached_statcast, (season,)),
-        "park_factors": (cached_park_factors, (season,)),
-        "weather_by_game": (cached_weather, (games,)),
-        "lineups_by_game": (cached_lineups, (game_pks,)),
-    }
-    if odds_api_key:
-        feed_calls["odds_events"] = (cached_odds, (odds_api_key,))
-
-    required_feed_error: Exception | None = None
-    with ThreadPoolExecutor(max_workers=len(feed_calls)) as executor:
-        futures = {
-            name: executor.submit(function, *arguments)
-            for name, (function, arguments) in feed_calls.items()
-        }
-        for name, future in futures.items():
-            try:
-                feed_defaults[name] = future.result()
-            except Exception as exc:  # Each source already normalizes network errors.
-                if name == "team_stats":
-                    required_feed_error = exc
-
-    if required_feed_error is not None:
-        st.error(
-            "Team statistics are required for projections and could not be loaded: "
-            f"{required_feed_error}"
-        )
+    st.divider()
+    as_of = selected_date.isoformat()
+    try:
+        with st.spinner("Syncing the MLB slate and official game states…"):
+            games = cached_schedule(as_of)
+    except DataSourceError as exc:
+        st.error(f"The MLB schedule feed is currently unavailable: {exc}")
+        render_live_tracker(page_started_at=page_token)
         st.stop()
 
-    team_stats = feed_defaults["team_stats"]
-    if not team_stats:
-        st.error("Team statistics were empty. Predictions were withheld instead of substituting invented data.")
+    if not games:
+        st.info("No MLB games were returned for this date.")
+        render_live_tracker(page_started_at=page_token)
         st.stop()
 
-    pitcher_profiles = feed_defaults["pitcher_profiles"]
-    bullpen_stats = feed_defaults["bullpen_stats"]
-    pitcher_statcast = feed_defaults["pitcher_statcast"]
-    park_factors = feed_defaults["park_factors"]
-    weather_by_game = feed_defaults["weather_by_game"]
-    lineups_by_game = feed_defaults["lineups_by_game"]
-    odds_events = feed_defaults["odds_events"]
+    try:
+        with st.spinner("Loading the slate and preserving saved pregame forecasts…"):
+            tracker_before, tracker_before_status = load_prediction_tracker()
+            predictions, weather_by_game, lineups_by_game = build_slate_forecasts(
+                games, selected_date, simulations, tracker_before, odds_api_key
+            )
+    except (DataSourceError, ValueError) as exc:
+        st.error(f"Forecast inputs could not be verified: {exc}")
+        render_live_tracker(page_started_at=page_token)
+        st.stop()
 
-predictions: list[dict[str, Any]] = []
-for game in games:
-    weather = weather_by_game.get(
-        game["game_pk"], {"available": False, "controlled": False, "run_multiplier": 1.0}
-    )
-    lineup = lineups_by_game.get(game["game_pk"], {})
-    odds = match_moneyline_odds(game, odds_events) if odds_events else None
-    predictions.append(
-        build_game_prediction(
-            game,
-            team_stats,
-            pitcher_profiles,
-            pitcher_statcast,
-            bullpen_stats,
-            park_factors,
-            weather,
-            lineup,
-            odds,
-            simulations=simulations,
-            lock_pregame=True,
+    priority = {"LIVE": 0, "PREVIEW": 1, "FINAL": 2}
+    predictions.sort(
+        key=lambda prediction: (
+            priority[prediction["game"]["live"]["status"]],
+            prediction["game"].get("game_datetime_utc") or datetime.max.replace(tzinfo=ET),
         )
     )
 
-priority = {"LIVE": 0, "PREVIEW": 1, "FINAL": 2}
-predictions.sort(
-    key=lambda prediction: (
-        priority[prediction["game"]["live"]["status"]],
-        prediction["game"].get("game_datetime_utc") or datetime.max.replace(tzinfo=ET),
+    tracker_payload, tracker_storage_status = sync_prediction_tracker(
+        predictions, datetime.now(ET), reconcile=False
     )
-)
+    predictions = [apply_frozen_forecast(prediction, tracker_payload["picks"].get(str(prediction["game"]["game_pk"])))
+                   for prediction in predictions]
 
-tracker_payload, tracker_storage_status = sync_prediction_tracker(predictions, now_et)
+    live_count = sum(p["game"]["live"]["status"] == "LIVE" for p in predictions)
+    preview_count = sum(p["game"]["live"]["status"] == "PREVIEW" for p in predictions)
+    final_count = sum(p["game"]["live"]["status"] == "FINAL" for p in predictions)
+    render_game_center(predictions, selected_date)
+    render_live_tracker(tracker_storage_status, page_started_at=page_token)
 
-live_count = sum(p["game"]["live"]["status"] == "LIVE" for p in predictions)
-preview_count = sum(p["game"]["live"]["status"] == "PREVIEW" for p in predictions)
-final_count = sum(p["game"]["live"]["status"] == "FINAL" for p in predictions)
-render_game_center(predictions, selected_date)
-render_tracker_summary(tracker_payload, tracker_storage_status)
-
-render_slate_insights(predictions)
-st.markdown(
-    html_block("""
-    <div class="model-note">
-        Probabilities, not promises. Every outcome can lose. The model reports uncertainty,
-        leaves unavailable information missing, and never labels a prediction a guarantee.
-    </div>
-    """),
-    unsafe_allow_html=True,
-)
-section_heading(
-    "Game-by-game forecast",
-    "Matchup Board",
-    f"{len(predictions)} games · {live_count} live · {preview_count} upcoming · "
-    f"{final_count} final · refreshed {datetime.now(ET).strftime('%-I:%M:%S %p ET')}",
-)
-
-filter_column, sort_column, search_column = st.columns([1.35, 1.1, 1.1], vertical_alignment="bottom")
-with filter_column:
-    status_filter = st.radio(
-        "Game status",
-        ["All", "Live", "Upcoming", "Final"],
-        horizontal=True,
-        key="matchup_status_filter",
-    )
-with sort_column:
-    sort_mode = st.selectbox(
-        "Sort matchups",
-        ["Game time", "Strongest lean", "Highest data quality", "Closest matchup"],
-        key="matchup_sort_mode",
-    )
-with search_column:
-    team_search = st.text_input(
-        "Find a team",
-        placeholder="Team name…",
-        key="matchup_team_search",
-    ).strip().lower()
-
-status_map = {"Live": "LIVE", "Upcoming": "PREVIEW", "Final": "FINAL"}
-filtered_predictions = [
-    prediction
-    for prediction in predictions
-    if (
-        status_filter == "All"
-        or prediction["game"]["live"]["status"] == status_map[status_filter]
-    )
-    and (
-        not team_search
-        or team_search in prediction["game"]["away"]["name"].lower()
-        or team_search in prediction["game"]["home"]["name"].lower()
-    )
-]
-
-if sort_mode == "Strongest lean":
-    filtered_predictions.sort(key=lambda p: p["target_probability"], reverse=True)
-elif sort_mode == "Highest data quality":
-    filtered_predictions.sort(key=lambda p: p["quality_score"], reverse=True)
-elif sort_mode == "Closest matchup":
-    filtered_predictions.sort(key=lambda p: abs(p["target_probability"] - 0.5))
-else:
-    filtered_predictions.sort(
-        key=lambda p: (
-            priority[p["game"]["live"]["status"]],
-            p["game"].get("game_datetime_utc") or datetime.max.replace(tzinfo=ET),
-        )
-    )
-
-st.caption(f"Showing {len(filtered_predictions)} of {len(predictions)} matchups")
-if not filtered_predictions:
-    st.info("No matchups fit the selected filters.")
-
-for prediction in filtered_predictions:
-    game_pk = prediction["game"]["game_pk"]
-    weather = weather_by_game.get(game_pk, {})
-    lineup = lineups_by_game.get(game_pk, {})
-    render_compact_game_row(prediction, weather)
-    analysis_is_open = st.session_state.get("open_game_pk") == game_pk
-    if analysis_is_open:
-        render_advanced(prediction, weather, lineup)
-
-st.markdown("---")
-with st.expander("Methodology, data sources and important limitations", expanded=False):
+    render_slate_insights(predictions)
     st.markdown(
-        """
-The app uses an interpretable ensemble rather than presenting an unvalidated model as “AI.” Pregame run estimates combine season-to-date and recent team offense, opposing starter ERA/FIP/xERA, bullpen relief splits, fielding, a rolling three-year park factor, game-time weather and home-field context. A negative-binomial Monte Carlo simulation produces a score distribution; its winner probability is blended with a separate record-based estimate and shrunk toward 50% to acknowledge uncertainty.
-
-Every displayed pick is a locked pregame forecast. Live scores, inning, outs and base state are shown in the Score Center but are deliberately excluded from the prediction so a pick cannot flip after first pitch.
-
-Current limits:
-
-- Confirmed lineups are detected, but this version does not yet rebuild team offense batter-by-batter.
-- Bullpen quality uses relief splits; individual reliever availability and warm-up data are not yet modeled.
-- Without an odds API key, the app cannot calculate real market edge, expected value or line movement.
-- The model must be walk-forward backtested and calibrated before anyone treats its estimates as proven betting signals.
-        """
+        html_block("""
+        <div class="model-note">
+            Probabilities, not promises. Every outcome can lose. The model reports uncertainty,
+            leaves unavailable information missing, and never labels a prediction a guarantee.
+        </div>
+        """),
+        unsafe_allow_html=True,
     )
-    st.markdown("**Primary sources**")
-    for name, url in SOURCE_LINKS.items():
-        st.markdown(f"- [{name}]({url})")
-    st.caption("Open-Meteo weather data requires attribution under its published license. MLB and Statcast data remain subject to MLB terms and notices.")
+    section_heading(
+        "Game-by-game forecast",
+        "Matchup Board",
+        f"{len(predictions)} games · {live_count} live · {preview_count} upcoming · "
+        f"{final_count} final · refreshed {datetime.now(ET).strftime('%-I:%M:%S %p ET')}",
+    )
+
+    filter_column, sort_column, search_column = st.columns([1.35, 1.1, 1.1], vertical_alignment="bottom")
+    with filter_column:
+        status_filter = st.radio(
+            "Game status",
+            ["All", "Live", "Upcoming", "Final"],
+            horizontal=True,
+            key="matchup_status_filter",
+        )
+    with sort_column:
+        sort_mode = st.selectbox(
+            "Sort matchups",
+            ["Game time", "Strongest lean", "Highest data quality", "Closest matchup", "Stronger setups only"],
+            key="matchup_sort_mode",
+        )
+    with search_column:
+        team_search = st.text_input(
+            "Find a team",
+            placeholder="Team name…",
+            key="matchup_team_search",
+        ).strip().lower()
+
+    status_map = {"Live": "LIVE", "Upcoming": "PREVIEW", "Final": "FINAL"}
+    filtered_predictions = [
+        prediction
+        for prediction in predictions
+        if (
+            status_filter == "All"
+            or prediction["game"]["live"]["status"] == status_map[status_filter]
+        )
+        and (
+            not team_search
+            or team_search in prediction["game"]["away"]["name"].lower()
+            or team_search in prediction["game"]["home"]["name"].lower()
+        )
+    ]
+
+    if sort_mode == "Stronger setups only":
+        filtered_predictions = [p for p in filtered_predictions if (p.get("research_selection") or {}).get("qualifies")]
+        filtered_predictions.sort(key=lambda p: p["target_probability"], reverse=True)
+    elif sort_mode == "Strongest lean":
+        filtered_predictions.sort(key=lambda p: p["target_probability"], reverse=True)
+    elif sort_mode == "Highest data quality":
+        filtered_predictions.sort(key=lambda p: p["quality_score"], reverse=True)
+    elif sort_mode == "Closest matchup":
+        filtered_predictions.sort(key=lambda p: abs(p["target_probability"] - 0.5))
+    else:
+        filtered_predictions.sort(
+            key=lambda p: (
+                priority[p["game"]["live"]["status"]],
+                p["game"].get("game_datetime_utc") or datetime.max.replace(tzinfo=ET),
+            )
+        )
+
+    st.caption(f"Showing {len(filtered_predictions)} of {len(predictions)} matchups")
+    if not filtered_predictions:
+        st.info("No matchups fit the selected filters.")
+
+    for prediction in filtered_predictions:
+        game_pk = prediction["game"]["game_pk"]
+        weather = weather_by_game.get(game_pk, {})
+        lineup = lineups_by_game.get(game_pk, {})
+        render_compact_game_row(prediction, weather)
+        analysis_is_open = st.session_state.get("open_game_pk") == game_pk
+        if analysis_is_open:
+            render_advanced(prediction, weather, lineup)
+
+    st.markdown("---")
+    with st.expander("Methodology, data sources and important limitations", expanded=False):
+        st.markdown(
+            """
+    The app uses an interpretable ensemble rather than presenting an unvalidated model as “AI.” Pregame run estimates combine season-to-date and recent team offense, opposing starter ERA/FIP/xERA, bullpen relief splits, fielding, a rolling three-year park factor, game-time weather and home-field context. A negative-binomial Monte Carlo simulation produces a score distribution; its winner probability is blended with a separate record-based estimate and shrunk toward 50% to acknowledge uncertainty.
+
+    Saved picks and their probabilities are restored from the tracker, with full input snapshots for Build 24 captures. Live scores never rewrite a saved forecast. Games first seen after scheduled first pitch are marked untracked and excluded from the record. Earlier-build detailed inputs were not saved, so those are not retroactively reconstructed.
+
+    Current limits:
+
+    - Confirmed lineups are detected, but this version does not yet rebuild team offense batter-by-batter.
+    - Bullpen quality uses relief splits; individual reliever availability and warm-up data are not yet modeled.
+    - Without an odds API key, the app cannot calculate real market edge, expected value or line movement.
+    - The model must be walk-forward backtested and calibrated before anyone treats its estimates as proven betting signals.
+    - The experimental stronger-setup rule and calibration challenger are scored prospectively; neither is advertised as a proven 70% model.
+            """
+        )
+        st.markdown("**Primary sources**")
+        for name, url in SOURCE_LINKS.items():
+            st.markdown(f"- [{name}]({url})")
+        st.caption("Open-Meteo weather data requires attribution under its published license. MLB and Statcast data remain subject to MLB terms and notices.")
+
+
+if __name__ == "__main__":
+    if "--sync-tracker" in sys.argv:
+        import argparse
+        parser = argparse.ArgumentParser(description="Capture pregame picks and reconcile official MLB finals.")
+        parser.add_argument("--sync-tracker", action="store_true")
+        parser.add_argument("--init-remote", action="store_true")
+        parser.add_argument("--grade-only", action="store_true")
+        parser.add_argument("--seed-backup")
+        arguments = parser.parse_args()
+        raise SystemExit(run_background_tracker(initialize=arguments.init_remote,
+                                                grade_only=arguments.grade_only,
+                                                seed_path=arguments.seed_backup))
+    else:
+        run_dashboard()
