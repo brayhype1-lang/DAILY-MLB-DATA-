@@ -784,29 +784,37 @@ def fetch_weather_slate(games: Iterable[dict[str, Any]]) -> dict[int, dict[str, 
 def _single_lineup(game_pk: int) -> dict[str, Any]:
     payload = _request_json(f"{MLB_API_BASE}/game/{game_pk}/boxscore", timeout=12)
     teams = payload.get("teams", {}) if isinstance(payload, dict) else {}
-    output: dict[str, Any] = {}
+    output: dict[str, Any] = {"observed_at_utc": datetime.now(timezone.utc).isoformat()}
     for side in ("away", "home"):
         team_box = teams.get(side) or {}
         batter_ids = team_box.get("batters") or []
         players = team_box.get("players") or {}
-        names: list[str] = []
-        ordered: list[tuple[int, str]] = []
+        ordered: dict[int, dict[str, Any]] = {}
         for player_id in batter_ids:
             player = players.get(f"ID{player_id}") or {}
             order = player.get("battingOrder")
             name = ((player.get("person") or {}).get("fullName") or "").strip()
             if order and name:
                 try:
-                    ordered.append((int(order), name))
+                    code = int(order)
+                    # 100..900 are the original nine; 101/102 etc. are substitutes.
+                    slot = code // 100 if code >= 100 and code % 100 == 0 else code
+                    if 1 <= slot <= 9 and slot not in ordered:
+                        batting = (player.get("seasonStats") or {}).get("batting") or {}
+                        ordered[slot] = {
+                            "player_id": int(player_id), "name": name, "slot": slot,
+                            "ops": _as_float(batting.get("ops")),
+                            "plate_appearances": _as_float(batting.get("plateAppearances")),
+                        }
                 except (TypeError, ValueError):
                     continue
-        for _, name in sorted(ordered):
-            if name not in names:
-                names.append(name)
+        batters = [ordered[slot] for slot in sorted(ordered)]
+        names = [batter["name"] for batter in batters]
         output[side] = {
-            "confirmed": len(names) >= 9,
+            "confirmed": len(batters) == 9 and len({batter["player_id"] for batter in batters}) == 9,
             "count": len(names),
-            "names": names[:9],
+            "names": names,
+            "batters": batters,
         }
     return output
 
@@ -1053,6 +1061,61 @@ def _fip(stat: dict[str, Any], constant: float) -> float | None:
     return (13.0 * home_runs + 3.0 * (walks + hit_batters) - 2.0 * strikeouts) / innings + constant
 
 
+def lineup_offense_profile(team_row: dict[str, Any], league: dict[str, float],
+                           order: dict[str, Any], *, eligible: bool) -> dict[str, Any]:
+    """Conservative lineup adjustment from the nine actual pregame MLB batters.
+
+    Uses the existing boxscore request, not nine additional API calls. This is
+    a bounded, untrained feature, not evidence of an accuracy improvement.
+    Missing or post-start observations leave the team model unchanged.
+    """
+    profile = offense_profile(team_row, league)
+    profile.update(lineup_used=False, lineup_multiplier=1.0, lineup_ops=None,
+                   lineup_note="Team baseline used; a complete pregame batting order and hitter statistics were not available.")
+    batters = order.get("batters") or []
+    if (not eligible or not order.get("confirmed") or not isinstance(batters, list)
+            or len(batters) != 9 or any(not isinstance(batter, dict) for batter in batters)):
+        return profile
+    if (len({batter.get("player_id") for batter in batters}) != 9
+            or any(not isinstance(batter.get("player_id"), int) or batter["player_id"] <= 0 for batter in batters)
+            or {batter.get("slot") for batter in batters} != set(range(1, 10))):
+        return profile
+    baseline = safe_float((team_row.get("hitting") or {}).get("ops"))
+    if baseline is None or not 0 < baseline <= 4:
+        return profile
+    rates = []
+    for batter in sorted(batters, key=lambda row: row["slot"]):
+        ops = safe_float(batter.get("ops"))
+        pa = safe_float(batter.get("plate_appearances"))
+        if ops is None or not 0 <= ops <= 4 or pa is None or pa <= 0:
+            return profile
+        # Shrink small hitter samples toward the existing team baseline.
+        rates.append(baseline + (ops - baseline) * pa / (pa + 200.0))
+    lineup_ops = sum(rates) / 9.0
+    multiplier = clamp(math.exp((lineup_ops - baseline) * 2.55), 0.92, 1.08)
+    profile.update(team_only_strength=profile["strength"],
+                   strength=clamp(profile["strength"] * multiplier, 0.68, 1.38),
+                   lineup_used=True, lineup_multiplier=multiplier, lineup_ops=lineup_ops,
+                   lineup_note="All nine confirmed hitters used; small samples regressed and the run adjustment capped at ±8%.")
+    return profile
+
+
+def _pregame_lineup_observation(game: dict[str, Any], lineup: dict[str, Any]) -> bool:
+    """Never use a live/final boxscore's hitter totals as pregame evidence."""
+    if (game.get("live") or {}).get("status") != "PREVIEW":
+        return False
+    observed_raw = lineup.get("observed_at_utc")
+    start_raw = game.get("game_datetime_utc")
+    if not isinstance(observed_raw, str) or not start_raw:
+        return False
+    try:
+        observed = datetime.fromisoformat(observed_raw.replace("Z", "+00:00"))
+        start = start_raw if isinstance(start_raw, datetime) else datetime.fromisoformat(str(start_raw).replace("Z", "+00:00"))
+        return bool(observed.tzinfo and start.tzinfo and observed < start and observed.year == start.year)
+    except (TypeError, ValueError):
+        return False
+
+
 def starter_profile(
     profile: dict[str, Any], statcast: dict[str, Any], league: dict[str, float]
 ) -> dict[str, Any]:
@@ -1194,6 +1257,60 @@ def _negative_binomial_runs(rng: np.random.Generator, mean: float, count: int) -
     dispersion = 5.0
     probability = dispersion / (dispersion + mean)
     return rng.negative_binomial(dispersion, probability, size=count)
+
+
+def exact_pregame_score_distribution(away_mean: float, home_mean: float,
+                                    total_line: float | None = None) -> dict[str, Any]:
+    """Sum the same negative-binomial model without Monte Carlo sampling noise.
+
+    The existing dispersion (5) and 54% home tie-break assumption are retained.
+    Each score tail is below 1e-13; the tiny truncated mass is normalized.
+    This changes numerical precision, not the claimed predictive accuracy.
+    """
+    def mass(mean: float) -> np.ndarray:
+        if not math.isfinite(mean) or mean < 0 or mean > 100:
+            raise ValueError("The run mean must be finite and between 0 and 100.")
+        probability = 5.0 / (5.0 + max(0.001, mean))
+        values = [probability ** 5.0]
+        cumulative = values[0]
+        for runs in range(1, 2048):
+            value = values[-1] * (runs + 4.0) / runs * (1.0 - probability)
+            values.append(value)
+            cumulative += value
+            if 1.0 - cumulative < 1e-13:
+                break
+        else:
+            raise ValueError("The score probability tail did not converge.")
+        result = np.asarray(values, dtype=float)
+        return result / result.sum()
+
+    away_pmf, home_pmf = mass(float(away_mean)), mass(float(home_mean))
+    size = max(len(away_pmf), len(home_pmf)) + 1
+    joint = np.zeros((size, size), dtype=float)  # rows away, columns home
+    joint[:len(away_pmf), :len(home_pmf)] = np.outer(away_pmf, home_pmf)
+    for tied_score in range(size - 1):
+        tie = joint[tied_score, tied_score]
+        joint[tied_score, tied_score] = 0.0
+        joint[tied_score, tied_score + 1] += tie * 0.54
+        joint[tied_score + 1, tied_score] += tie * 0.46
+    away_scores, home_scores = np.indices(joint.shape)
+    difference = home_scores - away_scores
+    totals = away_scores + home_scores
+    line = 8.5 if total_line is None else float(total_line)
+    home_win = float(joint[difference > 0].sum())
+    return {
+        "home_win": home_win, "away_win": 1.0 - home_win,
+        "home_minus_1_5": float(joint[difference > 1.5].sum()),
+        "away_plus_1_5": float(joint[difference < 1.5].sum()),
+        "over_probability": float(joint[totals > line].sum()),
+        "under_probability": float(joint[totals < line].sum()),
+        "push_probability": float(joint[totals == line].sum()),
+        "median_away": float(np.searchsorted(np.cumsum(joint.sum(axis=1)), 0.5)),
+        "median_home": float(np.searchsorted(np.cumsum(joint.sum(axis=0)), 0.5)),
+        "mean_away": float((joint * away_scores).sum()),
+        "mean_home": float((joint * home_scores).sum()),
+        "total_line": line, "probability_method": "exact_negative_binomial",
+    }
 
 
 def _remaining_innings(live: dict[str, Any]) -> tuple[float, float]:
@@ -1471,8 +1588,9 @@ def build_game_prediction(
     away_id, home_id = game["away"]["id"], game["home"]["id"]
     away_team = team_stats.get(away_id, {})
     home_team = team_stats.get(home_id, {})
-    away_offense = offense_profile(away_team, league)
-    home_offense = offense_profile(home_team, league)
+    lineup_eligible = _pregame_lineup_observation(game, lineup)
+    away_offense = lineup_offense_profile(away_team, league, lineup.get("away") or {}, eligible=lineup_eligible)
+    home_offense = lineup_offense_profile(home_team, league, lineup.get("home") or {}, eligible=lineup_eligible)
 
     away_pitcher_id = game["away"].get("pitcher_id")
     home_pitcher_id = game["home"].get("pitcher_id")
@@ -1522,9 +1640,12 @@ def build_game_prediction(
     total_line = moneyline_odds.get("consensus_total") if moneyline_odds else None
     actual_status = game["live"]["status"]
     model_game = pregame_model_state(game) if lock_pregame else game
-    distribution = simulate_score_distribution(
-        model_game, away_mean, home_mean, simulations, total_line=total_line
-    )
+    if model_game["live"]["status"] == "PREVIEW":
+        distribution = exact_pregame_score_distribution(away_mean, home_mean, total_line=total_line)
+    else:
+        distribution = simulate_score_distribution(
+            model_game, away_mean, home_mean, simulations, total_line=total_line
+        )
     record_home = _record_probability(game)
     sim_home = distribution["home_win"]
     model_status = model_game["live"]["status"]
@@ -1539,6 +1660,21 @@ def build_game_prediction(
         home_probability = clamp(home_probability, 0.18, 0.82)
     away_probability = 1.0 - home_probability
     agreement = abs(sim_home - record_home)
+
+    # Freeze a no-lineup control for fair, future-game comparison. It never
+    # replaces the published pick or rewrites an older game's forecast.
+    lineup_baseline_home = None
+    if model_status == "PREVIEW" and any(profile.get("lineup_used") for profile in (away_offense, home_offense)):
+        away_base = clamp(league["runs_per_game"]
+                          * away_offense.get("team_only_strength", away_offense["strength"])
+                          * (home_staff / league["era"]) * defense_multiplier(home_team, league)
+                          * shared_environment, 2.0, 8.2)
+        home_base = clamp(league["runs_per_game"]
+                          * home_offense.get("team_only_strength", home_offense["strength"])
+                          * (away_staff / league["era"]) * defense_multiplier(away_team, league)
+                          * shared_environment * 1.025, 2.0, 8.2)
+        baseline = exact_pregame_score_distribution(away_base, home_base)["home_win"]
+        lineup_baseline_home = clamp(0.5 + (0.78 * baseline + 0.22 * record_home - 0.5) * 0.88, 0.18, 0.82)
 
     target_side = "home" if home_probability >= away_probability else "away"
     target_probability = max(home_probability, away_probability)
@@ -1624,6 +1760,7 @@ def build_game_prediction(
         "quality_label": quality_label,
         "model_agreement_gap": agreement,
         "simulation_home_probability": sim_home,
+        "lineup_baseline_home_probability": lineup_baseline_home,
         "record_home_probability": record_home,
         "away_staff_ra9": away_staff,
         "home_staff_ra9": home_staff,
@@ -1638,7 +1775,7 @@ def build_game_prediction(
         "odds": moneyline_odds,
         "methodology": (
             "Ensemble of opponent-adjusted run estimates, ERA/FIP/xERA starter quality, "
-            "bullpen splits, team offense, defense, park/weather and Monte Carlo scoring."
+            "bullpen splits, pregame lineup-adjusted offense, defense, park/weather and score probabilities."
         ),
     }
 import random
@@ -4592,7 +4729,7 @@ ET = ZoneInfo("America/New_York")
 DAILY_REFRESH_HOUR_ET = 8
 DAILY_REFRESH_MINUTE_ET = 0
 LIVE_REFRESH_SECONDS = 30
-MODEL_VERSION = "24.1-input-integrity"
+MODEL_VERSION = "25.1-lineups-exact"
 SHORTLIST_RULE_VERSION = "24.1-prospective"
 
 def initialize_page() -> None:
@@ -4642,7 +4779,7 @@ def toggle_game_analysis(game_pk: int) -> None:
 
 
 TRACKER_SCHEMA_VERSION = 1
-TRACKER_BUILD = 24
+TRACKER_BUILD = 25
 TRACKER_MAX_BYTES = 50_000_000
 TRACKER_RESULT_OPTIONS = ("PENDING", "WIN", "LOSS", "VOID")
 _tracker_path_override = os.environ.get("MLB_TRACKER_PATH", "").strip()
@@ -4865,7 +5002,8 @@ def evaluate_frozen_forecasts(entries: Iterable[dict[str, Any]]) -> dict[str, An
     shortlisted = [row for row in prospectively_labeled
                    if row["research_selection"].get("qualifies")]
     comparisons = []
-    for key, label in (("simulation_home", "Run simulation"), ("record_home", "Record baseline"),
+    for key, label in (("simulation_home", "Run distribution"), ("record_home", "Record baseline"),
+                       ("team_only_home", "Team-only control (no lineup adjustment)"),
                        ("market_home", "No-vig sportsbook"), ("calibrated_target", "Calibration challenger")):
         paired = []
         for row in graded:
@@ -4933,6 +5071,7 @@ def attach_forecast_evidence(prediction: dict[str, Any], weather: dict[str, Any]
     prediction["evaluation_probabilities"] = {
         "simulation_home": safe_float(prediction.get("simulation_home_probability")),
         "record_home": safe_float(prediction.get("record_home_probability")),
+        "team_only_home": safe_float(prediction.get("lineup_baseline_home_probability")),
         "market_home": safe_float((prediction.get("odds") or {}).get("home_no_vig")),
     }
     if calibration:
@@ -6029,12 +6168,21 @@ def build_model_explanation(
         f"{agreement_description(prediction['model_agreement_gap'])}. The final pregame "
         "probability blends both estimates and shrinks the result toward 50% to reduce false precision."
     )
+    exact_scores = (prediction.get("distribution") or {}).get("probability_method") == "exact_negative_binomial"
+    if exact_scores:
+        simulation = (
+            f"The scoring distribution gives {target['short_name']} {simulation_target*100:.1f}%. "
+            "Its probabilities are summed directly, so a random seed or simulation count cannot change the pick. "
+            f"The separate record/home baseline gives {record_target*100:.1f}%, a "
+            f"{prediction['model_agreement_gap']*100:.1f}-point gap. "
+            "The existing blend and pull toward 50% remain. More precise calculation does not mean more certain outcomes."
+        )
     if prediction.get("snapshot_state") == "legacy":
         simulation = ("This earlier build saved the original pick, probability and projected score, "
                       "but not the full simulation inputs. Those original values are retained. "
                       "The other panels show current context, not a reconstruction of the original model.")
     branch_short = (
-        f"Score simulations: {simulation_target*100:.1f}% · record/home baseline: "
+        f"Run distribution: {simulation_target*100:.1f}% · record/home baseline: "
         f"{record_target*100:.1f}% · disagreement: "
         f"{prediction['model_agreement_gap']*100:.1f} points."
     )
@@ -6051,6 +6199,16 @@ def build_model_explanation(
         f"{home_offense['ops']:.3f} OPS. An index of 100 is league average, and recent form "
         "is intentionally regressed so a short hot streak cannot dominate the pick."
     )
+    if prediction.get("snapshot_state") != "legacy":
+        for side, profile in (("away", away_offense), ("home", home_offense)):
+            if profile.get("lineup_used"):
+                offense += (
+                    f" {game[side]['short_name']}: all nine confirmed hitters enter the run estimate; "
+                    f"the lineup multiplier is {float(profile['lineup_multiplier']):.3f} "
+                    "after sample-size regression (capped at ±8%)."
+                )
+            elif "lineup_used" in profile:
+                offense += f" {game[side]['short_name']}: team baseline retained; complete pregame hitter inputs were unavailable."
 
     away_starter = prediction["away_starter"]
     home_starter = prediction["home_starter"]
@@ -6545,6 +6703,17 @@ def tracker_pick_log_markup(entries: Iterable[dict[str, Any]]) -> str:
 
 def render_model_lab(payload: dict[str, Any]) -> None:
     assessment = evaluate_frozen_forecasts(payload["picks"].values())
+    current_rows = [row for row in payload["picks"].values() if row.get("model_version") == MODEL_VERSION]
+    current_assessment = evaluate_frozen_forecasts(current_rows)
+    current_wins = sum(row.get("result") == "WIN" and not row.get("manual_override") for row in current_rows)
+    current_pending = sum(row.get("result") == "PENDING" for row in current_rows)
+    st.markdown("**Build 25 · new forecasts only**")
+    st.caption(
+        f"{current_wins} wins · {current_assessment['n'] - current_wins} losses · {current_pending} pending. "
+        "Earlier picks stay in the all-time record below; they are not counted as tests of this update. "
+        "This version uses confirmed pregame hitters when complete stats are available and removes simulation noise. "
+        "Its win-rate improvement has not yet been established."
+    )
     st.markdown("**Measured performance—not promised accuracy**")
     st.caption("Uses saved probabilities and official win/loss grades. Manual corrections, pending games and voids are excluded from the probability checks.")
     if not assessment["n"]:
@@ -6567,7 +6736,7 @@ def render_model_lab(payload: dict[str, Any]) -> None:
     trial = assessment["shortlisted"]
     st.write(f"{trial['wins']} wins · {trial['losses']} losses · {trial['pending']} pending")
     st.caption(
-        "Fixed rule for new Build 24 captures: at least 60% model probability, data quality 80/100, "
+        "Fixed rule introduced in Build 24: at least 60% model probability, data quality 80/100, "
         "both starters with usable stats and 80 batters faced, and model disagreement no greater than 10 points. "
         "This is an experimental research shortlist, not validated betting advice. Every game still remains in the main record. "
         "Older picks are not retrospectively labeled to improve this trial's results."
@@ -6581,12 +6750,12 @@ def render_model_lab(payload: dict[str, Any]) -> None:
             for row in assessment["comparisons"]
         ], hide_index=True, use_container_width=True)
     else:
-        st.caption("Comparisons begin when newly saved Build 24 forecasts finish. Older inputs were not recorded, so they are not backfilled.")
+        st.caption("Comparisons begin when forecasts with saved input snapshots finish. Older inputs were not recorded, so they are not backfilled.")
     st.caption(
         "The calibration challenger waits for 200 official results from this model version across at least 14 dates. "
         "It learns only from results available before each new forecast, then is scored on later games. "
-        "It never replaces the published probability automatically. Lineups are currently a completeness check, "
-        "not yet a batter-by-batter offensive adjustment."
+        "It never replaces the published probability automatically. The lineup adjustment is bounded and experimental; "
+        "a team-only control is saved before first pitch so its effect can be measured on the same future games."
     )
 
 
@@ -7506,7 +7675,7 @@ def run_dashboard() -> None:
                 <div>
                     <div class="quant-brand-heading">
                         <div class="quant-brand-title">MLB Quant Terminal</div>
-                        <span class="quant-build">Build 24</span>
+                        <span class="quant-build">Build 25</span>
                     </div>
                     <div class="quant-brand-subtitle">Live scores · locked pregame forecasts · matchup intelligence</div>
                 </div>
@@ -7540,11 +7709,8 @@ def run_dashboard() -> None:
                 key="slate_date",
                 help="Choose today's slate or an upcoming MLB date.",
             )
-            simulations = st.select_slider(
-                "Monte Carlo simulations",
-                options=[10_000, 20_000, 30_000, 50_000, 75_000],
-                value=30_000,
-            )
+            simulations = 30_000  # Retained for compatibility with older saved snapshots.
+            st.caption("Build 25 calculates pregame score probabilities directly; no simulation-count tuning is needed.")
             st.caption("Picks use pregame inputs. Live scores never change them.")
             if st.button("Force complete refresh", use_container_width=True):
                 st.cache_data.clear()
@@ -7695,13 +7861,13 @@ def run_dashboard() -> None:
     with st.expander("Methodology, data sources and important limitations", expanded=False):
         st.markdown(
             """
-    The app uses an interpretable ensemble rather than presenting an unvalidated model as “AI.” Pregame run estimates combine season-to-date and recent team offense, opposing starter ERA/FIP/xERA, bullpen relief splits, fielding, a rolling three-year park factor, game-time weather and home-field context. A negative-binomial Monte Carlo simulation produces a score distribution; its winner probability is blended with a separate record-based estimate and shrunk toward 50% to acknowledge uncertainty.
+    Pregame run estimates combine season-to-date and recent team offense, opposing starter ERA/FIP/xERA, bullpen relief splits, fielding, a rolling three-year park factor, game-time weather and home-field context. Build 25 sums the negative-binomial scoring probabilities directly instead of sampling them. The dispersion, extra-inning tie assumption, record-based blend and shrinkage toward 50% are unchanged. This eliminates sampling jitter, not real baseball uncertainty.
 
-    Saved picks and their probabilities are restored from the tracker, with full input snapshots for Build 24 captures. Live scores never rewrite a saved forecast. Games first seen after scheduled first pitch are marked untracked and excluded from the record. Earlier-build detailed inputs were not saved, so those are not retroactively reconstructed.
+    Saved picks and their probabilities are restored from the tracker, with full input snapshots from Build 24 onward. Live scores never rewrite a saved forecast. Games first seen after scheduled first pitch are marked untracked and excluded from the record. Earlier-build detailed inputs were not saved, so those are not retroactively reconstructed. This upgrade applies to new captures only, and does not replace a morning pick when a later batting order arrives.
 
     Current limits:
 
-    - Confirmed lineups are detected, but this version does not yet rebuild team offense batter-by-batter.
+    - When all nine confirmed pregame hitters have season OPS and plate appearances, their regressed average adjusts the team run estimate by no more than ±8%. Missing, partial or post-start observations leave the baseline unchanged. This is a conservative untrained feature, not a validated accuracy gain; handedness, injuries and batter/pitcher matchup effects are not yet modeled.
     - Bullpen quality uses relief splits; individual reliever availability and warm-up data are not yet modeled.
     - Without an odds API key, the app cannot calculate real market edge, expected value or line movement.
     - The model must be walk-forward backtested and calibrated before anyone treats its estimates as proven betting signals.
