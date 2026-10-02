@@ -1,20 +1,4 @@
 {
-  "last_updated": "2026-10-01 16:49:49 UTC",
-  "slate": [
-    {
-      "game_id": 849844,
-      "away_team": "Philadelphia Phillies",
-      "away_pitcher": "Aaron Nola",
-      "away_era": 4.67,
-      "away_whip": 1.35,
-      "away_prob": 25.0,
-      "home_team": "Atlanta Braves",
-      "home_pitcher": "Ray Kerr",
-      "home_era": 1.47,
-      "home_whip": 0.6,
-      "home_prob": 75.0,
-      "recommended_bet": "Atlanta Braves F5 Moneyline",
-      "confidence": "HIGH"
-    }
-  ]
+  "last_updated": "2026-10-02 16:03:10 UTC",
+  "slate": []
 }
