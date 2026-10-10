@@ -1,4 +1,20 @@
 {
-  "last_updated": "2026-10-09 16:45:35 UTC",
-  "slate": []
+  "last_updated": "2026-10-10 15:39:46 UTC",
+  "slate": [
+    {
+      "game_id": 849831,
+      "away_team": "Chicago White Sox",
+      "away_pitcher": "Sean Burke",
+      "away_era": 3.34,
+      "away_whip": 1.2,
+      "away_prob": 46.8,
+      "home_team": "Cleveland Guardians",
+      "home_pitcher": "Gavin Williams",
+      "home_era": 3.76,
+      "home_whip": 1.11,
+      "home_prob": 53.2,
+      "recommended_bet": "NO EDGE / PASS",
+      "confidence": "MEDIUM"
+    }
+  ]
 }
