@@ -1,20 +1,20 @@
 {
-  "last_updated": "2026-10-10 15:39:46 UTC",
+  "last_updated": "2026-10-11 16:06:11 UTC",
   "slate": [
     {
-      "game_id": 849831,
-      "away_team": "Chicago White Sox",
-      "away_pitcher": "Sean Burke",
-      "away_era": 3.34,
-      "away_whip": 1.2,
-      "away_prob": 46.8,
-      "home_team": "Cleveland Guardians",
-      "home_pitcher": "Gavin Williams",
-      "home_era": 3.76,
-      "home_whip": 1.11,
-      "home_prob": 53.2,
-      "recommended_bet": "NO EDGE / PASS",
-      "confidence": "MEDIUM"
+      "game_id": 849809,
+      "away_team": "Los Angeles Dodgers",
+      "away_pitcher": "Tarik Skubal",
+      "away_era": 2.72,
+      "away_whip": 0.96,
+      "away_prob": 34.2,
+      "home_team": "Milwaukee Brewers",
+      "home_pitcher": "Jacob Misiorowski",
+      "home_era": 1.8,
+      "home_whip": 0.8,
+      "home_prob": 65.8,
+      "recommended_bet": "Milwaukee Brewers F5 Moneyline",
+      "confidence": "HIGH"
     }
   ]
 }
