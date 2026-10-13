@@ -1,34 +1,19 @@
 {
-  "last_updated": "2026-10-12 19:33:49 UTC",
+  "last_updated": "2026-10-13 17:17:50 UTC",
   "slate": [
     {
-      "game_id": 849812,
-      "away_team": "Los Angeles Dodgers",
-      "away_pitcher": "Yoshinobu Yamamoto",
-      "away_era": 2.53,
-      "away_whip": 0.87,
-      "away_prob": 45.4,
-      "home_team": "Milwaukee Brewers",
-      "home_pitcher": "Logan Henderson",
-      "home_era": 2.47,
-      "home_whip": 0.84,
-      "home_prob": 54.6,
-      "recommended_bet": "NO EDGE / PASS",
-      "confidence": "MEDIUM"
-    },
-    {
-      "game_id": 849820,
+      "game_id": 849813,
       "away_team": "Cleveland Guardians",
-      "away_pitcher": "Foster Griffin",
-      "away_era": 3.6,
-      "away_whip": 1.21,
-      "away_prob": 29.0,
+      "away_pitcher": "Parker Messick",
+      "away_era": 2.56,
+      "away_whip": 1.06,
+      "away_prob": 70.8,
       "home_team": "Tampa Bay Rays",
-      "home_pitcher": "Drew Rasmussen",
-      "home_era": 2.67,
-      "home_whip": 0.91,
-      "home_prob": 71.0,
-      "recommended_bet": "Tampa Bay Rays F5 Moneyline",
+      "home_pitcher": "Freddy Peralta",
+      "home_era": 4.42,
+      "home_whip": 1.33,
+      "home_prob": 29.2,
+      "recommended_bet": "Cleveland Guardians F5 Moneyline",
       "confidence": "HIGH"
     }
   ]
