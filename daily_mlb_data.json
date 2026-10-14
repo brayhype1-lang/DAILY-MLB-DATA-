@@ -1,19 +1,19 @@
 {
-  "last_updated": "2026-10-13 17:17:50 UTC",
+  "last_updated": "2026-10-14 14:49:21 UTC",
   "slate": [
     {
-      "game_id": 849813,
-      "away_team": "Cleveland Guardians",
-      "away_pitcher": "Parker Messick",
-      "away_era": 2.56,
-      "away_whip": 1.06,
-      "away_prob": 70.8,
-      "home_team": "Tampa Bay Rays",
-      "home_pitcher": "Freddy Peralta",
-      "home_era": 4.42,
-      "home_whip": 1.33,
-      "home_prob": 29.2,
-      "recommended_bet": "Cleveland Guardians F5 Moneyline",
+      "game_id": 849811,
+      "away_team": "Milwaukee Brewers",
+      "away_pitcher": "Robert Gasser",
+      "away_era": 3.87,
+      "away_whip": 1.19,
+      "away_prob": 29.0,
+      "home_team": "Los Angeles Dodgers",
+      "home_pitcher": "Blake Snell",
+      "home_era": 1.9,
+      "home_whip": 1.1,
+      "home_prob": 71.0,
+      "recommended_bet": "Los Angeles Dodgers F5 Moneyline",
       "confidence": "HIGH"
     }
   ]
