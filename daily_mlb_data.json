@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-16 14:27:31 UTC",
+  "last_updated": "2026-10-17 13:24:41 UTC",
   "slate": [
     {
       "game_id": 849817,
@@ -7,12 +7,12 @@
       "away_pitcher": "Nick Martinez",
       "away_era": 3.1,
       "away_whip": 1.09,
-      "away_prob": 62.2,
+      "away_prob": 69.1,
       "home_team": "Cleveland Guardians",
-      "home_pitcher": "Unannounced Starter",
-      "home_era": 4.2,
-      "home_whip": 1.28,
-      "home_prob": 37.8,
+      "home_pitcher": "Shawn Armstrong",
+      "home_era": 4.58,
+      "home_whip": 1.39,
+      "home_prob": 30.9,
       "recommended_bet": "Tampa Bay Rays F5 Moneyline",
       "confidence": "HIGH"
     }
