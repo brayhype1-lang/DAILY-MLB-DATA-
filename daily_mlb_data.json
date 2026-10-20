@@ -1,20 +1,4 @@
 {
-  "last_updated": "2026-10-19 16:45:07 UTC",
-  "slate": [
-    {
-      "game_id": 849815,
-      "away_team": "Cleveland Guardians",
-      "away_pitcher": "Shawn Armstrong",
-      "away_era": 4.58,
-      "away_whip": 1.39,
-      "away_prob": 43.6,
-      "home_team": "Tampa Bay Rays",
-      "home_pitcher": "Freddy Peralta",
-      "home_era": 4.42,
-      "home_whip": 1.33,
-      "home_prob": 56.4,
-      "recommended_bet": "Tampa Bay Rays F5 Moneyline",
-      "confidence": "HIGH"
-    }
-  ]
+  "last_updated": "2026-10-20 14:36:48 UTC",
+  "slate": []
 }
