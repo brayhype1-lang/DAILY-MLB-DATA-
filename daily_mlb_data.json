@@ -1,19 +1,19 @@
 {
-  "last_updated": "2026-10-27 15:40:00 UTC",
+  "last_updated": "2026-10-28 16:23:57 UTC",
   "slate": [
     {
-      "game_id": 849803,
+      "game_id": 849799,
       "away_team": "Milwaukee Brewers",
-      "away_pitcher": "Unannounced Starter",
-      "away_era": 4.2,
-      "away_whip": 1.28,
-      "away_prob": 38.3,
+      "away_pitcher": "Jacob Misiorowski",
+      "away_era": 1.8,
+      "away_whip": 0.8,
+      "away_prob": 75.0,
       "home_team": "Tampa Bay Rays",
-      "home_pitcher": "Griffin Jax",
-      "home_era": 3.53,
-      "home_whip": 1.18,
-      "home_prob": 61.7,
-      "recommended_bet": "Tampa Bay Rays F5 Moneyline",
+      "home_pitcher": "Unannounced Starter",
+      "home_era": 4.2,
+      "home_whip": 1.28,
+      "home_prob": 25.0,
+      "recommended_bet": "Milwaukee Brewers F5 Moneyline",
       "confidence": "HIGH"
     }
   ]
