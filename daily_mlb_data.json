@@ -1,20 +1,4 @@
 {
-  "last_updated": "2026-10-28 16:23:57 UTC",
-  "slate": [
-    {
-      "game_id": 849799,
-      "away_team": "Milwaukee Brewers",
-      "away_pitcher": "Jacob Misiorowski",
-      "away_era": 1.8,
-      "away_whip": 0.8,
-      "away_prob": 75.0,
-      "home_team": "Tampa Bay Rays",
-      "home_pitcher": "Unannounced Starter",
-      "home_era": 4.2,
-      "home_whip": 1.28,
-      "home_prob": 25.0,
-      "recommended_bet": "Milwaukee Brewers F5 Moneyline",
-      "confidence": "HIGH"
-    }
-  ]
+  "last_updated": "2026-10-29 16:33:04 UTC",
+  "slate": []
 }
